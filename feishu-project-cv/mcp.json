@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "feishu-project": {
+      "baseUrl": "https://project.feishu.cn/mcp_server/v1?mcpKey=m-f81485b9-71a1-43a6-8049-2f3e6da9ab5c&userKey=7308538463777800196&projectKey=697b384fd5eaf3ca7de6ff5c"
+    }
+  },
+  "imports": []
+}

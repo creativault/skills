@@ -1,0 +1,31 @@
+{
+  "name": "powerdata-skills",
+  "owner": {
+    "name": "PowerData Team",
+    "email": "powerdata@creativault.ai"
+  },
+  "metadata": {
+    "description": "PowerData 团队 Agent Skills 集合，包含 Next.js 前端脚手架和飞书项目管理能力",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "frontend-skills",
+      "description": "Next.js 前端标准化脚手架，集成 Tailwind CSS v4、shadcn/ui 和公司设计系统",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./nextjs-frontend-base"
+      ]
+    },
+    {
+      "name": "feishu-project-skills",
+      "description": "飞书项目管理 Skills，支持 MOQL 查询需求、缺陷、任务，管理工作项状态和字段",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./feishu-project-cv"
+      ]
+    }
+  ]
+}
