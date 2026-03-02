@@ -28,6 +28,87 @@ skills/
 
 ## 安装方式
 
+### 推荐使用 @creativault/powerdata-cli
+
+```bash
+# 直接使用 npx
+npx @creativault/powerdata-cli addskill
+```
+
+**流程：**
+
+1. **选择目标 IDE** — 列表会显示每个 IDE 对应的 skills 目录路径
+2. **获取远程仓库** — 自动从 `skill` 分支克隆 Skills 仓库
+3. **浏览并选择 Skill** — 递归浏览仓库目录结构
+4. **确认安装** — 将选中的 Skill 复制到 IDE 的 skills 目录
+
+**浏览规则：**
+
+- 每层目录提供「选择全部」和各子文件夹两个选项
+- 「选择全部」会将当前目录下的所有子文件夹分别安装到 skills 目录（不带父目录）
+- 进入子文件夹时，如果检测到 `SKILL.md` 文件会自动选中该文件夹
+- 没有 `SKILL.md` 则继续展示选项供你浏览
+
+**示例：**
+
+```bash
+npx @creativault/powerdata-cli addskill
+```
+
+```
+? 选择目标 IDE
+  Cursor         → .agents/skills
+  Claude Code    → .claude/skills
+  Kiro CLI       → .kiro/skills
+  ...
+
+⚡ PowerData 正在获取远程 Skills 仓库...
+⚡ PowerData ✔ 仓库获取成功
+
+? 当前路径: /
+  ✔ 选择全部 (/)
+  📁 frontend
+  📁 backend
+  📁 devops
+
+? 当前路径: /frontend
+  ✔ 选择全部 (/frontend)
+  📁 react-skill
+  📁 vue-skill
+
+⚡ PowerData ✔ 检测到 SKILL.md，自动选择: frontend/react-skill
+
+⚡ PowerData 将 skill 安装到: .agents/skills/react-skill
+? 确认安装？ Yes
+⚡ PowerData ✔ Skill react-skill 已安装到 .agents/skills/react-skill
+```
+
+## 支持的 IDE
+
+| IDE | Skills 目录 |
+|-----|------------|
+| Antigravity | `.agent/skills` |
+| Claude Code | `.claude/skills` |
+| CodeBuddy | `.codebuddy/skills` |
+| Codex | `.agents/skills` |
+| Command Code | `.commandcode/skills` |
+| Cortex Code | `.cortex/skills` |
+| Cursor | `.agents/skills` |
+| Gemini CLI | `.agents/skills` |
+| Goose | `.goose/skills` |
+| iFlow CLI | `.iflow/skills` |
+| Kilo Code | `.kilocode/skills` |
+| Kimi Code CLI | `.agents/skills` |
+| Kiro CLI | `.kiro/skills` |
+| Kode | `.kode/skills` |
+| OpenClaw | `skills` |
+| OpenCode | `.agents/skills` |
+| Qoder | `.qoder/skills` |
+| Qwen Code | `.qwen/skills` |
+| Trae | `.trae/skills` |
+| Trae CN | `.trae/skills` |
+| Zencoder | `.zencoder/skills` |
+
 本仓库托管在公司 GitLab 私仓，以下是不同 AI 工具的安装方法。
 
 ### Claude Code
