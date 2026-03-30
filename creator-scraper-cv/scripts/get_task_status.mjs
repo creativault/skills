@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// 查询采集任务状态
+// Query collection task status
 //
-// 用法:
+// Usage:
 //   node get_task_status.mjs '{"task_id":"task_20260315_abc123"}'
 
 import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';

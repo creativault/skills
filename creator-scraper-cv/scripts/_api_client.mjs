@@ -1,5 +1,5 @@
-// Creativault Open API 公共调用模块
-// 所有脚本共享的认证、请求、错误处理逻辑
+// Creativault Open API client module
+// Shared authentication, request, and error handling logic
 
 const API_BASE = (process.env.CV_API_BASE_URL || 'https://dev01-creativault-business.tec-develop.cn').replace(/\/+$/, '');
 const API_KEY = process.env.CV_API_KEY;
@@ -7,25 +7,25 @@ const USER_IDENTITY = process.env.CV_USER_IDENTITY;
 
 if (!API_KEY) {
   console.error(JSON.stringify({
-    error: '未设置 CV_API_KEY 环境变量',
-    hint: '请设置: export CV_API_KEY=cv_live_your_key_here',
+    error: 'CV_API_KEY environment variable is not set',
+    hint: 'Set it via: export CV_API_KEY=cv_live_your_key_here',
   }));
   process.exit(1);
 }
 
 if (!USER_IDENTITY) {
   console.error(JSON.stringify({
-    error: '未设置 CV_USER_IDENTITY 环境变量',
-    hint: '请设置: export CV_USER_IDENTITY=your_email@example.com',
+    error: 'CV_USER_IDENTITY environment variable is not set',
+    hint: 'Set it via: export CV_USER_IDENTITY=your_email@example.com',
   }));
   process.exit(1);
 }
 
 /**
- * 调用 Creativault Open API
- * @param {string} path - API 路径，如 /openapi/v1/creators/tiktok/search
- * @param {object} body - 请求体
- * @returns {object} 完整响应（含 success, data, error, meta）
+ * Call Creativault Open API
+ * @param {string} path - API path, e.g. /openapi/v1/creators/tiktok/search
+ * @param {object} body - Request body
+ * @returns {object} Full response (success, data, error, meta)
  */
 export async function callAPI(path, body = {}) {
   const url = `${API_BASE}${path}`;
@@ -43,7 +43,7 @@ export async function callAPI(path, body = {}) {
     });
   } catch (err) {
     console.error(JSON.stringify({
-      error: `网络请求失败: ${err.message}`,
+      error: `Network request failed: ${err.message}`,
       url,
     }));
     process.exit(1);
@@ -54,7 +54,7 @@ export async function callAPI(path, body = {}) {
     data = await response.json();
   } catch {
     console.error(JSON.stringify({
-      error: `响应解析失败，HTTP 状态码: ${response.status}`,
+      error: `Failed to parse response, HTTP status: ${response.status}`,
       url,
     }));
     process.exit(1);
@@ -62,7 +62,7 @@ export async function callAPI(path, body = {}) {
 
   if (!data.success) {
     console.error(JSON.stringify({
-      error: data.error?.message || '请求失败',
+      error: data.error?.message || 'Request failed',
       code: data.error?.code,
       request_id: data.meta?.request_id,
     }, null, 2));
@@ -73,8 +73,8 @@ export async function callAPI(path, body = {}) {
 }
 
 /**
- * 解析命令行 JSON 参数
- * @returns {object} 解析后的参数对象
+ * Parse command-line JSON argument
+ * @returns {object} Parsed parameters
  */
 export function parseArgs() {
   const raw = process.argv[2];
@@ -83,7 +83,7 @@ export function parseArgs() {
     return JSON.parse(raw);
   } catch {
     console.error(JSON.stringify({
-      error: '参数必须是有效的 JSON 字符串',
+      error: 'Argument must be a valid JSON string',
       received: raw,
     }));
     process.exit(1);
@@ -91,15 +91,15 @@ export function parseArgs() {
 }
 
 /**
- * 校验必填参数
- * @param {object} params - 参数对象
- * @param {string[]} required - 必填字段名列表
+ * Validate required parameters
+ * @param {object} params - Parameter object
+ * @param {string[]} required - List of required field names
  */
 export function validateRequired(params, required) {
   const missing = required.filter(key => params[key] === undefined || params[key] === null);
   if (missing.length > 0) {
     console.error(JSON.stringify({
-      error: `缺少必填参数: ${missing.join(', ')}`,
+      error: `Missing required parameters: ${missing.join(', ')}`,
     }));
     process.exit(1);
   }
@@ -108,13 +108,13 @@ export function validateRequired(params, required) {
 const VALID_PLATFORMS = ['tiktok', 'youtube', 'instagram'];
 
 /**
- * 校验平台参数
+ * Validate platform parameter
  * @param {string} platform
  */
 export function validatePlatform(platform) {
   if (!platform || !VALID_PLATFORMS.includes(platform)) {
     console.error(JSON.stringify({
-      error: `platform 必须为: ${VALID_PLATFORMS.join(' / ')}`,
+      error: `platform must be one of: ${VALID_PLATFORMS.join(' / ')}`,
       received: platform,
     }));
     process.exit(1);

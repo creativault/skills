@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// 提交关键词采集任务
+// Submit keyword collection task
 //
-// 用法:
+// Usage:
 //   node submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips","skincare"]}'
 
 import { callAPI, parseArgs, validateRequired, validatePlatform } from './_api_client.mjs';
@@ -12,12 +12,12 @@ validateRequired(params, ['platform', 'keywords']);
 validatePlatform(params.platform);
 
 if (!Array.isArray(params.keywords) || params.keywords.length === 0) {
-  console.error(JSON.stringify({ error: 'keywords 必须为非空数组' }));
+  console.error(JSON.stringify({ error: 'keywords must be a non-empty array' }));
   process.exit(1);
 }
 
 if (params.keywords.length > 10) {
-  console.error(JSON.stringify({ error: 'keywords 最多 10 个' }));
+  console.error(JSON.stringify({ error: 'keywords cannot exceed 10 items' }));
   process.exit(1);
 }
 

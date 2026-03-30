@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// 获取采集任务数据
+// Get collection task data
 //
-// 用法:
+// Usage:
 //   node get_task_data.mjs '{"task_id":"task_20260315_abc123","page":1,"size":20}'
 
 import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';

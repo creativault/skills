@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// 获取文件下载链接
+// Get file download URL
 //
-// 用法:
+// Usage:
 //   node get_download_url.mjs '{"file_id":"a1b2c3d4e5f6"}'
-//   node get_download_url.mjs '{"file_name":"upload-youtube - 20条.xls"}'
+//   node get_download_url.mjs '{"file_name":"upload-youtube-20.xls"}'
 
 import { callAPI, parseArgs } from './_api_client.mjs';
 
@@ -11,7 +11,7 @@ const params = parseArgs();
 
 if (!params.file_id && !params.file_name) {
   console.error(JSON.stringify({
-    error: '必须指定 file_id 或 file_name（至少一个）',
+    error: 'Either file_id or file_name is required',
   }));
   process.exit(1);
 }

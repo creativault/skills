@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// 将搜索结果或采集数据导出为 CSV 文件（增量追加模式）
+// Export search results or collection data to CSV file (incremental append mode)
 //
-// 用法:
+// Usage:
 //   echo '<json>' | node export_to_csv.mjs '{"output":"creators.csv"}'
-//   node search_creators.mjs '{"platform":"tiktok","keyword":"beauty","size":5}' | node export_to_csv.mjs '{"output":"creators.csv"}'
+//   node search_creators.mjs '...' | node export_to_csv.mjs '{"output":"creators.csv"}'
 //
-// 参数:
-//   output    — 输出文件路径，默认 output.csv
-//   mode      — 写入模式：append（增量追加，默认）/ overwrite（覆盖）
+// Parameters:
+//   output    — Output file path, default output.csv
+//   mode      — Write mode: append (default) / overwrite
 
 import { writeFileSync, appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -46,7 +46,7 @@ function rowToCSV(headers, row) {
   return headers.map(h => escapeCSV(row[h])).join(',');
 }
 
-// 从 stdin 读取 JSON
+// Read JSON from stdin
 let input = '';
 for await (const chunk of process.stdin) {
   input += chunk;
@@ -56,11 +56,11 @@ let json;
 try {
   json = JSON.parse(input);
 } catch {
-  console.error('错误: stdin 输入不是有效的 JSON');
+  console.error('Error: stdin input is not valid JSON');
   process.exit(1);
 }
 
-// 提取数据数组
+// Extract data array
 let rows = [];
 if (Array.isArray(json.data)) {
   rows = json.data;
@@ -69,12 +69,12 @@ if (Array.isArray(json.data)) {
 } else if (Array.isArray(json)) {
   rows = json;
 } else {
-  console.error('错误: 无法从 JSON 中提取数据数组');
+  console.error('Error: cannot extract data array from JSON');
   process.exit(1);
 }
 
 if (rows.length === 0) {
-  console.error('警告: 数据为空，无内容可导出');
+  console.error('Warning: data is empty, nothing to export');
   process.exit(0);
 }
 
@@ -82,40 +82,40 @@ const params = parseArgs();
 const outputPath = resolve(params.output || 'output.csv');
 const mode = params.mode || 'append';
 
-// 展平所有行
+// Flatten all rows
 const flatRows = rows.map(r => flattenObject(r));
 
-// 获取所有列头
+// Collect all headers
 const allHeaders = [...new Set(flatRows.flatMap(r => Object.keys(r)))];
 
 const fileExists = existsSync(outputPath);
 
 if (mode === 'overwrite' || !fileExists) {
-  // 写入表头 + 数据（BOM 头确保 Excel 正确识别 UTF-8）
+  // Write header + data (BOM for Excel UTF-8 compatibility)
   const bom = '\ufeff';
   const headerLine = allHeaders.map(escapeCSV).join(',');
   const dataLines = flatRows.map(r => rowToCSV(allHeaders, r)).join('\n');
   writeFileSync(outputPath, bom + headerLine + '\n' + dataLines + '\n', 'utf-8');
-  console.error(`[导出] ${fileExists ? '覆盖' : '创建'} ${outputPath}，写入 ${rows.length} 行`);
+  console.error(`[export] ${fileExists ? 'Overwritten' : 'Created'} ${outputPath}, wrote ${rows.length} rows`);
 } else {
-  // 增量追加：读取已有表头，合并新列
+  // Incremental append: read existing headers
   const existingContent = readFileSync(outputPath, 'utf-8');
   const firstLine = existingContent.split('\n')[0].replace(/^\ufeff/, '');
   const existingHeaders = firstLine.split(',').map(h => h.replace(/^"|"$/g, ''));
 
-  // 检查是否有新列
+  // Check for new columns
   const newHeaders = allHeaders.filter(h => !existingHeaders.includes(h));
   if (newHeaders.length > 0) {
-    console.error(`[导出] 警告: 新数据包含 ${newHeaders.length} 个新列（${newHeaders.join(', ')}），追加时忽略这些列`);
+    console.error(`[export] Warning: new data contains ${newHeaders.length} new column(s) (${newHeaders.join(', ')}), ignored during append`);
   }
 
-  // 按已有表头顺序追加
+  // Append using existing header order
   const dataLines = flatRows.map(r => rowToCSV(existingHeaders, r)).join('\n');
   appendFileSync(outputPath, dataLines + '\n', 'utf-8');
-  console.error(`[导出] 追加 ${rows.length} 行到 ${outputPath}`);
+  console.error(`[export] Appended ${rows.length} rows to ${outputPath}`);
 }
 
-// 输出摘要到 stdout
+// Output summary to stdout
 console.log(JSON.stringify({
   success: true,
   file: outputPath,
