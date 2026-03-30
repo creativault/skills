@@ -46,6 +46,7 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 | 轮询任务状态 | `scripts/poll_task_status.mjs` | 自动轮询，每 60s 查一次直到完成 |
 | 获取采集数据 | `scripts/get_task_data.mjs` | 同步，支持分页 |
 | 获取下载链接 | `scripts/get_download_url.mjs` | 同步 |
+| 导出为 CSV | `scripts/export_to_csv.mjs` | 管道输入，增量追加 |
 
 所有脚本参数通过命令行 JSON 字符串传入，结果输出 JSON 到 stdout。
 
@@ -184,6 +185,28 @@ node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}'
 |------|------|------|
 | `file_id` | string | 文件 ID（与 file_name 二选一）|
 | `file_name` | string | 文件名（与 file_id 二选一）|
+
+### export_to_csv.mjs — 导出为 CSV
+
+通过管道接收搜索或采集结果的 JSON，导出为 CSV 文件。默认增量追加模式。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `output` | string | 输出文件路径，默认 `output.csv` |
+| `mode` | string | `append`（增量追加，默认）/ `overwrite`（覆盖）|
+
+用法：
+
+```bash
+# 搜索并导出
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","size":50}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+
+# 再搜一页，增量追加
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","size":50,"page":2}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+
+# 采集数据导出
+node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"result.csv"}'
+```
 
 ## 常用示例
 
