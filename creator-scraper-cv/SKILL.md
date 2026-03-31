@@ -70,6 +70,7 @@ Before executing, determine the best approach based on user intent:
 - If the user gives specific profile links or usernames → use **collection** (async).
 - If search results satisfy the user's needs → no need to submit a collection task.
 - Only use collection when the user explicitly needs detailed/enriched data for specific creators.
+- **After any collection task completes, ALWAYS call `export_task_data.mjs` to generate a downloadable file (default xlsx) and present the download link to the user. Do NOT just call `get_task_data.mjs` and show raw JSON.**
 
 ## Output Formatting
 
@@ -131,15 +132,17 @@ node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 
 After submitting, inform the user: "Collection task submitted. This typically takes 5~30 minutes. I'll monitor the progress for you."
 
-**Step 3** — Get results:
+**Step 3** — After task is completed, **ALWAYS export the data as a file first**, then show the download link to the user. Only use `get_task_data.mjs` if the user explicitly asks for raw JSON data.
 
 ```bash
-# Option A: Raw JSON data
-node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx","page":1,"size":50}'
-
-# Option B: Export as file with download link (recommended)
+# PREFERRED: Export as file and give user the download link
 node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
+
+# Only if user explicitly requests raw JSON:
+node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx","page":1,"size":50}'
 ```
+
+> **Rule**: When a collection task completes, the default action is to call `export_task_data.mjs` with `format:"xlsx"` and present the `file_url` download link to the user. Do NOT just call `get_task_data.mjs` and dump raw JSON — users want a downloadable file.
 
 ### Workflow 4: Keyword Collection (async)
 
@@ -150,7 +153,7 @@ node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":
 # Step 2: Poll
 node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 
-# Step 3: Export
+# Step 3: ALWAYS export as file after completion
 node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
