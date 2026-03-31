@@ -2,7 +2,7 @@
 // Submit keyword collection task
 //
 // Usage:
-//   node submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips","skincare"]}'
+//   node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips","skincare"]}'
 
 import { callAPI, parseArgs, validateRequired, validatePlatform } from './_api_client.mjs';
 

@@ -2,8 +2,8 @@
 // Get file download URL
 //
 // Usage:
-//   node get_download_url.mjs '{"file_id":"a1b2c3d4e5f6"}'
-//   node get_download_url.mjs '{"file_name":"upload-youtube-20.xls"}'
+//   node {baseDir}/scripts/get_download_url.mjs '{"file_id":"a1b2c3d4e5f6"}'
+//   node {baseDir}/scripts/get_download_url.mjs '{"file_name":"upload-youtube-20.xls"}'
 
 import { callAPI, parseArgs } from './_api_client.mjs';
 

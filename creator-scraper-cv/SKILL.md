@@ -1,288 +1,277 @@
 ---
 name: creator-scraper-cv
 description: |
-  Creativault 达人数据采集 Skill。搜索和采集 TikTok、YouTube、Instagram 平台的达人数据，
-  支持多维度筛选搜索、链接/用户名/关键词批量采集、任务状态查询和数据导出。
-  当用户提到达人采集、KOL 搜索、网红数据、达人分析、influencer discovery，
-  或需要从 TikTok/YouTube/Instagram 获取达人信息时使用此 Skill。
+  Creativault creator data collection skill. Search and collect creator/influencer data
+  from TikTok, YouTube, and Instagram. Supports multi-dimensional search, batch collection
+  by links/usernames/keywords, task tracking, and data export (xlsx/csv/html).
+  Use when: creator search, influencer scraping, KOL search, KOL analytics, social media
+  data extraction, TikTok scraper, YouTube scraper, Instagram scraper, influencer discovery,
+  达人采集, KOL 搜索, 网红数据, 达人分析, 达人搜索, 社交媒体数据.
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.0"
+  version: "1.1.0"
 ---
 
-# Creativault 达人数据采集
+# Creativault Creator Data Collection
 
-## 前置条件
+## Prerequisites
 
-需要设置以下环境变量：
+Set the following environment variables:
 
-- `CV_API_KEY` — Creativault Open API Key（从管理后台获取）
-- `CV_USER_IDENTITY` — 操作人员邮箱地址
-- `CV_API_BASE_URL`（可选）— API 服务地址，默认 `https://dev01-creativault-business.tec-develop.cn`
+- `CV_API_KEY` — Creativault Open API Key (obtain from admin dashboard)
+- `CV_USER_IDENTITY` — Operator email address
+- `CV_API_BASE_URL` (optional) — API base URL, defaults to `https://dev01-creativault-business.tec-develop.cn`
 
-**Linux / macOS**：
+**Linux / macOS**:
 
 ```bash
 export CV_API_KEY=cv_live_your_key_here
 export CV_USER_IDENTITY=your_email@example.com
 ```
 
-**Windows PowerShell**：
+**Windows PowerShell**:
 
 ```powershell
 $env:CV_API_KEY = "cv_live_your_key_here"
 $env:CV_USER_IDENTITY = "your_email@example.com"
 ```
 
-## 能力总览
+## Capabilities
 
-| 能力 | 脚本 | 模式 |
-|------|------|------|
-| 搜索达人 | `scripts/search_creators.mjs` | 同步，实时返回 |
-| 提交采集任务 | `scripts/submit_collection_task.mjs` | 异步，返回 task_id |
-| 提交关键词采集 | `scripts/submit_keyword_task.mjs` | 异步，返回 task_id |
-| 查询任务状态 | `scripts/get_task_status.mjs` | 同步，单次查询 |
-| 轮询任务状态 | `scripts/poll_task_status.mjs` | 自动轮询，每 60s 查一次直到完成 |
-| 获取采集数据 | `scripts/get_task_data.mjs` | 同步，支持分页 |
-| 获取下载链接 | `scripts/get_download_url.mjs` | 同步 |
-| 导出为 CSV（本地） | `scripts/export_to_csv.mjs` | 管道输入，增量追加 |
-| 导出采集数据（服务端） | `scripts/export_task_data.mjs` | 同步，返回文件下载链接 |
+| Capability | Script | Mode |
+|------------|--------|------|
+| Search creators | `scripts/search_creators.mjs` | Sync, real-time |
+| Submit collection task | `scripts/submit_collection_task.mjs` | Async, returns task_id |
+| Submit keyword collection | `scripts/submit_keyword_task.mjs` | Async, returns task_id |
+| Check task status | `scripts/get_task_status.mjs` | Sync, single query |
+| Poll task status | `scripts/poll_task_status.mjs` | Auto-poll every 60s |
+| Get collection data | `scripts/get_task_data.mjs` | Sync, paginated |
+| Export task data (server) | `scripts/export_task_data.mjs` | Returns file download URL |
+| Export to local CSV | `scripts/export_to_csv.mjs` | Pipe input, incremental append |
+| Get file download URL | `scripts/get_download_url.mjs` | Sync |
 
-所有脚本参数通过命令行 JSON 字符串传入，结果输出 JSON 到 stdout。
+All scripts accept a JSON string as command-line argument. Results are output as JSON to stdout.
 
-## 标准工作流
+**Language**: Always respond to the user in the same language they use. If the user writes in Chinese, respond in Chinese. If in English, respond in English.
 
-### 流程一：搜索达人（实时）
+## Choosing the Right Approach
 
-直接搜索，立即返回结果列表：
+Before executing, determine the best approach based on user intent:
+
+| User Intent | Approach | Response Time |
+|-------------|----------|---------------|
+| "Search/find creators" with filters (keyword, country, followers) | `search_creators.mjs` | Instant (~1s) |
+| "Collect/scrape data" for specific creators (links or usernames) | `submit_collection_task.mjs` → poll → get data | 5~30 minutes |
+| "Find creators by keyword" and collect detailed data | `submit_keyword_task.mjs` → poll → get data | 5~30 minutes |
+
+**Decision rules:**
+- If the user gives filter conditions (keyword, country, follower count) → use **search** first. It returns results instantly.
+- If the user gives specific profile links or usernames → use **collection** (async).
+- If search results satisfy the user's needs → no need to submit a collection task.
+- Only use collection when the user explicitly needs detailed/enriched data for specific creators.
+
+## Output Formatting
+
+When presenting search or collection results to the user, format them as a readable table:
+
+```
+| # | Nickname | Username | Followers | Avg Views | Engagement | Country | Profile |
+|---|----------|----------|-----------|-----------|------------|---------|---------|
+| 1 | Creator1 | @user1   | 150,000   | 45,000    | 6.5%       | US      | [link]  |
+```
+
+**Formatting rules:**
+- Format large numbers with commas (e.g., 150,000)
+- Show engagement_rate as percentage (e.g., 0.065 → 6.5%)
+- Make profile_url a clickable link
+- Show top 10 results by default, ask user if they want more
+- After showing results, proactively ask: "Would you like to export these results to CSV/Excel?"
+
+## Quota Awareness
+
+Every API response includes `meta.quota_remaining`. Monitor this value:
+- If `quota_remaining` < 50: warn the user that quota is running low
+- If `quota_remaining` < 10: strongly recommend the user to conserve quota
+- If `quota_remaining` = 0 or error 42902: inform the user that daily quota is exhausted (resets at UTC 00:00)
+
+## Workflows
+
+### Workflow 1: Search Creators (instant)
 
 ```bash
 node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000,"size":20}'
 ```
 
-### 流程二：批量采集（异步，需轮询）
-
-> **重要**：采集任务是异步的，耗时通常在 5~30 分钟。提交后必须轮询等待完成，不要立即获取数据。
-
-**步骤 1** — 提交采集任务：
+### Workflow 2: Search + Export (instant)
 
 ```bash
-node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1","https://www.tiktok.com/@creator2"],"task_name":"Q1 达人采集"}'
+# Search and export to local CSV in one pipeline
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+
+# Append page 2 to the same file
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50,"page":2}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
 ```
 
-**步骤 2** — 轮询任务状态（自动每 60 秒查询一次，直到完成）：
+### Workflow 3: Batch Collection (async, 5~30 min)
+
+> **Important**: Collection tasks are async and take 5~30 minutes. You MUST poll for completion before fetching data.
+
+**Step 1** — Submit task:
+
+```bash
+node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1","https://www.tiktok.com/@creator2"],"task_name":"Q1 collection"}'
+```
+
+**Step 2** — Poll until completed (auto-polls every 60s):
 
 ```bash
 node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 ```
 
-轮询脚本会持续输出进度到 stderr，任务完成后输出最终结果到 stdout。默认每 60 秒查一次，最多轮询 45 次（约 45 分钟）。可自定义：
+After submitting, inform the user: "Collection task submitted. This typically takes 5~30 minutes. I'll monitor the progress for you."
+
+**Step 3** — Get results:
 
 ```bash
-# 每 30 秒查一次，最多查 60 次
-node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx","interval":30,"max_attempts":60}'
-```
-
-如果只需要查一次当前状态（不轮询），用 `get_task_status.mjs`：
-
-```bash
-node {baseDir}/scripts/get_task_status.mjs '{"task_id":"task_xxx"}'
-```
-
-**步骤 3** — 任务完成后，获取采集数据：
-
-```bash
-# Option A: Get raw JSON data
+# Option A: Raw JSON data
 node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx","page":1,"size":50}'
 
-# Option B: Export as file and get download link (recommended)
+# Option B: Export as file with download link (recommended)
 node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
-### 流程三：关键词采集（异步）
-
-提交后用 `poll_task_status.mjs` 轮询等待，完成后获取数据：
+### Workflow 4: Keyword Collection (async)
 
 ```bash
-# 步骤 1: 提交
+# Step 1: Submit
 node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips","skincare routine"]}'
 
-# 步骤 2: 轮询等待完成
+# Step 2: Poll
 node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 
-# 步骤 3: 获取数据或导出文件
-node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}'
+# Step 3: Export
 node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
-## 脚本参数详解
+## Script Parameters
 
-### search_creators.mjs — 搜索达人
+### search_creators.mjs
 
-`platform` 为必填，其余为可选筛选条件。
+`platform` is required. All other parameters are optional filters.
 
-**通用参数**：
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
+| `keyword` | string | Search keyword |
+| `country_code` | string | Country code, comma-separated (e.g., `US,CA`) |
+| `gender` | string | Gender filter |
+| `has_email` | boolean | Has email contact |
+| `followers_cnt_gte` | integer | Followers ≥ |
+| `followers_cnt_lte` | integer | Followers ≤ |
+| `page` | integer | Page number, default 1 |
+| `size` | integer | Page size, default 50, max 100 |
+| `sort_field` | string | Sort field (e.g., `followers_cnt`) |
+| `sort_order` | string | `asc` / `desc` (default `desc`) |
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` |
-| `keyword` | string | 搜索关键词 |
-| `country_code` | string | 国家代码，多选逗号分隔（如 `US,CA`）|
-| `gender` | string | 性别 |
-| `has_email` | boolean | 是否有邮箱 |
-| `followers_cnt_gte` | integer | 粉丝数 ≥ |
-| `followers_cnt_lte` | integer | 粉丝数 ≤ |
-| `page` | integer | 页码，默认 1 |
-| `size` | integer | 每页数量，默认 50，最大 100 |
-| `sort_field` | string | 排序字段（如 `followers_cnt`）|
-| `sort_order` | string | `asc` / `desc`（默认 `desc`）|
+Platform-specific parameters: see [Platform Parameters Reference](references/platform-params.md).
 
-各平台特有参数见 [平台参数参考](references/platform-params.md)。
+### submit_collection_task.mjs
 
-### submit_collection_task.mjs — 提交采集任务
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_type` | string | **Required**. `LINK_BATCH` (links) / `FILE_UPLOAD` (usernames) |
+| `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
+| `values` | string[] | **Required**. Links or usernames, max 500 |
+| `task_name` | string | Task name |
+| `webhook_url` | string | Completion callback URL (HTTPS) |
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `task_type` | string | **必填**。`LINK_BATCH`（链接）/ `FILE_UPLOAD`（用户名）|
-| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` |
-| `values` | string[] | **必填**。链接或用户名列表，最多 500 个 |
-| `task_name` | string | 任务名称 |
-| `webhook_url` | string | 完成回调 URL（HTTPS）|
+### submit_keyword_task.mjs
 
-### submit_keyword_task.mjs — 提交关键词采集
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
+| `keywords` | string[] | **Required**. Keyword list, max 10 |
+| `task_name` | string | Task name |
+| `webhook_url` | string | Completion callback URL (HTTPS) |
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` |
-| `keywords` | string[] | **必填**。关键词列表，最多 10 个 |
-| `task_name` | string | 任务名称 |
-| `webhook_url` | string | 完成回调 URL（HTTPS）|
-
-### get_task_status.mjs — 查询任务状态（单次）
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `task_id` | string | **必填**。任务 ID |
-
-返回字段：`status`（processing / completed / failed / timeout）、`progress`（0~100）。
-
-### poll_task_status.mjs — 轮询任务状态（自动定时）
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `task_id` | string | **必填**。任务 ID |
-| `interval` | integer | 轮询间隔秒数，默认 60 |
-| `max_attempts` | integer | 最大轮询次数，默认 45（约 45 分钟）|
-
-采集任务耗时通常 5~30 分钟。脚本会每隔 `interval` 秒查询一次任务状态，进度信息输出到 stderr，任务到达终态（completed / failed / timeout）后输出最终结果到 stdout 并退出。
-
-### get_task_data.mjs — 获取采集数据
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `task_id` | string | **必填**。任务 ID |
-| `page` | integer | 页码，默认 1 |
-| `size` | integer | 每页数量，默认 20，最大 100 |
-
-### get_download_url.mjs — 获取文件下载链接
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `file_id` | string | 文件 ID（与 file_name 二选一）|
-| `file_name` | string | 文件名（与 file_id 二选一）|
-
-### export_task_data.mjs — Export collection data to file (server-side)
-
-Exports task data to xlsx / csv / html, uploads to OSS, and returns a download URL. Repeated calls with the same task_id + format will return the cached file without regenerating.
+### poll_task_status.mjs
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `task_id` | string | **Required**. Task ID |
-| `format` | string | **Required**. `xlsx` / `csv` / `html` (`feishu_doc` not yet available) |
+| `interval` | integer | Poll interval in seconds, default 60 |
+| `max_attempts` | integer | Max poll attempts, default 45 (~45 min) |
 
-Usage:
+### get_task_status.mjs
 
-```bash
-# Export as Excel
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_id` | string | **Required**. Task ID |
 
-# Export as CSV
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
+### get_task_data.mjs
 
-# Export as HTML (viewable in browser)
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
-```
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_id` | string | **Required**. Task ID |
+| `page` | integer | Page number, default 1 |
+| `size` | integer | Page size, default 20, max 100 |
 
-Returns `file_url` (temporary download link), `file_id` (reusable via get_download_url.mjs), `row_count`, and `file_expire_at`.
+### export_task_data.mjs
 
-### export_to_csv.mjs — Export to local CSV (client-side)
+Exports task data to file (server-side), uploads to OSS, returns download URL. Repeated calls with same task_id + format return cached file.
 
-通过管道接收搜索或采集结果的 JSON，导出为 CSV 文件。默认增量追加模式。
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_id` | string | **Required**. Task ID (must be completed) |
+| `format` | string | **Required**. `xlsx` / `csv` / `html` |
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `output` | string | 输出文件路径，默认 `output.csv` |
-| `mode` | string | `append`（增量追加，默认）/ `overwrite`（覆盖）|
+### export_to_csv.mjs
 
-用法：
+Pipe JSON from search or collection results to export as local CSV file. Supports incremental append.
 
-```bash
-# 搜索并导出
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","size":50}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `output` | string | Output file path, default `output.csv` |
+| `mode` | string | `append` (default) / `overwrite` |
 
-# 再搜一页，增量追加
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","size":50,"page":2}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+### get_download_url.mjs
 
-# 采集数据导出
-node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"result.csv"}'
-```
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file_id` | string | File ID (either file_id or file_name required) |
+| `file_name` | string | File name (either file_id or file_name required) |
 
-## 常用示例
+## Error Handling
 
-```bash
-# 搜索美国 TikTok 美妆达人，粉丝 1 万以上
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000,"size":20}'
+| Code | HTTP | Description | Action |
+|------|------|-------------|--------|
+| 40001 | 400 | Invalid parameters | Check parameter format and values |
+| 40101 | 401 | Invalid API Key | Check CV_API_KEY env variable |
+| 40102 | 401 | API Key expired | Contact admin to renew |
+| 40103 | 401 | API Key revoked | Contact admin |
+| 40104 | 401 | Missing user identity | Check CV_USER_IDENTITY env variable |
+| 40201 | 402 | Insufficient credits | Top up or upgrade plan |
+| 40301 | 403 | No permission for this endpoint | Check API Key scopes |
+| 42901 | 429 | Rate limit exceeded | Auto-retry after Retry-After seconds |
+| 42902 | 402 | Daily quota exhausted | Wait until UTC 00:00 or upgrade plan |
+| 50001 | 500 | Server error | Report request_id to support |
 
-# 搜索 YouTube 科技频道，订阅 5 万以上
-node {baseDir}/scripts/search_creators.mjs '{"platform":"youtube","keyword":"tech review","followers_cnt_gte":50000}'
+## References
 
-# 搜索 Instagram 带货达人
-node {baseDir}/scripts/search_creators.mjs '{"platform":"instagram","is_product_kol":true,"country_code":"US"}'
+- [API Reference](references/api-reference.md) — Full request/response field documentation
+- [Platform Parameters](references/platform-params.md) — TikTok/YouTube/Instagram specific filters
+- [Error Codes](references/error-codes.md) — Complete error code list and troubleshooting
 
-# 批量链接采集
-node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1"]}'
+## Changelog
 
-# 批量用户名采集
-node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"FILE_UPLOAD","platform":"youtube","values":["creator1","creator2"]}'
+### v1.1.0
+- Added server-side export (xlsx/csv/html) via `export_task_data.mjs`
+- Added auto-retry on 429 rate limit in API client
+- Added quota awareness guidance
+- Added output formatting guidance for agents
+- Added smart workflow selection (search vs collection)
+- Unified all script logs and SKILL.md to English
 
-# 关键词采集
-node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips"]}'
-
-# 导出采集数据为 Excel
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
-
-# 导出采集数据为 CSV
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
-
-# 导出采集数据为 HTML（浏览器可直接查看）
-node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
-```
-
-## 错误处理
-
-| 错误码 | HTTP 状态码 | 说明 | 处理建议 |
-|--------|-----------|------|---------|
-| 40001 | 400 | 参数验证失败 | 检查参数格式和取值范围 |
-| 40101 | 401 | API Key 无效 | 检查 CV_API_KEY 环境变量 |
-| 40102 | 401 | API Key 已过期 | 联系管理员续期 |
-| 40103 | 401 | API Key 已吊销 | 联系管理员 |
-| 40104 | 401 | 缺少用户标识 | 检查 CV_USER_IDENTITY 环境变量 |
-| 42901 | 429 | 请求频率超限 | 等待 60 秒后重试 |
-| 42902 | 402 | 每日配额用尽 | 明日重试或升级套餐 |
-
-## 参考文档
-
-- [完整 API 字段参考](references/api-reference.md) — 各接口请求/响应字段完整说明
-- [各平台特有参数](references/platform-params.md) — TikTok/YouTube/Instagram 各自的筛选参数
-- [错误码完整列表](references/error-codes.md) — 所有错误码及排查指南
+### v1.0.0
+- Initial release: search, collection, polling, local CSV export

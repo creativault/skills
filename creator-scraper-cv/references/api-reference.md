@@ -1,19 +1,19 @@
-# API 字段参考
+# API Reference
 
-## 交互协议
+## Protocol
 
-| 项目 | 说明 |
-|------|------|
-| 基础路径 | `https://{host}/openapi/v1/` |
-| 传输协议 | HTTPS |
-| 请求方法 | 所有接口统一 **POST** |
-| 数据格式 | JSON (`Content-Type: application/json`) |
-| 认证方式 | `X-API-Key` + `X-User-Identity` 请求头 |
-| 字符编码 | UTF-8 |
-| 时间格式 | ISO 8601（如 `2026-03-15T10:30:00Z`）|
-| 分页参数 | `page`（从 1 开始）、`size`（默认 50）|
+| Item | Description |
+|------|-------------|
+| Base URL | `https://{host}/openapi/v1/` |
+| Protocol | HTTPS |
+| Method | All endpoints use **POST** |
+| Format | JSON (`Content-Type: application/json`) |
+| Auth | `X-API-Key` + `X-User-Identity` headers |
+| Encoding | UTF-8 |
+| Timestamps | ISO 8601 (e.g., `2026-03-15T10:30:00Z`) |
+| Pagination | `page` (starts at 1), `size` (default 50) |
 
-## 通用响应结构
+## Response Structure
 
 ```json
 {
@@ -30,49 +30,71 @@
 }
 ```
 
-## 接口列表
+`meta.quota_remaining`: remaining daily quota. `-1` means unlimited.
 
-| 接口 | 路径 | 说明 |
-|------|------|------|
-| 搜索 TikTok 达人 | `/openapi/v1/creators/tiktok/search` | 多维度筛选 |
-| 搜索 YouTube 达人 | `/openapi/v1/creators/youtube/search` | 多维度筛选 |
-| 搜索 Instagram 达人 | `/openapi/v1/creators/instagram/search` | 多维度筛选 |
-| 提交采集任务 | `/openapi/v1/collection/tasks/submit` | 链接/用户名批量采集 |
-| 提交关键词采集 | `/openapi/v1/collection/tasks/keyword-submit` | 关键词搜索采集 |
-| 查询任务状态 | `/openapi/v1/collection/tasks/status` | 查询采集进度 |
-| 获取采集数据 | `/openapi/v1/collection/tasks/data` | 分页获取结果 |
-| 导出采集数据 | `/openapi/v1/collection/tasks/export` | 导出为 xlsx/csv/html 文件 |
-| 获取文件下载链接 | `/openapi/v1/files/download-url` | 获取临时下载 URL |
+## Endpoints
 
-## 采集任务类型
+| Endpoint | Path | Description |
+|----------|------|-------------|
+| Search TikTok creators | `/openapi/v1/creators/tiktok/search` | Multi-dimensional filtering |
+| Search YouTube creators | `/openapi/v1/creators/youtube/search` | Multi-dimensional filtering |
+| Search Instagram creators | `/openapi/v1/creators/instagram/search` | Multi-dimensional filtering |
+| Submit collection task | `/openapi/v1/collection/tasks/submit` | Batch collect by links/usernames |
+| Submit keyword collection | `/openapi/v1/collection/tasks/keyword-submit` | Collect by keywords |
+| Query task status | `/openapi/v1/collection/tasks/status` | Check collection progress |
+| Get task data | `/openapi/v1/collection/tasks/data` | Paginated results |
+| Export task data | `/openapi/v1/collection/tasks/export` | Export to xlsx/csv/html file |
+| Get file download URL | `/openapi/v1/files/download-url` | Get temporary download URL |
 
-| task_type | 说明 | values 内容 | 最大数量 |
-|-----------|------|-----------|---------|
-| `LINK_BATCH` | 链接采集 | 达人主页链接列表 | 500 |
-| `FILE_UPLOAD` | 用户名采集 | 达人用户名列表 | 500 |
+## Task Types
 
-## 任务状态
+| task_type | Description | values content | Max items |
+|-----------|-------------|---------------|-----------|
+| `LINK_BATCH` | Link collection | Creator profile URLs | 500 |
+| `FILE_UPLOAD` | Username collection | Creator usernames | 500 |
 
-| status | 说明 |
-|--------|------|
-| `processing` | 处理中（采集中或数据入库中）|
-| `completed` | 已完成 |
-| `failed` | 失败 |
-| `timeout` | 超时 |
+## Task Status
 
-## 支持的平台
+| status | Description |
+|--------|-------------|
+| `processing` | In progress (collecting or importing data) |
+| `completed` | Completed |
+| `failed` | Failed |
+| `timeout` | Timed out |
 
-| 平台 | 标识 | 搜索 | 链接采集 | 用户名采集 | 关键词采集 |
-|------|------|------|---------|----------|----------|
+## Supported Platforms
+
+| Platform | ID | Search | Link Collection | Username Collection | Keyword Collection |
+|----------|----|--------|----------------|--------------------|--------------------|
 | TikTok | `tiktok` | ✅ | ✅ | ✅ | ✅ |
 | YouTube | `youtube` | ✅ | ✅ | ✅ | ✅ |
 | Instagram | `instagram` | ✅ | ✅ | ✅ | ✅ |
 
-## Webhook 回调
+## Export Formats
 
-提交采集任务时可传入 `webhook_url`，任务完成后系统自动回调。
+| format | Description |
+|--------|-------------|
+| `xlsx` | Excel file with bold headers, background colors, auto column width |
+| `csv` | CSV file, UTF-8 BOM encoding (Excel compatible) |
+| `html` | HTML table page, viewable in browser |
+| `feishu_doc` | Feishu document (not yet available, returns 400) |
 
-回调 Payload：
+## Export Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `file_id` | string | Unique file identifier (reusable via get_download_url) |
+| `file_name` | string | File name |
+| `file_url` | string | Authenticated temporary download URL |
+| `file_expire_at` | string | URL expiration time (ISO 8601 UTC) |
+| `format` | string | Export format |
+| `row_count` | integer | Number of data rows |
+
+## Webhook
+
+Pass `webhook_url` when submitting collection tasks for completion notification.
+
+Callback payload:
 
 ```json
 {
@@ -87,5 +109,5 @@
 }
 ```
 
-回调签名：`X-Webhook-Signature` 头，HMAC-SHA256 算法。
-重试策略：最多 3 次（10s → 30s → 90s）。
+Signature: `X-Webhook-Signature` header, HMAC-SHA256.
+Retry policy: max 3 attempts (10s → 30s → 90s).

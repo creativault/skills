@@ -2,7 +2,7 @@
 // Search creators — supports TikTok / YouTube / Instagram
 //
 // Usage:
-//   node search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000}'
+//   node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000}'
 
 import { callAPI, parseArgs, validatePlatform } from './_api_client.mjs';
 

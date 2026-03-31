@@ -2,8 +2,8 @@
 // Submit collection task (link batch / username batch)
 //
 // Usage:
-//   node submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1"]}'
-//   node submit_collection_task.mjs '{"task_type":"FILE_UPLOAD","platform":"youtube","values":["creator1","creator2"]}'
+//   node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1"]}'
+//   node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"FILE_UPLOAD","platform":"youtube","values":["creator1","creator2"]}'
 
 import { callAPI, parseArgs, validateRequired, validatePlatform } from './_api_client.mjs';
 

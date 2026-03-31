@@ -2,9 +2,9 @@
 // Export collection task data to file (xlsx / csv / html) and return download URL
 //
 // Usage:
-//   node export_task_data.mjs '{"task_id":"task_20260315_abc123","format":"xlsx"}'
-//   node export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
-//   node export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
+//   node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_20260315_abc123","format":"xlsx"}'
+//   node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
+//   node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
 //
 // Parameters:
 //   task_id  — Required. Task ID

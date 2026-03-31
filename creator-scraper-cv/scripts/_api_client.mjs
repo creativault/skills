@@ -1,9 +1,12 @@
 // Creativault Open API client module
-// Shared authentication, request, and error handling logic
+// Shared authentication, request, error handling, and retry logic
 
 const API_BASE = (process.env.CV_API_BASE_URL || 'https://dev01-creativault-business.tec-develop.cn').replace(/\/+$/, '');
 const API_KEY = process.env.CV_API_KEY;
 const USER_IDENTITY = process.env.CV_USER_IDENTITY;
+
+const MAX_RETRIES = 3;
+const DEFAULT_RETRY_AFTER = 60;
 
 if (!API_KEY) {
   console.error(JSON.stringify({
@@ -21,8 +24,12 @@ if (!USER_IDENTITY) {
   process.exit(1);
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
- * Call Creativault Open API
+ * Call Creativault Open API with auto-retry on 429
  * @param {string} path - API path, e.g. /openapi/v1/creators/tiktok/search
  * @param {object} body - Request body
  * @returns {object} Full response (success, data, error, meta)
@@ -30,46 +37,54 @@ if (!USER_IDENTITY) {
 export async function callAPI(path, body = {}) {
   const url = `${API_BASE}${path}`;
 
-  let response;
-  try {
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY,
-        'X-User-Identity': USER_IDENTITY,
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    console.error(JSON.stringify({
-      error: `Network request failed: ${err.message}`,
-      url,
-    }));
-    process.exit(1);
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY,
+          'X-User-Identity': USER_IDENTITY,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      console.error(JSON.stringify({ error: `Network request failed: ${err.message}`, url }));
+      process.exit(1);
+    }
+
+    // Auto-retry on 429 rate limit
+    if (response.status === 429 && attempt < MAX_RETRIES) {
+      const retryAfter = parseInt(response.headers.get('Retry-After') || DEFAULT_RETRY_AFTER, 10);
+      console.error(`[retry] Rate limited (429). Waiting ${retryAfter}s before retry ${attempt + 1}/${MAX_RETRIES}...`);
+      await sleep(retryAfter * 1000);
+      continue;
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      console.error(JSON.stringify({ error: `Failed to parse response, HTTP status: ${response.status}`, url }));
+      process.exit(1);
+    }
+
+    if (!data.success) {
+      console.error(JSON.stringify({
+        error: data.error?.message || 'Request failed',
+        code: data.error?.code,
+        request_id: data.meta?.request_id,
+      }, null, 2));
+      process.exit(1);
+    }
+
+    return data;
   }
 
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    console.error(JSON.stringify({
-      error: `Failed to parse response, HTTP status: ${response.status}`,
-      url,
-    }));
-    process.exit(1);
-  }
-
-  if (!data.success) {
-    console.error(JSON.stringify({
-      error: data.error?.message || 'Request failed',
-      code: data.error?.code,
-      request_id: data.meta?.request_id,
-    }, null, 2));
-    process.exit(1);
-  }
-
-  return data;
+  // All retries exhausted
+  console.error(JSON.stringify({ error: `Rate limit: max retries (${MAX_RETRIES}) exhausted`, url }));
+  process.exit(1);
 }
 
 /**
@@ -82,25 +97,20 @@ export function parseArgs() {
   try {
     return JSON.parse(raw);
   } catch {
-    console.error(JSON.stringify({
-      error: 'Argument must be a valid JSON string',
-      received: raw,
-    }));
+    console.error(JSON.stringify({ error: 'Argument must be a valid JSON string', received: raw }));
     process.exit(1);
   }
 }
 
 /**
  * Validate required parameters
- * @param {object} params - Parameter object
- * @param {string[]} required - List of required field names
+ * @param {object} params
+ * @param {string[]} required
  */
 export function validateRequired(params, required) {
   const missing = required.filter(key => params[key] === undefined || params[key] === null);
   if (missing.length > 0) {
-    console.error(JSON.stringify({
-      error: `Missing required parameters: ${missing.join(', ')}`,
-    }));
+    console.error(JSON.stringify({ error: `Missing required parameters: ${missing.join(', ')}` }));
     process.exit(1);
   }
 }
@@ -113,10 +123,7 @@ const VALID_PLATFORMS = ['tiktok', 'youtube', 'instagram'];
  */
 export function validatePlatform(platform) {
   if (!platform || !VALID_PLATFORMS.includes(platform)) {
-    console.error(JSON.stringify({
-      error: `platform must be one of: ${VALID_PLATFORMS.join(' / ')}`,
-      received: platform,
-    }));
+    console.error(JSON.stringify({ error: `platform must be one of: ${VALID_PLATFORMS.join(' / ')}`, received: platform }));
     process.exit(1);
   }
 }

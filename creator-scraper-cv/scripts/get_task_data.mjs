@@ -2,7 +2,7 @@
 // Get collection task data
 //
 // Usage:
-//   node get_task_data.mjs '{"task_id":"task_20260315_abc123","page":1,"size":20}'
+//   node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_20260315_abc123","page":1,"size":20}'
 
 import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';
 

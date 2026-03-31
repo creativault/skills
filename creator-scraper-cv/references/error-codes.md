@@ -1,56 +1,66 @@
-# 错误码完整列表
+# Error Codes
 
-## 错误码表
+## Error Code Table
 
-| 错误码 | HTTP 状态码 | 说明 | 排查建议 |
-|--------|-----------|------|---------|
-| 40001 | 400 | 参数验证失败 | 检查 JSON 参数格式、字段名拼写、取值范围 |
-| 40101 | 401 | 认证失败 / API Key 无效 | 检查 `CV_API_KEY` 环境变量是否正确设置 |
-| 40102 | 401 | API Key 已过期 | 联系管理员续期或重新生成 Key |
-| 40103 | 401 | API Key 已吊销 | 联系管理员了解原因 |
-| 40104 | 401 | 缺少 X-User-Identity | 检查 `CV_USER_IDENTITY` 环境变量是否设置 |
-| 40201 | 402 | 积分余额不足 | 充值或升级套餐 |
-| 40301 | 403 | 无接口访问权限 | 检查 API Key 的 scopes 是否包含所需权限 |
-| 42901 | 429 | 请求频率超出限制 | 等待 60 秒后重试（参考 Retry-After 响应头）|
-| 42902 | 402 | 每日配额已用尽 | 明日重试（UTC 00:00 重置）或升级套餐 |
-| 50001 | 500 | 服务器内部错误 | 记录 request_id，联系技术支持 |
+| Code | HTTP | Description | Action |
+|------|------|-------------|--------|
+| 40001 | 400 | Invalid parameters | Check JSON format, field names, value ranges |
+| 40101 | 401 | Invalid API Key | Verify `CV_API_KEY` environment variable |
+| 40102 | 401 | API Key expired | Contact admin to renew or regenerate |
+| 40103 | 401 | API Key revoked | Contact admin |
+| 40104 | 401 | Missing X-User-Identity | Verify `CV_USER_IDENTITY` environment variable |
+| 40201 | 402 | Insufficient credits | Top up or upgrade plan |
+| 40301 | 403 | No permission for endpoint | Check API Key scopes |
+| 42901 | 429 | Rate limit exceeded | Script auto-retries; wait for Retry-After header |
+| 42902 | 402 | Daily quota exhausted | Wait until UTC 00:00 reset or upgrade plan |
+| 50001 | 500 | Server error | Record request_id, contact support |
 
-## 常见问题排查
+## Export-Specific Errors
 
-### 环境变量未设置
+| Scenario | HTTP | Description |
+|----------|------|-------------|
+| Unsupported format (e.g., `feishu_doc`) | 400 | Format not yet supported |
+| Task not found or not owned by tenant | 404 | Task not found |
+| Task has no data to export | 404 | No data available for export |
+| OSS upload / DB insert / signing failed | 500 | Export failed |
+
+## Troubleshooting
+
+### Environment variables not set
 
 ```
-错误: 未设置 CV_API_KEY 环境变量
+Error: CV_API_KEY environment variable is not set
 ```
 
-**解决**：设置环境变量后重启终端/IDE。
+**Fix**: Set environment variables and restart terminal/IDE.
 
-### API Key 格式
+### API Key format
 
-正确格式：`cv_live_` 前缀 + 随机字符串，如 `cv_live_Y8nil_BsKAbITdqj...`
+Valid format: `cv_live_` prefix + random string, e.g., `cv_live_Y8nil_BsKAbITdqj...`
 
-### 速率限制
+### Rate limiting
 
-- 默认限制：60 次/分钟（按租户）
-- 超限后等待 60 秒自动恢复
-- 响应头 `Retry-After` 指示等待秒数
+- Default limit: 60 requests/minute (per tenant)
+- Script auto-retries up to 3 times on 429
+- `Retry-After` response header indicates wait time in seconds
 
-### 每日配额
+### Daily quota
 
-- 配额按 UTC 日期重置（每日 00:00 UTC）
-- 响应 `meta.quota_remaining` 字段显示剩余配额
-- `-1` 表示不限制
+- Resets at UTC 00:00 daily
+- `meta.quota_remaining` in responses shows remaining quota
+- `-1` means unlimited
 
-### 采集任务超时
+### Collection task timeout
 
-- 采集任务为异步执行，可能需要几分钟到几小时
-- 建议轮询间隔：首次 30 秒，之后每 60 秒查询一次
-- 任务状态 `timeout` 表示超时，可尝试重新提交
+- Collection tasks are async, typically 5~30 minutes
+- Recommended poll interval: 60 seconds
+- Status `timeout` means the task timed out; try resubmitting
 
-### 权限不足
+### Permission denied
 
-API Key 的 `scopes` 字段控制可访问的接口：
-- `["*"]` — 全部权限
-- `["collection:submit"]` — 仅链接/用户名采集
-- `["collection:keyword-submit"]` — 仅关键词采集
-- `["file:download"]` — 仅文件下载
+API Key `scopes` field controls endpoint access:
+- `["*"]` — full access
+- `["collection:submit"]` — link/username collection only
+- `["collection:keyword-submit"]` — keyword collection only
+- `["collection:export"]` — export only
+- `["file:download"]` — file download only

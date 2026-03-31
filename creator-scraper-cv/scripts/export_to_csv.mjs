@@ -2,8 +2,8 @@
 // Export search results or collection data to CSV file (incremental append mode)
 //
 // Usage:
-//   echo '<json>' | node export_to_csv.mjs '{"output":"creators.csv"}'
-//   node search_creators.mjs '...' | node export_to_csv.mjs '{"output":"creators.csv"}'
+//   echo '<json>' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+//   node {baseDir}/scripts/search_creators.mjs '...' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
 //
 // Parameters:
 //   output    — Output file path, default output.csv

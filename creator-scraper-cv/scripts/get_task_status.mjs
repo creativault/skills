@@ -2,7 +2,7 @@
 // Query collection task status
 //
 // Usage:
-//   node get_task_status.mjs '{"task_id":"task_20260315_abc123"}'
+//   node {baseDir}/scripts/get_task_status.mjs '{"task_id":"task_20260315_abc123"}'
 
 import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';
 
