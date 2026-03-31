@@ -41,6 +41,7 @@
 | 提交关键词采集 | `/openapi/v1/collection/tasks/keyword-submit` | 关键词搜索采集 |
 | 查询任务状态 | `/openapi/v1/collection/tasks/status` | 查询采集进度 |
 | 获取采集数据 | `/openapi/v1/collection/tasks/data` | 分页获取结果 |
+| 导出采集数据 | `/openapi/v1/collection/tasks/export` | 导出为 xlsx/csv/html 文件 |
 | 获取文件下载链接 | `/openapi/v1/files/download-url` | 获取临时下载 URL |
 
 ## 采集任务类型

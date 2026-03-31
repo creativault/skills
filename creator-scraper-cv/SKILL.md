@@ -46,7 +46,8 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 | 轮询任务状态 | `scripts/poll_task_status.mjs` | 自动轮询，每 60s 查一次直到完成 |
 | 获取采集数据 | `scripts/get_task_data.mjs` | 同步，支持分页 |
 | 获取下载链接 | `scripts/get_download_url.mjs` | 同步 |
-| 导出为 CSV | `scripts/export_to_csv.mjs` | 管道输入，增量追加 |
+| 导出为 CSV（本地） | `scripts/export_to_csv.mjs` | 管道输入，增量追加 |
+| 导出采集数据（服务端） | `scripts/export_task_data.mjs` | 同步，返回文件下载链接 |
 
 所有脚本参数通过命令行 JSON 字符串传入，结果输出 JSON 到 stdout。
 
@@ -92,7 +93,11 @@ node {baseDir}/scripts/get_task_status.mjs '{"task_id":"task_xxx"}'
 **步骤 3** — 任务完成后，获取采集数据：
 
 ```bash
+# Option A: Get raw JSON data
 node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx","page":1,"size":50}'
+
+# Option B: Export as file and get download link (recommended)
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
 ### 流程三：关键词采集（异步）
@@ -106,8 +111,9 @@ node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":
 # 步骤 2: 轮询等待完成
 node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 
-# 步骤 3: 获取数据
+# 步骤 3: 获取数据或导出文件
 node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}'
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
 ## 脚本参数详解
@@ -186,7 +192,31 @@ node {baseDir}/scripts/get_task_data.mjs '{"task_id":"task_xxx"}'
 | `file_id` | string | 文件 ID（与 file_name 二选一）|
 | `file_name` | string | 文件名（与 file_id 二选一）|
 
-### export_to_csv.mjs — 导出为 CSV
+### export_task_data.mjs — Export collection data to file (server-side)
+
+Exports task data to xlsx / csv / html, uploads to OSS, and returns a download URL. Repeated calls with the same task_id + format will return the cached file without regenerating.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_id` | string | **Required**. Task ID |
+| `format` | string | **Required**. `xlsx` / `csv` / `html` (`feishu_doc` not yet available) |
+
+Usage:
+
+```bash
+# Export as Excel
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
+
+# Export as CSV
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
+
+# Export as HTML (viewable in browser)
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
+```
+
+Returns `file_url` (temporary download link), `file_id` (reusable via get_download_url.mjs), `row_count`, and `file_expire_at`.
+
+### export_to_csv.mjs — Export to local CSV (client-side)
 
 通过管道接收搜索或采集结果的 JSON，导出为 CSV 文件。默认增量追加模式。
 
@@ -228,6 +258,15 @@ node {baseDir}/scripts/submit_collection_task.mjs '{"task_type":"FILE_UPLOAD","p
 
 # 关键词采集
 node {baseDir}/scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips"]}'
+
+# 导出采集数据为 Excel
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
+
+# 导出采集数据为 CSV
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"csv"}'
+
+# 导出采集数据为 HTML（浏览器可直接查看）
+node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"html"}'
 ```
 
 ## 错误处理
