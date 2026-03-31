@@ -21,7 +21,7 @@ Set the following environment variables:
 
 - `CV_API_KEY` — Creativault Open API Key (obtain from admin dashboard)
 - `CV_USER_IDENTITY` — Operator email address
-- `CV_API_BASE_URL` (optional) — API base URL, defaults to `https://dev01-creativault-business.tec-develop.cn`
+- `CV_API_BASE_URL` (optional) — API base URL, defaults to `http://api.creativault.vip`
 
 **Linux / macOS**:
 
