@@ -31,14 +31,16 @@
 ```
 
 `meta.quota_remaining`: remaining daily quota. `-1` means unlimited.
+`meta.service_level`: service level used for this search request (`S1`/`S2`/`S3`). Only present in search responses.
+`meta.credits_consumed`: credits deducted for this request. `0` means no charge.
 
 ## Endpoints
 
 | Endpoint | Path | Description |
 |----------|------|-------------|
-| Search TikTok creators | `/openapi/v1/creators/tiktok/search` | Multi-dimensional filtering |
-| Search YouTube creators | `/openapi/v1/creators/youtube/search` | Multi-dimensional filtering |
-| Search Instagram creators | `/openapi/v1/creators/instagram/search` | Multi-dimensional filtering |
+| Search TikTok creators | `/openapi/v1/creators/tiktok/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
+| Search YouTube creators | `/openapi/v1/creators/youtube/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
+| Search Instagram creators | `/openapi/v1/creators/instagram/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
 | Submit collection task | `/openapi/v1/collection/tasks/submit` | Batch collect by links/usernames |
 | Submit keyword collection | `/openapi/v1/collection/tasks/keyword-submit` | Collect by keywords |
 | Query task status | `/openapi/v1/collection/tasks/status` | Check collection progress |

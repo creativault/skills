@@ -21,7 +21,7 @@ Set the following environment variables:
 
 - `CV_API_KEY` — Creativault Open API Key (obtain from admin dashboard)
 - `CV_USER_IDENTITY` — Operator email address
-- `CV_API_BASE_URL` (optional) — API base URL, defaults to `https://dev01-creativault-business.tec-develop.cn`
+- `CV_API_BASE_URL` (optional) — API base URL, defaults to `http://api.creativault.vip`
 
 **Linux / macOS**:
 
@@ -72,6 +72,25 @@ Before executing, determine the best approach based on user intent:
 - Only use collection when the user explicitly needs detailed/enriched data for specific creators.
 - **After any collection task completes, ALWAYS call `export_task_data.mjs` to generate a downloadable file (default xlsx) and present the download link to the user. Do NOT just call `get_task_data.mjs` and show raw JSON.**
 
+### Service Level Selection
+
+Users may not know what S1/S2/S3 means. The agent MUST ask the user to confirm the service level before executing a search. Never auto-select silently.
+
+**Service level reference (show to user when asking):**
+
+| 等级 | 名称 | 返回内容 | 积分/条 |
+|------|------|----------|---------|
+| S1 | 纯名单筛选 | 基础信息（用户名、昵称、头像、粉丝数、主页链接） | 1 |
+| S2 | 精准触达 | S1 + 国家、性别、互动率、平均播放、带货类目、邮箱标识、语言 | 3 |
+| S3 | 深度画像 | S2 + 受众女性比例、受众国家分布、受众语言分布 | 4 |
+
+**Rules:**
+- If user does NOT specify a service level → show the table above and ask: "请选择服务等级：S1（基础名单，1积分/条）、S2（精准触达，3积分/条）、S3（深度画像，4积分/条）？"
+- If user explicitly says "S1"/"S2"/"S3" or "深度画像"/"精准触达"/"名单" → use as specified, no need to ask again
+- If user has already chosen a level in the current conversation → reuse that level for subsequent searches unless they say otherwise
+- **ALWAYS show the service level and credits consumed in the stats section after search results**
+- After showing results, display: "本次使用 S2（精准触达）等级，消耗 60 积分，剩余配额 xxx"
+
 ## Output Formatting
 
 展示搜索或采集结果时，使用以下分区格式。字段要展示齐全，表格要对齐整齐。
@@ -93,6 +112,8 @@ Before executing, determine the best approach based on user intent:
 
 📈 统计信息
 • 总匹配数：12,652 个达人
+• 服务等级：S2（精准触达）
+• 本次消耗：60 积分
 • 剩余配额：992 次
 • 请求ID：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
@@ -123,33 +144,35 @@ Before executing, determine the best approach based on user intent:
   - 粉丝/播放等数值：≥1万 用 K（如 33.1K）、≥100万 用 M（如 1.2M）；<1万 用逗号分隔（如 3,911）
   - 获赞/总观看等大数值：用万/亿简写（如 95.5万、5.2亿）
   - 互动率：转为百分比，保留两位小数（如 0.065 → 6.50%）
-- **统计信息**：单独列出总匹配数、剩余配额、请求 ID，用无序列表展示
+- **统计信息**：单独列出总匹配数、服务等级、本次消耗积分、剩余配额、请求 ID，用无序列表展示
 - **默认展示 5~10 条**，超过时询问用户是否需要更多
 - 展示结果后主动询问："需要导出完整数据到 CSV/Excel 吗？"
 
 ## Quota Awareness
 
-Every API response includes `meta.quota_remaining`. Monitor this value:
+Every API response includes `meta.quota_remaining` and search responses include `meta.credits_consumed`. Monitor these values:
+- `credits_consumed` shows how many credits were deducted for the current request (varies by `service_level`: S1=1/record, S2=3/record, S3=4/record)
 - If `quota_remaining` < 50: warn the user that quota is running low
 - If `quota_remaining` < 10: strongly recommend the user to conserve quota
 - If `quota_remaining` = 0 or error 42902: inform the user that daily quota is exhausted (resets at UTC 00:00)
+- When using S2/S3 service levels, remind the user that credits are consumed faster
 
 ## Workflows
 
 ### Workflow 1: Search Creators (instant)
 
 ```bash
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000,"size":20}'
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","followers_cnt_gte":10000,"size":20,"service_level":"S2"}'
 ```
 
 ### Workflow 2: Search + Export (instant)
 
 ```bash
 # Search and export to local CSV in one pipeline
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50,"service_level":"S2"}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
 
 # Append page 2 to the same file
-node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50,"page":2}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","country_code":"US","size":50,"page":2,"service_level":"S2"}' | node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators.csv"}'
 ```
 
 ### Workflow 3: Batch Collection (async, 5~30 min)
@@ -214,6 +237,15 @@ node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xls
 | `size` | integer | Page size, default 50, max 100 |
 | `sort_field` | string | Sort field (e.g., `followers_cnt`) |
 | `sort_order` | string | `asc` / `desc` (default `desc`) |
+| `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S1`. Different levels return different fields and consume different credits per record |
+
+#### Service Level Details
+
+| Level | Name | Included Fields | Credits/Record |
+|-------|------|----------------|----------------|
+| S1 | List only | uid, username, nickname, avatar_url, profile_url, followers_count, likes_count, has_showcase, last_video_publish_date | 1 |
+| S2 | Precise reach | S1 + country_code, gender, engagement_rate, avg_views, product_categories, has_email, language | 3 |
+| S3 | Deep profile | S2 + audience female ratio, audience country distribution, audience language distribution | 4 |
 
 Platform-specific parameters: see [Platform Parameters Reference](references/platform-params.md).
 

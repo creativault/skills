@@ -36,6 +36,20 @@
 
 ---
 
+## 服务等级（所有平台通用）
+
+搜索接口支持 `service_level` 参数，控制返回字段范围和积分消耗：
+
+| 等级 | 名称 | 包含数据字段 | 积分单价（每条） |
+|------|------|------------|------------|
+| S1 | 纯名单筛选 | uid、username、nickname、avatar_url、profile_url、followers_count、likes_count、has_showcase、last_video_publish_date | 1 积分 |
+| S2 | 精准触达 | S1 全部 + country_code、gender、engagement_rate、avg_views、product_categories、has_email 标识、language | 3 积分 |
+| S3 | 深度画像 | S2 全部 + 受众女性比例、受众国家分布、受众语言分布 | 4 积分 |
+
+默认 `S1`。响应 `meta` 中会返回 `service_level`（实际使用的等级）和 `credits_consumed`（本次扣减积分数）。
+
+---
+
 ## YouTube 特有参数
 
 | 参数 | 类型 | 说明 |
