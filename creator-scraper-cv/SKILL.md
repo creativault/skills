@@ -21,7 +21,7 @@ Set the following environment variables:
 
 - `CV_API_KEY` — Creativault Open API Key (obtain from admin dashboard)
 - `CV_USER_IDENTITY` — Operator email address
-- `CV_API_BASE_URL` (optional) — API base URL, defaults to `http://api.creativault.vip`
+- `CV_API_BASE_URL` (optional) — API base URL, defaults to `https://dev01-creativault-business.tec-develop.cn`
 
 **Linux / macOS**:
 
@@ -74,20 +74,58 @@ Before executing, determine the best approach based on user intent:
 
 ## Output Formatting
 
-When presenting search or collection results to the user, format them as a readable table:
+展示搜索或采集结果时，使用以下分区格式。字段要展示齐全，表格要对齐整齐。
+
+### TikTok 输出模板
 
 ```
-| # | Nickname | Username | Followers | Avg Views | Engagement | Country | Profile |
-|---|----------|----------|-----------|-----------|------------|---------|---------|
-| 1 | Creator1 | @user1   | 150,000   | 45,000    | 6.5%       | US      | [link]  |
+✅ 搜索成功！找到 N 个 [国家] [平台] [关键词]达人
+
+📊 采集结果
+
+| #   | 用户名      | 昵称        | 粉丝数  | 获赞数   | 平均播放 | 互动率  | 国家 | 主页链接          |
+| --- | ----------- | ----------- | ------- | -------- | -------- | ------- | ---- | ----------------- |
+| 1   | username1   | Nickname1   | 33.1K   | 95.5万   | 1.2万    | 6.50%   | US   | [查看][link1]     |
+| 2   | username2   | Nickname2   | 59.2K   | 146.0万  | 3.8万    | 3.75%   | US   | [查看][link2]     |
+
+[link1]: https://www.tiktok.com/@username1
+[link2]: https://www.tiktok.com/@username2
+
+📈 统计信息
+• 总匹配数：12,652 个达人
+• 剩余配额：992 次
+• 请求ID：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-**Formatting rules:**
-- Format large numbers with commas (e.g., 150,000)
-- Show engagement_rate as percentage (e.g., 0.065 → 6.5%)
-- Make profile_url a clickable link
-- Show top 10 results by default, ask user if they want more
-- After showing results, proactively ask: "Would you like to export these results to CSV/Excel?"
+### YouTube 输出模板
+
+```
+| #   | 用户名      | 频道名      | 订阅数  | 总观看    | 平均播放 | 互动率  | 国家 | 频道链接          |
+| --- | ----------- | ----------- | ------- | --------- | -------- | ------- | ---- | ----------------- |
+| 1   | username1   | Channel1    | 120K    | 5,200万   | 8.5万    | 4.20%   | US   | [查看][link1]     |
+```
+
+### Instagram 输出模板
+
+```
+| #   | 用户名      | 昵称        | 粉丝数  | 帖子数   | 平均播放 | 互动率  | 国家 | 主页链接          |
+| --- | ----------- | ----------- | ------- | -------- | -------- | ------- | ---- | ----------------- |
+| 1   | username1   | Nickname1   | 85.3K   | 342      | 2.1万    | 5.30%   | US   | [查看][link1]     |
+```
+
+### 格式规则
+
+- **分区结构**：用 emoji 标题分隔不同区域（✅ 搜索结果、📊 采集结果、📈 统计信息）
+- **字段齐全**：展示 API 返回的所有核心字段，不省略
+- **表格对齐**：每列用固定宽度对齐，分隔线用 `---` 填充，确保列宽一致
+- **链接处理**：表格内用 `[查看][linkN]` 引用式链接，在表格下方定义完整 URL，避免撑坏表格
+- **数字格式**：
+  - 粉丝/播放等数值：≥1万 用 K（如 33.1K）、≥100万 用 M（如 1.2M）；<1万 用逗号分隔（如 3,911）
+  - 获赞/总观看等大数值：用万/亿简写（如 95.5万、5.2亿）
+  - 互动率：转为百分比，保留两位小数（如 0.065 → 6.50%）
+- **统计信息**：单独列出总匹配数、剩余配额、请求 ID，用无序列表展示
+- **默认展示 5~10 条**，超过时询问用户是否需要更多
+- 展示结果后主动询问："需要导出完整数据到 CSV/Excel 吗？"
 
 ## Quota Awareness
 

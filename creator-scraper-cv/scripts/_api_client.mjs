@@ -1,7 +1,8 @@
 // Creativault Open API client module
 // Shared authentication, request, error handling, and retry logic
 
-const API_BASE = (process.env.CV_API_BASE_URL || 'http://api.creativault.vip').replace(/\/+$/, '');
+// const API_BASE = (process.env.CV_API_BASE_URL || 'http://api.creativault.vip').replace(/\/+$/, '');
+const API_BASE = (process.env.CV_API_BASE_URL || 'https://dev01-creativault-business.tec-develop.cn').replace(/\/+$/, '');
 const API_KEY = process.env.CV_API_KEY;
 const USER_IDENTITY = process.env.CV_USER_IDENTITY;
 
