@@ -334,6 +334,9 @@ Pipe JSON from search or collection results to export as local CSV file. Support
 
 - [API Reference](references/api-reference.md) — Full request/response field documentation
 - [Platform Parameters](references/platform-params.md) — TikTok/YouTube/Instagram specific filters
+- [Industry Categories](references/industry-categories.md) — Industry category tree with Chinese/English mapping (for `industry_category_levels_list` and `industry` params)
+- [Country Codes](references/country-codes.md) — ISO country codes with Chinese/English names and region shortcuts
+- [Language Codes](references/language-codes.md) — ISO language codes with Chinese/English names
 - [Error Codes](references/error-codes.md) — Complete error code list and troubleshooting
 
 ## Changelog
