@@ -2,15 +2,16 @@
 name: creator-scraper-cv
 description: |
   Creativault creator data collection skill. Search and collect creator/influencer data
-  from TikTok, YouTube, and Instagram. Supports multi-dimensional search, batch collection
-  by links/usernames/keywords, task tracking, and data export (xlsx/csv/html).
+  from TikTok, YouTube, and Instagram. Supports multi-dimensional search, similar/lookalike
+  creator discovery, batch collection by links/usernames/keywords, task tracking, and data
+  export (xlsx/csv/html).
   Use when: creator search, influencer scraping, KOL search, KOL analytics, social media
   data extraction, TikTok scraper, YouTube scraper, Instagram scraper, influencer discovery,
-  达人采集, KOL 搜索, 网红数据, 达人分析, 达人搜索, 社交媒体数据.
+  similar creators, lookalike, 达人采集, KOL 搜索, 网红数据, 达人分析, 达人搜索, 相似达人, 社交媒体数据.
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Creativault Creator Data Collection
@@ -50,6 +51,8 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 | Export task data (server) | `scripts/export_task_data.mjs` | Returns file download URL |
 | Export to local CSV | `scripts/export_to_csv.mjs` | Pipe input, incremental append |
 | Get file download URL | `scripts/get_download_url.mjs` | Sync |
+| Resolve creator username | `scripts/resolve_creator.mjs` | Sync, returns platform_id |
+| Find similar creators | `scripts/find_lookalike.mjs` | Sync, returns lookalike list |
 
 All scripts accept a JSON string as command-line argument. Results are output as JSON to stdout.
 
@@ -62,11 +65,13 @@ Before executing, determine the best approach based on user intent:
 | User Intent | Approach | Response Time |
 |-------------|----------|---------------|
 | "Search/find creators" with filters (keyword, country, followers) | `search_creators.mjs` | Instant (~1s) |
+| "Find similar/lookalike creators" given a profile link or username | `resolve_creator.mjs` → `find_lookalike.mjs` | Instant (~2s) |
 | "Collect/scrape data" for specific creators (links or usernames) | `submit_collection_task.mjs` → poll → get data | 5~30 minutes |
 | "Find creators by keyword" and collect detailed data | `submit_keyword_task.mjs` → poll → get data | 5~30 minutes |
 
 **Decision rules:**
 - If the user gives filter conditions (keyword, country, follower count) → use **search** first. It returns results instantly.
+- If the user gives a specific creator link/username and asks for "similar"/"lookalike"/"相似达人" → use **resolve + lookalike** workflow.
 - If the user gives specific profile links or usernames → use **collection** (async).
 - If search results satisfy the user's needs → no need to submit a collection task.
 - Only use collection when the user explicitly needs detailed/enriched data for specific creators.
@@ -134,6 +139,29 @@ Users may not know what S1/S2/S3 means. The agent MUST ask the user to confirm t
 | 1   | username1   | Nickname1   | 85.3K   | 342      | 2.1万    | 5.30%   | US   | [查看][link1]     |
 ```
 
+### 相似达人输出模板
+
+```
+🔍 找到 N 个与 @seed_username 相似的达人
+
+📊 相似达人列表
+
+| #   | 用户名      | 昵称        | 粉丝数  | 平均播放 | 互动率  | 相似度  | 国家 | 主页链接          |
+| --- | ----------- | ----------- | ------- | -------- | ------- | ------ | ---- | ----------------- |
+| 1   | username1   | Nickname1   | 120K    | 3.8万    | 7.20%   | 85.0%  | US   | [查看][link1]     |
+| 2   | username2   | Nickname2   | 95.5K   | 2.1万    | 5.50%   | 78.3%  | US   | [查看][link2]     |
+
+[link1]: https://www.tiktok.com/@username1
+[link2]: https://www.tiktok.com/@username2
+
+📈 统计信息
+• 种子达人：@seed_username（平台ID：7123456789）
+• 结果总数：N 个相似达人
+• 本次消耗：10 积分
+• 剩余配额：xxx 次
+• 请求ID：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
 ### 格式规则
 
 - **分区结构**：用 emoji 标题分隔不同区域（✅ 搜索结果、📊 采集结果、📈 统计信息）
@@ -145,6 +173,7 @@ Users may not know what S1/S2/S3 means. The agent MUST ask the user to confirm t
   - 获赞/总观看等大数值：用万/亿简写（如 95.5万、5.2亿）
   - 互动率：转为百分比，保留两位小数（如 0.065 → 6.50%）
 - **统计信息**：单独列出总匹配数、服务等级、本次消耗积分、剩余配额、请求 ID，用无序列表展示
+- **总匹配数展示规则**：API 的 `meta.total` 仅在筛选条件 > 2 个时返回数值，≤ 2 个筛选条件时返回 null。当 total 为 null 时，统计信息中不展示"总匹配数"这一行，避免显示"总匹配数：null"
 - **默认展示 5~10 条**，超过时询问用户是否需要更多
 - 展示结果后主动询问："需要导出完整数据到 CSV/Excel 吗？"
 
@@ -218,6 +247,34 @@ node {baseDir}/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
 node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
 ```
 
+### Workflow 5: Find Similar/Lookalike Creators (instant)
+
+When the user provides a creator profile link or username and asks for similar creators:
+
+**Step 1** — Extract username from the link (e.g., `https://www.tiktok.com/@creator_demo` → `creator_demo`), then resolve to platform ID:
+
+```bash
+node {baseDir}/scripts/resolve_creator.mjs '{"platform":"tiktok","username":"creator_demo"}'
+```
+
+This returns `platform_id` (e.g., `7123456789012345678`).
+
+**Step 2** — Use the `platform_id` to find lookalike creators:
+
+```bash
+node {baseDir}/scripts/find_lookalike.mjs '{"seed_platform_id":"7123456789012345678","seed_platform":"tiktok","target_platform":"tiktok","limit":10}'
+```
+
+Optional filters: `target_region`, `target_language`, `follower_min`, `follower_max`, `avg_views_min`, `avg_views_max`, `female_rate_min`.
+
+**Cross-platform search**: Set `target_platform` different from `seed_platform` to find similar creators on another platform (e.g., find YouTube creators similar to a TikTok creator).
+
+**Decision rules for lookalike:**
+- If user gives a profile URL → extract username, call resolve first, then lookalike
+- If user gives a username → call resolve first, then lookalike
+- If user already has a platform_id → skip resolve, call lookalike directly
+- If resolve returns error 40401 (creator not found) → inform user the creator is not in the database
+
 ## Script Parameters
 
 ### search_creators.mjs
@@ -237,7 +294,7 @@ node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xls
 | `size` | integer | Page size, default 50, max 100 |
 | `sort_field` | string | Sort field (e.g., `followers_cnt`) |
 | `sort_order` | string | `asc` / `desc` (default `desc`) |
-| `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S1`. Different levels return different fields and consume different credits per record |
+| `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S2`. Different levels return different fields and consume different credits per record |
 
 #### Service Level Details
 
@@ -315,6 +372,37 @@ Pipe JSON from search or collection results to export as local CSV file. Support
 | `file_id` | string | File ID (either file_id or file_name required) |
 | `file_name` | string | File name (either file_id or file_name required) |
 
+### resolve_creator.mjs
+
+Resolve a creator username to their platform unique ID. Required before calling `find_lookalike.mjs`.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
+| `username` | string | **Required**. Creator username (without `@`), max 200 chars |
+
+Returns: `platform_id`, `username`, `display_name`, `avatar_url`, `followers_count`.
+
+### find_lookalike.mjs
+
+Find similar/lookalike creators based on a seed creator. Supports cross-platform search.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `seed_platform_id` | string | **Required**. Seed creator platform ID (from `resolve_creator.mjs`) |
+| `seed_platform` | string | **Required**. Seed creator platform: `tiktok` / `youtube` / `instagram` |
+| `target_platform` | string | **Required**. Target search platform: `tiktok` / `youtube` / `instagram` |
+| `target_region` | string | Target country code, `all` for no filter |
+| `target_language` | string | Target language code, `all` for no filter |
+| `limit` | integer | Number of results, default 20, max 50 |
+| `follower_min` | integer | Minimum followers |
+| `follower_max` | integer | Maximum followers |
+| `avg_views_min` | integer | Minimum average views |
+| `avg_views_max` | integer | Maximum average views |
+| `female_rate_min` | number | Minimum female audience ratio (0~100) |
+
+Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profile_url`, `country_code`, `followers_count`, `avg_views`, `engagement_rate`, `match_score`.
+
 ## Error Handling
 
 | Code | HTTP | Description | Action |
@@ -340,6 +428,13 @@ Pipe JSON from search or collection results to export as local CSV file. Support
 - [Error Codes](references/error-codes.md) — Complete error code list and troubleshooting
 
 ## Changelog
+
+### v1.2.0
+- Added similar/lookalike creator discovery via `resolve_creator.mjs` + `find_lookalike.mjs`
+- Search API now defaults to S2 (precise reach) service level
+- `meta.total` only returned when filter conditions > 2; output formatting hides total when null
+- Added cross-platform lookalike search support
+- Added Workflow 5 for lookalike creator discovery
 
 ### v1.1.0
 - Added server-side export (xlsx/csv/html) via `export_task_data.mjs`

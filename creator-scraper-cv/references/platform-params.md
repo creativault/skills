@@ -167,3 +167,48 @@
 | `avg_views` | integer | 近10条视频平均播放量 |
 | `engagement_rate` | number | 近10条视频平均互动率 |
 | `last_video_publish_time` | string | 最近视频发布时间 |
+
+---
+
+## 解析达人用户名（resolve）返回字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `platform_id` | string | 达人平台唯一 ID |
+| `username` | string | 用户名 |
+| `display_name` | string / null | 昵称/显示名 |
+| `avatar_url` | string / null | 头像链接 |
+| `followers_count` | integer / null | 粉丝数 |
+
+---
+
+## 相似达人推荐（lookalike）返回字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `uid` | string | 达人唯一标识 |
+| `username` | string / null | 用户名 |
+| `nickname` | string / null | 昵称 |
+| `avatar_url` | string / null | 头像链接 |
+| `profile_url` | string / null | 主页链接 |
+| `country_code` | string / null | 国家/地区代码 |
+| `followers_count` | integer / null | 粉丝数 |
+| `avg_views` | integer / null | 近10条视频平均播放量 |
+| `engagement_rate` | number / null | 近10条视频平均互动率 |
+| `match_score` | number / null | 相似度匹配分数 |
+
+### lookalike 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `seed_platform_id` | string | 是 | 种子达人平台唯一 ID（通过 resolve 获取） |
+| `seed_platform` | string | 是 | 种子达人所在平台：`tiktok` / `youtube` / `instagram` |
+| `target_platform` | string | 是 | 目标搜索平台：`tiktok` / `youtube` / `instagram` |
+| `target_region` | string | 否 | 目标地区代码，`all` 表示不限 |
+| `target_language` | string | 否 | 目标语言代码，`all` 表示不限 |
+| `limit` | integer | 否 | 返回数量，默认 20，范围 1~50 |
+| `follower_min` | integer | 否 | 粉丝数下限 |
+| `follower_max` | integer | 否 | 粉丝数上限 |
+| `avg_views_min` | integer | 否 | 平均观看量下限 |
+| `avg_views_max` | integer | 否 | 平均观看量上限 |
+| `female_rate_min` | number | 否 | 女性受众占比下限（%），范围 0~100 |
