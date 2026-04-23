@@ -51,8 +51,7 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 | Export task data (server) | `scripts/export_task_data.mjs` | Returns file download URL |
 | Export to local CSV | `scripts/export_to_csv.mjs` | Pipe input, incremental append |
 | Get file download URL | `scripts/get_download_url.mjs` | Sync |
-| Resolve creator username | `scripts/resolve_creator.mjs` | Sync, returns platform_id |
-| Find similar creators | `scripts/find_lookalike.mjs` | Sync, returns lookalike list |
+| Find similar creators | `scripts/find_lookalike.mjs` | Sync, auto-resolves username/URL |
 
 All scripts accept a JSON string as command-line argument. Results are output as JSON to stdout.
 
@@ -65,13 +64,13 @@ Before executing, determine the best approach based on user intent:
 | User Intent | Approach | Response Time |
 |-------------|----------|---------------|
 | "Search/find creators" with filters (keyword, country, followers) | `search_creators.mjs` | Instant (~1s) |
-| "Find similar/lookalike creators" given a profile link or username | `resolve_creator.mjs` → `find_lookalike.mjs` | Instant (~2s) |
+| "Find similar/lookalike creators" given a profile link or username | `find_lookalike.mjs` | Instant (~2s) |
 | "Collect/scrape data" for specific creators (links or usernames) | `submit_collection_task.mjs` → poll → get data | 5~30 minutes |
 | "Find creators by keyword" and collect detailed data | `submit_keyword_task.mjs` → poll → get data | 5~30 minutes |
 
 **Decision rules:**
 - If the user gives filter conditions (keyword, country, follower count) → use **search** first. It returns results instantly.
-- If the user gives a specific creator link/username and asks for "similar"/"lookalike"/"相似达人" → use **resolve + lookalike** workflow.
+- If the user gives a specific creator link/username and asks for "similar"/"lookalike"/"相似达人" → use **lookalike** directly (no resolve needed).
 - If the user gives specific profile links or usernames → use **collection** (async).
 - If search results satisfy the user's needs → no need to submit a collection task.
 - Only use collection when the user explicitly needs detailed/enriched data for specific creators.
@@ -249,31 +248,35 @@ node {baseDir}/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xls
 
 ### Workflow 5: Find Similar/Lookalike Creators (instant)
 
-When the user provides a creator profile link or username and asks for similar creators:
+When the user provides a creator profile link or username and asks for similar creators, call `find_lookalike.mjs` directly — the API internally resolves username/URL to platform ID, no separate resolve step needed.
 
-**Step 1** — Extract username from the link (e.g., `https://www.tiktok.com/@creator_demo` → `creator_demo`), then resolve to platform ID:
-
-```bash
-node {baseDir}/scripts/resolve_creator.mjs '{"platform":"tiktok","username":"creator_demo"}'
-```
-
-This returns `platform_id` (e.g., `7123456789012345678`).
-
-**Step 2** — Use the `platform_id` to find lookalike creators:
+**By username + platform:**
 
 ```bash
-node {baseDir}/scripts/find_lookalike.mjs '{"seed_platform_id":"7123456789012345678","seed_platform":"tiktok","target_platform":"tiktok","limit":10}'
+node {baseDir}/scripts/find_lookalike.mjs '{"username":"creator_demo","platform":"tiktok","limit":10}'
 ```
 
-Optional filters: `target_region`, `target_language`, `follower_min`, `follower_max`, `avg_views_min`, `avg_views_max`, `female_rate_min`.
+**By profile URL (auto-detects platform):**
 
-**Cross-platform search**: Set `target_platform` different from `seed_platform` to find similar creators on another platform (e.g., find YouTube creators similar to a TikTok creator).
+```bash
+node {baseDir}/scripts/find_lookalike.mjs '{"profile_url":"https://www.tiktok.com/@creator_demo","limit":10}'
+```
+
+**By username only (auto-searches all platforms):**
+
+```bash
+node {baseDir}/scripts/find_lookalike.mjs '{"username":"creator_demo","limit":10}'
+```
+
+**Cross-platform search**: Set `target_platform` different from the seed creator's platform to find similar creators on another platform (e.g., find YouTube creators similar to a TikTok creator).
+
+Optional filters: `target_region`, `target_language`, `follower_min`, `follower_max`, `avg_views_min`, `avg_views_max`, `female_rate_min`, `lang`, `service_level`.
 
 **Decision rules for lookalike:**
-- If user gives a profile URL → extract username, call resolve first, then lookalike
-- If user gives a username → call resolve first, then lookalike
-- If user already has a platform_id → skip resolve, call lookalike directly
-- If resolve returns error 40401 (creator not found) → inform user the creator is not in the database
+- If user gives a profile URL → pass it as `profile_url`, the API auto-parses platform and username
+- If user gives a username + platform → pass both
+- If user gives only a username → pass just `username`, the API searches all three platforms
+- If API returns error 40401 → inform user the creator is not in the database
 
 ## Script Parameters
 
@@ -295,14 +298,15 @@ Optional filters: `target_region`, `target_language`, `follower_min`, `follower_
 | `sort_field` | string | Sort field (e.g., `followers_cnt`) |
 | `sort_order` | string | `asc` / `desc` (default `desc`) |
 | `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S2`. Different levels return different fields and consume different credits per record |
+| `lang` | string | Response language: `cn` (Chinese) / `en` (English). Translates code values like country_code, gender, etc. |
 
 #### Service Level Details
 
 | Level | Name | Included Fields | Credits/Record |
 |-------|------|----------------|----------------|
-| S1 | List only | uid, username, nickname, avatar_url, profile_url, followers_count, likes_count, has_showcase, last_video_publish_date | 1 |
-| S2 | Precise reach | S1 + country_code, gender, engagement_rate, avg_views, product_categories, has_email, language | 3 |
-| S3 | Deep profile | S2 + audience female ratio, audience country distribution, audience language distribution | 4 |
+| S1 | List only | uid, username, nickname, avatar_url, profile_url, followers_count, likes_count, video_count, has_showcase, has_email, has_mcn, has_line, has_zalo, last_video_publish_date | 1 |
+| S2 | Precise reach | S1 + country_code, gender, engagement_rate, avg_views, views_per_follower, product_categories, industry_categories, bio, hashtags, email, contact fields, mcn, language | 3 |
+| S3 | Deep profile | S2 + audience_female_rate (percentage), audience_country_code_list, audience_language_code_list, audience_age_id_list | 4 |
 
 Platform-specific parameters: see [Platform Parameters Reference](references/platform-params.md).
 
@@ -372,26 +376,16 @@ Pipe JSON from search or collection results to export as local CSV file. Support
 | `file_id` | string | File ID (either file_id or file_name required) |
 | `file_name` | string | File name (either file_id or file_name required) |
 
-### resolve_creator.mjs
-
-Resolve a creator username to their platform unique ID. Required before calling `find_lookalike.mjs`.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
-| `username` | string | **Required**. Creator username (without `@`), max 200 chars |
-
-Returns: `platform_id`, `username`, `display_name`, `avatar_url`, `followers_count`.
-
 ### find_lookalike.mjs
 
-Find similar/lookalike creators based on a seed creator. Supports cross-platform search.
+Find similar/lookalike creators. Supports username, profile URL, or cross-platform search. The API internally resolves username/URL to platform ID.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `seed_platform_id` | string | **Required**. Seed creator platform ID (from `resolve_creator.mjs`) |
-| `seed_platform` | string | **Required**. Seed creator platform: `tiktok` / `youtube` / `instagram` |
-| `target_platform` | string | **Required**. Target search platform: `tiktok` / `youtube` / `instagram` |
+| `username` | string | Creator username (without `@`), either this or `profile_url` required |
+| `platform` | string | Creator platform: `tiktok` / `youtube` / `instagram`. Optional — if omitted, searches all platforms |
+| `profile_url` | string | Creator profile URL (auto-detects platform), either this or `username` required |
+| `target_platform` | string | Target search platform. If omitted, same as seed creator's platform |
 | `target_region` | string | Target country code, `all` for no filter |
 | `target_language` | string | Target language code, `all` for no filter |
 | `limit` | integer | Number of results, default 20, max 50 |
@@ -400,6 +394,8 @@ Find similar/lookalike creators based on a seed creator. Supports cross-platform
 | `avg_views_min` | integer | Minimum average views |
 | `avg_views_max` | integer | Maximum average views |
 | `female_rate_min` | number | Minimum female audience ratio (0~100) |
+| `lang` | string | Response language: `cn` / `en` |
+| `service_level` | string | Service level, default `S1` |
 
 Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profile_url`, `country_code`, `followers_count`, `avg_views`, `engagement_rate`, `match_score`.
 
@@ -429,8 +425,19 @@ Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profil
 
 ## Changelog
 
+### v1.3.0
+- Updated all three platform search response fields per v1.4 API doc
+- TikTok: added `video_count`(S1), `views_per_follower`(S2), `bio`(S2), `industry_categories`(S2), `hashtags`(S2), `audience_age_id_list`(S3), contact fields
+- YouTube: added `bio`(S2), `industry_categories`(S2), `hashtags`(S2), `audience_female_rate`(S3)
+- Instagram: added `gender`(S2), `bio`(S2), `industry_categories`(S2), `hashtags`(S2), `audience_age_id_list`(S3)
+- Added `lang` parameter support for i18n (cn/en) on all search and lookalike endpoints
+- `audience_female_rate` now returns percentage value (e.g., 78.65 = 78.65%)
+- Removed `resolve_creator.mjs` — lookalike API now auto-resolves username/URL internally
+- Simplified `find_lookalike.mjs` to accept `username`/`profile_url` directly (no more `seed_platform_id`)
+- Simplified Workflow 5 to single-step lookalike call
+
 ### v1.2.0
-- Added similar/lookalike creator discovery via `resolve_creator.mjs` + `find_lookalike.mjs`
+- Added similar/lookalike creator discovery via `find_lookalike.mjs`
 - Search API now defaults to S2 (precise reach) service level
 - `meta.total` only returned when filter conditions > 2; output formatting hides total when null
 - Added cross-platform lookalike search support

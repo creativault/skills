@@ -34,6 +34,7 @@
 `meta.service_level`: service level used for this search request (`S1`/`S2`/`S3`). Only present in search responses. Default is `S2`.
 `meta.credits_consumed`: credits deducted for this request. `0` means no charge.
 `meta.total`: total matching records. For search endpoints, only returned when filter conditions > 2 (excluding `page`, `size`, `sort_field`, `sort_order`, `service_level`). Returns `null` when ≤ 2 filters.
+`meta.lang`: response translation language (`cn`/`en`). `null` when `lang` param not provided.
 
 ## Endpoints
 
@@ -48,8 +49,7 @@
 | Get task data | `/openapi/v1/collection/tasks/data` | Paginated results |
 | Export task data | `/openapi/v1/collection/tasks/export` | Export to xlsx/csv/html file |
 | Get file download URL | `/openapi/v1/files/download-url` | Get temporary download URL |
-| Resolve creator username | `/openapi/v1/creators/resolve` | Get platform_id from username |
-| Find similar creators | `/openapi/v1/creators/lookalike` | Lookalike search by seed creator |
+| Find similar creators | `/openapi/v1/creators/lookalike` | Lookalike search by username/URL, auto-resolves platform ID |
 
 ## Task Types
 

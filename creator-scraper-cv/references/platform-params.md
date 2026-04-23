@@ -38,15 +38,17 @@
 
 ## 服务等级（所有平台通用）
 
-搜索接口支持 `service_level` 参数，控制返回字段范围和积分消耗：
+搜索接口支持 `service_level` 参数，控制返回字段范围和积分消耗。同时支持 `lang` 参数控制码值字段的国际化翻译（`cn` 中文 / `en` 英文）。
 
 | 等级 | 名称 | 包含数据字段 | 积分单价（每条） |
 |------|------|------------|------------|
-| S1 | 纯名单筛选 | uid、username、nickname、avatar_url、profile_url、followers_count、likes_count、has_showcase、last_video_publish_date | 1 积分 |
-| S2 | 精准触达 | S1 全部 + country_code、gender、engagement_rate、avg_views、product_categories、has_email 标识、language | 3 积分 |
-| S3 | 深度画像 | S2 全部 + 受众女性比例、受众国家分布、受众语言分布 | 4 积分 |
+| S1 | 纯名单筛选 | uid、username、nickname、avatar_url、profile_url、followers_count、likes_count、video_count、has_showcase、has_email、has_mcn、has_line、has_zalo、last_video_publish_date | 1 积分 |
+| S2 | 精准触达 | S1 全部 + country_code、gender、engagement_rate、avg_views、views_per_follower、product_categories、industry_categories、bio、hashtags、email、联系方式字段、mcn、language | 3 积分 |
+| S3 | 深度画像 | S2 全部 + audience_female_rate、audience_country_code_list、audience_language_code_list、audience_age_id_list | 4 积分 |
 
-默认 `S1`。响应 `meta` 中会返回 `service_level`（实际使用的等级）和 `credits_consumed`（本次扣减积分数）。
+默认 `S2`。响应 `meta` 中会返回 `service_level`（实际使用的等级）、`credits_consumed`（本次扣减积分数）和 `lang`（翻译语言）。
+
+`audience_female_rate` 返回值为百分比数值（如 78.65 表示 78.65%）。
 
 ---
 
@@ -108,81 +110,112 @@
 
 ### TikTok 返回字段
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `uid` | string | 达人唯一标识 |
-| `username` | string | 用户名 |
-| `nickname` | string | 昵称 |
-| `avatar_url` | string | 头像链接 |
-| `profile_url` | string | 主页链接 |
-| `country_code` | string | 国家/地区代码 |
-| `gender` | string | 性别 |
-| `followers_count` | integer | 粉丝数 |
-| `likes_count` | integer | 点赞数 |
-| `avg_views` | integer | 近10条视频平均播放量 |
-| `engagement_rate` | number | 近10条视频平均互动率 |
-| `has_showcase` | boolean | 是否开通橱窗带货 |
-| `product_categories` | string[] | 带货类目列表 |
-| `last_video_publish_date` | string | 最近视频发布日期 |
+| 字段 | 类型 | 等级 | 说明 |
+|------|------|------|------|
+| `uid` | string | S1 | 达人唯一标识 |
+| `username` | string | S1 | 用户名 |
+| `nickname` | string | S1 | 昵称 |
+| `avatar_url` | string | S1 | 头像链接 |
+| `profile_url` | string | S1 | 主页链接 |
+| `followers_count` | integer | S1 | 粉丝数 |
+| `likes_count` | integer | S1 | 点赞数 |
+| `video_count` | integer | S1 | 视频总数 |
+| `has_showcase` | boolean | S1 | 是否开通橱窗带货 |
+| `has_email` | boolean | S1 | 是否有邮箱 |
+| `has_mcn` | boolean | S1 | 是否绑定 MCN |
+| `has_line` | boolean | S1 | 是否有 Line |
+| `has_zalo` | boolean | S1 | 是否有 Zalo |
+| `last_video_publish_date` | string | S1 | 最近视频发布日期（YYYY-MM-DD） |
+| `country_code` | string | S2 | 国家/地区代码 |
+| `gender` | string | S2 | 性别（传 `lang` 时翻译） |
+| `avg_views` | integer | S2 | 近10条视频平均播放量 |
+| `engagement_rate` | number | S2 | 近10条视频平均互动率 |
+| `views_per_follower` | number | S2 | 均播/粉丝比 |
+| `product_categories` | string[] | S2 | 带货类目列表 |
+| `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
+| `bio` | string | S2 | 个人介绍 |
+| `hashtags` | string[] | S2 | Hashtag 标签列表 |
+| `language` | string | S2 | 语言 |
+| `email` | string | S2 | 邮箱 |
+| `link_whatsapp` | string | S2 | WhatsApp |
+| `link_line` | string | S2 | Line |
+| `link_zalo` | string | S2 | Zalo |
+| `mcn` | string | S2 | MCN 机构 |
+| `audience_female_rate` | number | S3 | 受众女性比例（百分比，如 78.65 表示 78.65%） |
+| `audience_country_code_list` | string[] | S3 | 受众国家分布 |
+| `audience_language_code_list` | string[] | S3 | 受众语言分布 |
+| `audience_age_id_list` | string[] | S3 | 受众年龄分布（传 `lang` 时翻译为可读标签） |
 
 ### YouTube 返回字段
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `uid` | string | 达人唯一标识 |
-| `username` | string | 用户名 |
-| `nickname` | string | 频道名 |
-| `avatar_url` | string | 头像链接 |
-| `channel_url` | string | 频道链接 |
-| `country_code` | string | 国家/地区代码 |
-| `country_name` | string | 国家名称（英文）|
-| `language` | string | 语言 |
-| `gender` | string | 性别 |
-| `bio` | string | 频道简介 |
-| `followers_count` | integer | 订阅数 |
-| `video_count` | integer | 视频数量 |
-| `view_count` | integer | 总观看次数 |
-| `avg_views` | integer | 近10条视频平均播放量（全部）|
-| `avg_views_short` | integer | 近10条短视频平均播放量 |
-| `avg_views_long` | integer | 近10条长视频平均播放量 |
-| `engagement_rate` | number | 近10条视频互动率（全部）|
-| `engagement_rate_short` | number | 近10条短视频互动率 |
-| `engagement_rate_long` | number | 近10条长视频互动率 |
-| `last_video_publish_time` | string | 最近视频发布时间 |
+| 字段 | 类型 | 等级 | 说明 |
+|------|------|------|------|
+| `uid` | string | S1 | 达人唯一标识 |
+| `username` | string | S1 | 用户名 |
+| `nickname` | string | S1 | 昵称/频道名 |
+| `avatar_url` | string | S1 | 头像链接 |
+| `channel_url` | string | S1 | 频道链接 |
+| `has_email` | boolean | S1 | 是否有邮箱 |
+| `has_whatsapp` | boolean | S1 | 是否有 WhatsApp |
+| `last_video_publish_time` | string | S1 | 最近视频发布时间（ISO 8601） |
+| `country_code` | string | S2 | 国家/地区代码 |
+| `language` | string | S2 | 语言 |
+| `gender` | string | S2 | 性别 |
+| `bio` | string | S2 | 频道简介 |
+| `followers_count` | integer | S2 | 订阅数 |
+| `video_count` | integer | S2 | 视频数量 |
+| `view_count` | integer | S2 | 总观看次数 |
+| `avg_views` | integer | S2 | 近10条视频平均播放量（全部） |
+| `avg_views_short` | integer | S2 | 近10条短视频平均播放量 |
+| `avg_views_long` | integer | S2 | 近10条长视频平均播放量 |
+| `engagement_rate` | number | S2 | 近10条视频互动率（全部） |
+| `engagement_rate_short` | number | S2 | 近10条短视频互动率 |
+| `engagement_rate_long` | number | S2 | 近10条长视频互动率 |
+| `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
+| `hashtags` | string[] | S2 | Hashtag 标签列表 |
+| `email` | string | S2 | 邮箱 |
+| `whatsapp` | string | S2 | WhatsApp |
+| `audience_female_rate` | number | S3 | 受众女性比例（百分比，如 78.65 表示 78.65%） |
+| `audience_country_code_list` | string[] | S3 | 受众国家分布 |
+| `audience_language_list` | string[] | S3 | 受众语言分布 |
+| `audience_age_list` | string[] | S3 | 受众年龄分布（传 `lang` 时翻译为可读标签） |
 
 ### Instagram 返回字段
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `uid` | string | 达人唯一标识 |
-| `username` | string | 用户名 |
-| `nickname` | string | 昵称 |
-| `avatar_url` | string | 头像链接 |
-| `profile_url` | string | 主页链接 |
-| `country_code` | string | 国家/地区代码 |
-| `language` | string | 语言 |
-| `followers_count` | integer | 粉丝数 |
-| `video_count` | integer | 视频/帖子数量 |
-| `view_count` | integer | 总观看次数 |
-| `avg_views` | integer | 近10条视频平均播放量 |
-| `engagement_rate` | number | 近10条视频平均互动率 |
-| `last_video_publish_time` | string | 最近视频发布时间 |
+| 字段 | 类型 | 等级 | 说明 |
+|------|------|------|------|
+| `uid` | string | S1 | 达人唯一标识 |
+| `username` | string | S1 | 用户名 |
+| `nickname` | string | S1 | 昵称 |
+| `avatar_url` | string | S1 | 头像链接 |
+| `profile_url` | string | S1 | 主页链接 |
+| `has_email` | boolean | S1 | 是否有邮箱 |
+| `has_whatsapp` | boolean | S1 | 是否有 WhatsApp |
+| `last_video_publish_time` | string | S1 | 最近视频发布时间 |
+| `country_code` | string | S2 | 国家/地区代码 |
+| `language` | string | S2 | 语言 |
+| `gender` | string | S2 | 性别 |
+| `bio` | string | S2 | 个人介绍 |
+| `followers_count` | integer | S2 | 粉丝数 |
+| `video_count` | integer | S2 | 视频/帖子数量 |
+| `avg_views` | integer | S2 | 近10条视频平均播放量 |
+| `engagement_rate` | number | S2 | 近10条视频平均互动率 |
+| `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
+| `hashtags` | string[] | S2 | Hashtag 标签列表 |
+| `email` | string | S2 | 邮箱 |
+| `link_whatsapp` | string | S2 | WhatsApp |
+| `audience_female_rate` | number | S3 | 受众女性比例（百分比，如 78.65 表示 78.65%） |
+| `audience_country_code_list` | string[] | S3 | 受众国家分布 |
+| `audience_language_code_list` | string[] | S3 | 受众语言分布 |
+| `audience_age_id_list` | string[] | S3 | 受众年龄分布（传 `lang` 时翻译为可读标签） |
 
 ---
 
-## 解析达人用户名（resolve）返回字段
+## 相似达人推荐（lookalike）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `platform_id` | string | 达人平台唯一 ID |
-| `username` | string | 用户名 |
-| `display_name` | string / null | 昵称/显示名 |
-| `avatar_url` | string / null | 头像链接 |
-| `followers_count` | integer / null | 粉丝数 |
+接口内部自动解析用户名、识别平台、获取达人 ID，一步完成相似搜索，无需单独 resolve。
 
----
-
-## 相似达人推荐（lookalike）返回字段
+### lookalike 返回字段
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -201,9 +234,10 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `seed_platform_id` | string | 是 | 种子达人平台唯一 ID（通过 resolve 获取） |
-| `seed_platform` | string | 是 | 种子达人所在平台：`tiktok` / `youtube` / `instagram` |
-| `target_platform` | string | 是 | 目标搜索平台：`tiktok` / `youtube` / `instagram` |
+| `username` | string | 否 | 达人用户名（不含 `@`），与 `profile_url` 二选一 |
+| `platform` | string | 否 | 达人所在平台：`tiktok` / `youtube` / `instagram`，不传则自动在三个平台查找 |
+| `profile_url` | string | 否 | 达人主页地址（自动解析平台和用户名），与 `username` 二选一 |
+| `target_platform` | string | 否 | 目标搜索平台：`tiktok` / `youtube` / `instagram`，不传则与种子达人同平台 |
 | `target_region` | string | 否 | 目标地区代码，`all` 表示不限 |
 | `target_language` | string | 否 | 目标语言代码，`all` 表示不限 |
 | `limit` | integer | 否 | 返回数量，默认 20，范围 1~50 |
@@ -212,3 +246,5 @@
 | `avg_views_min` | integer | 否 | 平均观看量下限 |
 | `avg_views_max` | integer | 否 | 平均观看量上限 |
 | `female_rate_min` | number | 否 | 女性受众占比下限（%），范围 0~100 |
+| `lang` | string | 否 | 响应语言：`cn`（中文）/ `en`（英文） |
+| `service_level` | string | 否 | 服务等级，默认 `S1` |
