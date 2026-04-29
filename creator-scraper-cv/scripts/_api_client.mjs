@@ -32,9 +32,16 @@ function sleep(ms) {
  * Call Creativault Open API with auto-retry on 429
  * @param {string} path - API path, e.g. /openapi/v1/creators/tiktok/search
  * @param {object} body - Request body
- * @returns {object} Full response (success, data, error, meta)
+ * @param {string} platform - Platform name for preprocessing (optional)
+ * @returns {Promise<object>} Full response (success, data, error, meta)
  */
-export async function callAPI(path, body = {}) {
+export async function callAPI(path, body = {}, platform = null) {
+  // Preprocess industry parameters if platform is provided
+  let processedBody = body;
+  if (platform) {
+    processedBody = await preprocessIndustryParams(platform, body);
+  }
+  
   const url = `${API_BASE}${path}`;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -47,7 +54,7 @@ export async function callAPI(path, body = {}) {
           'X-API-Key': API_KEY,
           'X-User-Identity': USER_IDENTITY,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(processedBody),
       });
     } catch (err) {
       console.error(JSON.stringify({ error: `Network request failed: ${err.message}`, url }));
@@ -126,4 +133,55 @@ export function validatePlatform(platform) {
     console.error(JSON.stringify({ error: `platform must be one of: ${VALID_PLATFORMS.join(' / ')}`, received: platform }));
     process.exit(1);
   }
+}
+
+/**
+ * Preprocess industry category parameters based on platform
+ * @param {string} platform - Platform name (tiktok/youtube/instagram)
+ * @param {object} params - Request parameters
+ * @returns {Promise<object>} Processed parameters
+ */
+export async function preprocessIndustryParams(platform, params) {
+  // Import industry mapper functions dynamically
+  const { convertToLeafIds } = await import('./_industry_mapper.mjs');
+  
+  const processed = { ...params };
+  
+  if (platform === 'tiktok') {
+    // TikTok: industry_category_levels_list expects level-3 IDs (comma-separated string)
+    if (processed.industry_category_levels_list) {
+      const input = processed.industry_category_levels_list;
+      
+      // If it's already a comma-separated list of IDs, validate and keep
+      if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
+        // Already in correct format
+        return processed;
+      }
+      
+      // Convert single input to array of level-3 IDs
+      const leafIds = convertToLeafIds(input);
+      if (leafIds.length > 0) {
+        processed.industry_category_levels_list = leafIds.join(',');
+      }
+    }
+  } else if (platform === 'youtube' || platform === 'instagram') {
+    // YouTube/Instagram: industry expects level-3 IDs (comma-separated string), same as TikTok
+    if (processed.industry) {
+      const input = processed.industry;
+      
+      // If it's already a comma-separated list of IDs, validate and keep
+      if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
+        // Already in correct format
+        return processed;
+      }
+      
+      // Convert input to array of level-3 IDs
+      const leafIds = convertToLeafIds(input);
+      if (leafIds.length > 0) {
+        processed.industry = leafIds.join(',');
+      }
+    }
+  }
+  
+  return processed;
 }

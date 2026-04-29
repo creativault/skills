@@ -300,6 +300,37 @@ Optional filters: `target_region`, `target_language`, `follower_min`, `follower_
 | `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S2`. Different levels return different fields and consume different credits per record |
 | `lang` | string | Response language: `cn` (Chinese) / `en` (English). Translates code values like country_code, gender, etc. |
 
+**Platform-specific category parameters:**
+
+All platforms use the same format: **level-3 category IDs** (8-digit codes). The skill automatically converts user input to the correct format.
+
+- **TikTok**: `industry_category_levels_list` parameter
+- **YouTube/Instagram**: `industry` parameter
+
+**Supported input formats** (all platforms):
+- **Level-3 category IDs** (8-digit codes): `25009001,24001001` (Skincare + Mobile Phones)
+- **Level-1 category IDs** (2-digit codes): `25` (expands to all Beauty & Personal Care subcategories)
+- **Chinese category names**: `美妆,科技数码` (auto-converts to IDs)
+- **English category names**: `Skincare,Mobile Phones` (auto-converts to IDs)
+
+See [Industry Categories Reference](references/industry-categories.md) for complete mapping.
+
+**Category Input Examples:**
+
+```bash
+# TikTok: All formats work, auto-converted to level-3 IDs
+node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"美妆"}'
+node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"Skincare"}'
+node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"25"}'
+node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"25009001"}'
+
+# YouTube/Instagram: All formats work, auto-converted to level-3 IDs (same as TikTok)
+node scripts/search_creators.mjs '{"platform":"youtube","industry":"美妆"}'
+node scripts/search_creators.mjs '{"platform":"youtube","industry":"Skincare"}'
+node scripts/search_creators.mjs '{"platform":"instagram","industry":"25"}'
+node scripts/search_creators.mjs '{"platform":"instagram","industry":"25009001"}'
+```
+
 #### Service Level Details
 
 | Level | Name | Included Fields | Credits/Record |

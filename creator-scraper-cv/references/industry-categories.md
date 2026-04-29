@@ -1,9 +1,11 @@
-# 行业类目映射表（industry_category_levels_list）
+# 行业类目映射表
 
-TikTok 搜索的 `industry_category_levels_list` 参数使用此类目树的英文标签值（逗号分隔）。
-YouTube / Instagram 搜索的 `industry` 参数使用三级英文类目名（逗号分隔）。
+**所有平台统一使用三级类目 ID（8位数字）**
 
-用户说中文类目名时，agent 需要转换为对应的英文标签传给 API。
+- TikTok 搜索：`industry_category_levels_list` 参数传三级 ID（逗号分隔）
+- YouTube/Instagram 搜索：`industry` 参数传三级 ID（逗号分隔）
+
+用户输入中文/英文类目名时，skill 会自动转换为对应的三级 ID 传给 API。
 
 ## 一级类目总览
 
@@ -39,6 +41,32 @@ YouTube / Instagram 搜索的 `industry` 参数使用三级英文类目名（逗
 | 7 | Safety & Emergency | 安全与应急 |
 | 13 | Politics | 政治 |
 | 18 | Rule of Law | 法治 |
+
+## 快速查询：常用三级类目 ID
+
+| 中文 | 英文 | 三级 ID |
+|------|------|---------|
+| 护肤 | Skincare | 25009001 |
+| 面部彩妆 | Facial Makeup | 25006004 |
+| 眼妆 | Eye Makeup | 25006003 |
+| 唇妆 | Lip Makeup | 25006002 |
+| 美甲 | Nail Art & Tools | 25012001 |
+| 女装 | Women's Clothing | 16002001 |
+| 男装 | Men's Clothing | 16003001 |
+| 童装 | Kids' Clothing | 16004001 |
+| 鞋履 | Footwear | 16001001 |
+| 手机 | Mobile Phones | 24001001 |
+| 电脑 | Computers | 24002001 |
+| 相机 | Photography & Video Equipment | 24003001 |
+| 耳机 | Headphones | 24006001 |
+| 健身 | Aerobic Training | 12001001 |
+| 篮球 | Basketball | 12002001 |
+| 足球 | Football | 12002002 |
+| 跑步 | Running | 12003001 |
+| 游戏 | Shooter | 19006001 |
+| 美食 | Food | 26001001 |
+| 咖啡 | Coffee | 26002001 |
+| 旅行 | Travel Guides | 15001001 |
 
 ## 二级 & 三级类目明细
 
@@ -216,6 +244,44 @@ YouTube / Instagram 搜索的 `industry` 参数使用三级英文类目名（逗
 
 ## 使用说明
 
-- TikTok `industry_category_levels_list`：传英文类目名，逗号分隔，如 `Beauty & Personal Care,Skincare`
-- YouTube / Instagram `industry`：传三级英文类目名，逗号分隔，如 `Skincare,Makeup`
-- 用户说"美妆"→ 传 `Beauty & Personal Care`；说"护肤"→ 传 `Skincare`；说"科技"→ 传 `Technology & Electronics`
+### 所有平台统一规则
+
+**TikTok 参数名**：`industry_category_levels_list`  
+**YouTube/Instagram 参数名**：`industry`
+
+**传值格式**：所有平台统一传**三级类目 ID**（8位数字），逗号分隔
+
+**映射规则**：
+- 用户说"美妆" → 查找一级类目 `Beauty & Personal Care` (ID: 25) → 获取所有三级 ID → 传 `25006004,25006003,25006002,25006001,25011001,25012001,25003001,25002001,25009001,25007001,25004001,25013001,25008001,25005001,25010001,25001001,25014001`
+- 用户说"护肤" → 查找三级类目 `Skincare` → 传 `25009001`
+- 用户说"手机" → 查找三级类目 `Mobile Phones` → 传 `24001001`
+
+**示例**：
+
+```json
+// TikTok
+{
+  "platform": "tiktok",
+  "industry_category_levels_list": "25009001,25006004"
+}
+
+// YouTube
+{
+  "platform": "youtube",
+  "industry": "25009001,25006004"
+}
+
+// Instagram
+{
+  "platform": "instagram",
+  "industry": "25009001,25006004"
+}
+```
+
+### 映射逻辑总结
+
+| 用户输入 | 所有平台参数值 |
+|---------|---------------|
+| 美妆（一级） | 所有三级 ID（如 `25009001,25006004,...`） |
+| 护肤（三级） | 三级 ID（`25009001`） |
+| 手机（三级） | 三级 ID（`24001001`） |
