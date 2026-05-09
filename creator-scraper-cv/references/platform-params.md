@@ -17,7 +17,7 @@
 | `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD）|
 | `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD）|
 | `product_category_id_array` | string | 带货类目 ID，逗号分隔 |
-| `industry_category_levels_list` | string | 行业类目，多选逗号分隔 |
+| `industry` | string | 行业三级类目，英文三级类目逗号分隔 |
 | `audience_female_rate_gte` | number | 粉丝女性比例 ≥ |
 | `audience_female_rate_lte` | number | 粉丝女性比例 ≤ |
 | `audience_age_list` | string | 粉丝主要年龄区间 |
@@ -131,6 +131,10 @@
 | `avg_views` | integer | S2 | 近10条视频平均播放量 |
 | `engagement_rate` | number | S2 | 近10条视频平均互动率 |
 | `views_per_follower` | number | S2 | 均播/粉丝比 |
+| `is_verified` | boolean | S2 | 是否已认证 |
+| `last10_video_views_per_sub` | number | S2 | 近10条视频播放量/粉丝比 |
+| `last10_med_video_views_cnt` | integer | S2 | 近10条视频播放量中位数 |
+| `last10_med_video_views_per_sub` | number | S2 | 近10条视频播放量中位数/粉丝比 |
 | `product_categories` | string[] | S2 | 带货类目列表 |
 | `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
 | `bio` | string | S2 | 个人介绍 |
@@ -160,7 +164,7 @@
 | `last_video_publish_time` | string | S1 | 最近视频发布时间（ISO 8601） |
 | `country_code` | string | S2 | 国家/地区代码 |
 | `language` | string | S2 | 语言 |
-| `gender` | string | S2 | 性别 |
+| `gender` | string | S2 | 性别（传 `lang` 时翻译） |
 | `bio` | string | S2 | 频道简介 |
 | `followers_count` | integer | S2 | 订阅数 |
 | `video_count` | integer | S2 | 视频数量 |
@@ -171,6 +175,16 @@
 | `engagement_rate` | number | S2 | 近10条视频互动率（全部） |
 | `engagement_rate_short` | number | S2 | 近10条短视频互动率 |
 | `engagement_rate_long` | number | S2 | 近10条长视频互动率 |
+| `is_verified` | boolean | S2 | 是否已认证 |
+| `last10_video_views_per_sub` | number | S2 | 近10条视频播放量/粉丝比（全部） |
+| `last10_video_views_per_sub_short` | number | S2 | 近10条短视频播放量/粉丝比 |
+| `last10_video_views_per_sub_long` | number | S2 | 近10条长视频播放量/粉丝比 |
+| `last10_med_video_views_cnt` | integer | S2 | 近10条视频播放量中位数（全部） |
+| `last10_med_video_views_cnt_short` | integer | S2 | 近10条短视频播放量中位数 |
+| `last10_med_video_views_cnt_long` | integer | S2 | 近10条长视频播放量中位数 |
+| `last10_med_video_views_per_sub` | number | S2 | 近10条视频播放量中位数/粉丝比（全部） |
+| `last10_med_video_views_per_sub_short` | number | S2 | 近10条短视频播放量中位数/粉丝比 |
+| `last10_med_video_views_per_sub_long` | number | S2 | 近10条长视频播放量中位数/粉丝比 |
 | `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
 | `hashtags` | string[] | S2 | Hashtag 标签列表 |
 | `email` | string | S2 | 邮箱 |
@@ -194,12 +208,16 @@
 | `last_video_publish_time` | string | S1 | 最近视频发布时间 |
 | `country_code` | string | S2 | 国家/地区代码 |
 | `language` | string | S2 | 语言 |
-| `gender` | string | S2 | 性别 |
+| `gender` | string | S2 | 性别（传 `lang` 时翻译） |
 | `bio` | string | S2 | 个人介绍 |
 | `followers_count` | integer | S2 | 粉丝数 |
 | `video_count` | integer | S2 | 视频/帖子数量 |
 | `avg_views` | integer | S2 | 近10条视频平均播放量 |
 | `engagement_rate` | number | S2 | 近10条视频平均互动率 |
+| `is_verified` | boolean | S2 | 是否已认证 |
+| `last10_video_views_per_sub` | number | S2 | 近10条视频播放量/粉丝比 |
+| `last10_med_video_views_cnt` | integer | S2 | 近10条视频播放量中位数 |
+| `last10_med_video_views_per_sub` | number | S2 | 近10条视频播放量中位数/粉丝比 |
 | `industry_categories` | array | S2 | 达人领域（三级类目，含 primary/secondary/tertiary） |
 | `hashtags` | string[] | S2 | Hashtag 标签列表 |
 | `email` | string | S2 | 邮箱 |

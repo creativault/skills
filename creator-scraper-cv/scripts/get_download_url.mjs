@@ -16,5 +16,5 @@ if (!params.file_id && !params.file_name) {
   process.exit(1);
 }
 
-const result = await callAPI('/openapi/v1/files/download-url', params);
+const result = await callAPI('/openapi/v1/files/download-url', params, null, { skipUserIdentity: true });
 console.log(JSON.stringify(result, null, 2));

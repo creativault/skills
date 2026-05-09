@@ -2,8 +2,7 @@
 
 **所有平台统一使用三级类目 ID（8位数字）**
 
-- TikTok 搜索：`industry_category_levels_list` 参数传三级 ID（逗号分隔）
-- YouTube/Instagram 搜索：`industry` 参数传三级 ID（逗号分隔）
+- 所有平台统一使用 `industry` 参数传三级 ID（逗号分隔）
 
 用户输入中文/英文类目名时，skill 会自动转换为对应的三级 ID 传给 API。
 
@@ -246,8 +245,7 @@
 
 ### 所有平台统一规则
 
-**TikTok 参数名**：`industry_category_levels_list`  
-**YouTube/Instagram 参数名**：`industry`
+**所有平台参数名**：`industry`
 
 **传值格式**：所有平台统一传**三级类目 ID**（8位数字），逗号分隔
 
@@ -259,10 +257,10 @@
 **示例**：
 
 ```json
-// TikTok
+// TikTok / YouTube / Instagram — 所有平台统一使用 "industry" 参数
 {
   "platform": "tiktok",
-  "industry_category_levels_list": "25009001,25006004"
+  "industry": "25009001,25006004"
 }
 
 // YouTube

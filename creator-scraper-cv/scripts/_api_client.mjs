@@ -16,12 +16,14 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-if (!USER_IDENTITY) {
-  console.error(JSON.stringify({
-    error: 'CV_USER_IDENTITY environment variable is not set',
-    hint: 'Set it via: export CV_USER_IDENTITY=your_email@example.com',
-  }));
-  process.exit(1);
+function ensureUserIdentity() {
+  if (!USER_IDENTITY) {
+    console.error(JSON.stringify({
+      error: 'CV_USER_IDENTITY environment variable is not set',
+      hint: 'Set it via: export CV_USER_IDENTITY=your_email@example.com',
+    }));
+    process.exit(1);
+  }
 }
 
 function sleep(ms) {
@@ -35,7 +37,7 @@ function sleep(ms) {
  * @param {string} platform - Platform name for preprocessing (optional)
  * @returns {Promise<object>} Full response (success, data, error, meta)
  */
-export async function callAPI(path, body = {}, platform = null) {
+export async function callAPI(path, body = {}, platform = null, options = {}) {
   // Preprocess industry parameters if platform is provided
   let processedBody = body;
   if (platform) {
@@ -47,13 +49,19 @@ export async function callAPI(path, body = {}, platform = null) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     let response;
     try {
+      if (!options.skipUserIdentity) {
+        ensureUserIdentity();
+      }
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+      };
+      if (!options.skipUserIdentity) {
+        headers['X-User-Identity'] = USER_IDENTITY;
+      }
       response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
-          'X-User-Identity': USER_IDENTITY,
-        },
+        headers,
         body: JSON.stringify(processedBody),
       });
     } catch (err) {
@@ -147,39 +155,19 @@ export async function preprocessIndustryParams(platform, params) {
   
   const processed = { ...params };
   
-  if (platform === 'tiktok') {
-    // TikTok: industry_category_levels_list expects level-3 IDs (comma-separated string)
-    if (processed.industry_category_levels_list) {
-      const input = processed.industry_category_levels_list;
-      
-      // If it's already a comma-separated list of IDs, validate and keep
-      if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
-        // Already in correct format
-        return processed;
-      }
-      
-      // Convert single input to array of level-3 IDs
-      const leafIds = convertToLeafIds(input);
-      if (leafIds.length > 0) {
-        processed.industry_category_levels_list = leafIds.join(',');
-      }
+  if (processed.industry) {
+    const input = processed.industry;
+    
+    // If it's already a comma-separated list of IDs, validate and keep
+    if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
+      // Already in correct format
+      return processed;
     }
-  } else if (platform === 'youtube' || platform === 'instagram') {
-    // YouTube/Instagram: industry expects level-3 IDs (comma-separated string), same as TikTok
-    if (processed.industry) {
-      const input = processed.industry;
-      
-      // If it's already a comma-separated list of IDs, validate and keep
-      if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
-        // Already in correct format
-        return processed;
-      }
-      
-      // Convert input to array of level-3 IDs
-      const leafIds = convertToLeafIds(input);
-      if (leafIds.length > 0) {
-        processed.industry = leafIds.join(',');
-      }
+    
+    // Convert input to array of level-3 IDs
+    const leafIds = convertToLeafIds(input);
+    if (leafIds.length > 0) {
+      processed.industry = leafIds.join(',');
     }
   }
   

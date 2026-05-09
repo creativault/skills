@@ -75,6 +75,142 @@
 | YouTube | `youtube` | ✅ | ✅ | ✅ | ✅ |
 | Instagram | `instagram` | ✅ | ✅ | ✅ | ✅ |
 
+## Search Response Fields by Service Level
+
+### TikTok
+
+| Field | Type | Level | Description |
+|-------|------|-------|-------------|
+| `uid` | string | S1 | Creator unique ID |
+| `username` | string | S1 | Username |
+| `nickname` | string | S1 | Nickname |
+| `avatar_url` | string | S1 | Avatar URL |
+| `profile_url` | string | S1 | Profile URL |
+| `followers_count` | integer | S1 | Followers count |
+| `likes_count` | integer | S1 | Likes count |
+| `video_count` | integer | S1 | Total videos |
+| `has_showcase` | boolean | S1 | Has showcase/store |
+| `has_email` | boolean | S1 | Has email |
+| `has_mcn` | boolean | S1 | Has MCN |
+| `has_line` | boolean | S1 | Has Line |
+| `has_zalo` | boolean | S1 | Has Zalo |
+| `last_video_publish_date` | string | S1 | Last video publish date (YYYY-MM-DD) |
+| `country_code` | string | S2 | Country/region code |
+| `gender` | string | S2 | Gender (translated when `lang` is set) |
+| `avg_views` | integer | S2 | Avg views of last 10 videos |
+| `engagement_rate` | number | S2 | Avg interaction rate of last 10 videos |
+| `views_per_follower` | number | S2 | Views per follower ratio |
+| `is_verified` | boolean | S2 | Whether verified |
+| `last10_video_views_per_sub` | number | S2 | Last 10 video views per subscriber |
+| `last10_med_video_views_cnt` | integer | S2 | Last 10 video views median |
+| `last10_med_video_views_per_sub` | number | S2 | Last 10 video views median per subscriber |
+| `product_categories` | string[] | S2 | Product categories |
+| `industry_categories` | array | S2 | Industry categories (primary/secondary/tertiary) |
+| `bio` | string | S2 | Bio / profile description |
+| `hashtags` | string[] | S2 | Hashtag list |
+| `language` | string | S2 | Language |
+| `email` | string | S2 | Email address |
+| `link_whatsapp` | string | S2 | WhatsApp link |
+| `link_line` | string | S2 | Line link |
+| `link_zalo` | string | S2 | Zalo link |
+| `mcn` | string | S2 | MCN agency |
+| `audience_female_rate` | number | S3 | Female audience ratio (percentage, e.g. 78.65 = 78.65%) |
+| `audience_country_code_list` | string[] | S3 | Audience country distribution |
+| `audience_language_code_list` | string[] | S3 | Audience language distribution |
+| `audience_age_id_list` | string[] | S3 | Audience age distribution (translated when `lang` is set) |
+
+### YouTube
+
+| Field | Type | Level | Description |
+|-------|------|-------|-------------|
+| `uid` | string | S1 | Creator unique ID |
+| `username` | string | S1 | Username |
+| `nickname` | string | S1 | Channel name |
+| `avatar_url` | string | S1 | Avatar URL |
+| `channel_url` | string | S1 | Channel URL |
+| `has_email` | boolean | S1 | Has email |
+| `has_whatsapp` | boolean | S1 | Has WhatsApp |
+| `last_video_publish_time` | string | S1 | Last video publish time (ISO 8601) |
+| `country_code` | string | S2 | Country/region code |
+| `language` | string | S2 | Language |
+| `gender` | string | S2 | Gender |
+| `bio` | string | S2 | Channel bio / description |
+| `followers_count` | integer | S2 | Subscribers count |
+| `video_count` | integer | S2 | Video count |
+| `view_count` | integer | S2 | Total views |
+| `avg_views` | integer | S2 | Avg views of last 10 videos (all) |
+| `avg_views_short` | integer | S2 | Avg views of last 10 short videos |
+| `avg_views_long` | integer | S2 | Avg views of last 10 long videos |
+| `engagement_rate` | number | S2 | Interaction rate of last 10 videos (all) |
+| `engagement_rate_short` | number | S2 | Interaction rate of last 10 short videos |
+| `engagement_rate_long` | number | S2 | Interaction rate of last 10 long videos |
+| `is_verified` | boolean | S2 | Whether verified |
+| `last10_video_views_per_sub` | number | S2 | Last 10 video views per subscriber (all) |
+| `last10_video_views_per_sub_short` | number | S2 | Last 10 short video views per subscriber |
+| `last10_video_views_per_sub_long` | number | S2 | Last 10 long video views per subscriber |
+| `last10_med_video_views_cnt` | integer | S2 | Last 10 video views median (all) |
+| `last10_med_video_views_cnt_short` | integer | S2 | Last 10 short video views median |
+| `last10_med_video_views_cnt_long` | integer | S2 | Last 10 long video views median |
+| `last10_med_video_views_per_sub` | number | S2 | Last 10 video views median per subscriber (all) |
+| `last10_med_video_views_per_sub_short` | number | S2 | Last 10 short video views median per subscriber |
+| `last10_med_video_views_per_sub_long` | number | S2 | Last 10 long video views median per subscriber |
+| `industry_categories` | array | S2 | Industry categories (primary/secondary/tertiary) |
+| `hashtags` | string[] | S2 | Hashtag list |
+| `email` | string | S2 | Email address |
+| `whatsapp` | string | S2 | WhatsApp |
+| `audience_female_rate` | number | S3 | Female audience ratio (percentage) |
+| `audience_country_code_list` | string[] | S3 | Audience country distribution |
+| `audience_language_list` | string[] | S3 | Audience language distribution |
+| `audience_age_list` | string[] | S3 | Audience age distribution (translated when `lang` is set) |
+
+### Instagram
+
+| Field | Type | Level | Description |
+|-------|------|-------|-------------|
+| `uid` | string | S1 | Creator unique ID |
+| `username` | string | S1 | Username |
+| `nickname` | string | S1 | Nickname |
+| `avatar_url` | string | S1 | Avatar URL |
+| `profile_url` | string | S1 | Profile URL |
+| `has_email` | boolean | S1 | Has email |
+| `has_whatsapp` | boolean | S1 | Has WhatsApp |
+| `last_video_publish_time` | string | S1 | Last post/video publish time |
+| `country_code` | string | S2 | Country/region code |
+| `language` | string | S2 | Language |
+| `gender` | string | S2 | Gender (translated when `lang` is set) |
+| `bio` | string | S2 | Bio / profile description |
+| `followers_count` | integer | S2 | Followers count |
+| `video_count` | integer | S2 | Posts/videos count |
+| `avg_views` | integer | S2 | Avg views of last 10 videos |
+| `engagement_rate` | number | S2 | Avg interaction rate of last 10 videos |
+| `is_verified` | boolean | S2 | Whether verified |
+| `last10_video_views_per_sub` | number | S2 | Last 10 video views per subscriber |
+| `last10_med_video_views_cnt` | integer | S2 | Last 10 video views median |
+| `last10_med_video_views_per_sub` | number | S2 | Last 10 video views median per subscriber |
+| `industry_categories` | array | S2 | Industry categories (primary/secondary/tertiary) |
+| `hashtags` | string[] | S2 | Hashtag list |
+| `email` | string | S2 | Email address |
+| `link_whatsapp` | string | S2 | WhatsApp |
+| `audience_female_rate` | number | S3 | Female audience ratio (percentage) |
+| `audience_country_code_list` | string[] | S3 | Audience country distribution |
+| `audience_language_code_list` | string[] | S3 | Audience language distribution |
+| `audience_age_id_list` | string[] | S3 | Audience age distribution (translated when `lang` is set) |
+
+### Lookalike
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `uid` | string | Creator unique ID |
+| `username` | string / null | Username |
+| `nickname` | string / null | Nickname |
+| `avatar_url` | string / null | Avatar URL |
+| `profile_url` | string / null | Profile URL |
+| `country_code` | string / null | Country/region code |
+| `followers_count` | integer / null | Followers count |
+| `avg_views` | integer / null | Avg views of last 10 videos |
+| `engagement_rate` | number / null | Avg interaction rate of last 10 videos |
+| `match_score` | number / null | Similarity match score |
+
 ## Export Formats
 
 | format | Description |

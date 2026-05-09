@@ -11,7 +11,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.2.0"
+  version: "1.5.0"
 ---
 
 # Creativault Creator Data Collection
@@ -85,8 +85,8 @@ Users may not know what S1/S2/S3 means. The agent MUST ask the user to confirm t
 | 等级 | 名称 | 返回内容 | 积分/条 |
 |------|------|----------|---------|
 | S1 | 纯名单筛选 | 基础信息（用户名、昵称、头像、粉丝数、主页链接） | 1 |
-| S2 | 精准触达 | S1 + 国家、性别、互动率、平均播放、带货类目、邮箱标识、语言 | 3 |
-| S3 | 深度画像 | S2 + 受众女性比例、受众国家分布、受众语言分布 | 4 |
+| S2 | 精准触达 | S1 + 国家、性别、互动率、平均播放、均播/粉丝比、认证状态、带货类目、达人领域、bio、hashtags、邮箱标识、语言 | 3 |
+| S3 | 深度画像 | S2 + 受众女性比例、受众国家分布、受众语言分布、受众年龄分布 | 4 |
 
 **Rules:**
 - If user does NOT specify a service level → show the table above and ask: "请选择服务等级：S1（基础名单，1积分/条）、S2（精准触达，3积分/条）、S3（深度画像，4积分/条）？"
@@ -298,14 +298,13 @@ Optional filters: `target_region`, `target_language`, `follower_min`, `follower_
 | `sort_field` | string | Sort field (e.g., `followers_cnt`) |
 | `sort_order` | string | `asc` / `desc` (default `desc`) |
 | `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S2`. Different levels return different fields and consume different credits per record |
-| `lang` | string | Response language: `cn` (Chinese) / `en` (English). Translates code values like country_code, gender, etc. |
+| `lang` | string | Response language: `cn` (Chinese) / `en` (English). Translates code values like country_code, gender, audience_age_id_list, etc. |
 
 **Platform-specific category parameters:**
 
 All platforms use the same format: **level-3 category IDs** (8-digit codes). The skill automatically converts user input to the correct format.
 
-- **TikTok**: `industry_category_levels_list` parameter
-- **YouTube/Instagram**: `industry` parameter
+All platforms use the **`industry`** parameter for category filtering.
 
 **Supported input formats** (all platforms):
 - **Level-3 category IDs** (8-digit codes): `25009001,24001001` (Skincare + Mobile Phones)
@@ -318,16 +317,10 @@ See [Industry Categories Reference](references/industry-categories.md) for compl
 **Category Input Examples:**
 
 ```bash
-# TikTok: All formats work, auto-converted to level-3 IDs
-node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"美妆"}'
-node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"Skincare"}'
-node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"25"}'
-node scripts/search_creators.mjs '{"platform":"tiktok","industry_category_levels_list":"25009001"}'
-
-# YouTube/Instagram: All formats work, auto-converted to level-3 IDs (same as TikTok)
-node scripts/search_creators.mjs '{"platform":"youtube","industry":"美妆"}'
-node scripts/search_creators.mjs '{"platform":"youtube","industry":"Skincare"}'
-node scripts/search_creators.mjs '{"platform":"instagram","industry":"25"}'
+# All platforms: use "industry" parameter, auto-converted to level-3 IDs
+node scripts/search_creators.mjs '{"platform":"tiktok","industry":"美妆"}'
+node scripts/search_creators.mjs '{"platform":"tiktok","industry":"Skincare"}'
+node scripts/search_creators.mjs '{"platform":"youtube","industry":"25"}'
 node scripts/search_creators.mjs '{"platform":"instagram","industry":"25009001"}'
 ```
 
@@ -336,7 +329,7 @@ node scripts/search_creators.mjs '{"platform":"instagram","industry":"25009001"}
 | Level | Name | Included Fields | Credits/Record |
 |-------|------|----------------|----------------|
 | S1 | List only | uid, username, nickname, avatar_url, profile_url, followers_count, likes_count, video_count, has_showcase, has_email, has_mcn, has_line, has_zalo, last_video_publish_date | 1 |
-| S2 | Precise reach | S1 + country_code, gender, engagement_rate, avg_views, views_per_follower, product_categories, industry_categories, bio, hashtags, email, contact fields, mcn, language | 3 |
+| S2 | Precise reach | S1 + country_code, gender, engagement_rate, avg_views, views_per_follower, is_verified, last10_video_views_per_sub, last10_med_video_views_cnt, last10_med_video_views_per_sub, product_categories, industry_categories, bio, hashtags, email, contact fields, mcn, language | 3 |
 | S3 | Deep profile | S2 + audience_female_rate (percentage), audience_country_code_list, audience_language_code_list, audience_age_id_list | 4 |
 
 Platform-specific parameters: see [Platform Parameters Reference](references/platform-params.md).
@@ -449,12 +442,28 @@ Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profil
 
 - [API Reference](references/api-reference.md) — Full request/response field documentation
 - [Platform Parameters](references/platform-params.md) — TikTok/YouTube/Instagram specific filters
-- [Industry Categories](references/industry-categories.md) — Industry category tree with Chinese/English mapping (for `industry_category_levels_list` and `industry` params)
+- [Industry Categories](references/industry-categories.md) — Industry category tree with Chinese/English mapping (for `industry` param)
 - [Country Codes](references/country-codes.md) — ISO country codes with Chinese/English names and region shortcuts
 - [Language Codes](references/language-codes.md) — ISO language codes with Chinese/English names
 - [Error Codes](references/error-codes.md) — Complete error code list and troubleshooting
 
 ## Changelog
+
+### v1.5.0
+- Aligned with API v1.5
+- All platforms: added `is_verified`(S2), `last10_video_views_per_sub`(S2), `last10_med_video_views_cnt`(S2), `last10_med_video_views_per_sub`(S2)
+- YouTube: added short/long variants (`last10_video_views_per_sub_short/long`, `last10_med_video_views_cnt_short/long`, `last10_med_video_views_per_sub_short/long`)
+- TikTok search: `industry_category_levels_list` parameter unified to `industry` (same as YouTube/Instagram)
+- `lang` parameter now also translates `audience_age_id_list`
+
+### v1.4.0
+- Aligned with API v1.4: added `bio`, `industry_categories`, `hashtags` to S2 for all three platforms
+- TikTok: added `video_count`(S1), `views_per_follower`(S2), `audience_age_id_list`(S3)
+- YouTube: added `bio`(S2), `audience_female_rate`(S3)
+- Instagram: added `gender`(S2), `bio`(S2), `industry_categories`(S2), `hashtags`(S2), `audience_age_id_list`(S3)
+- `audience_female_rate` now returns percentage value (e.g., 78.65 = 78.65%)
+- `gender` and `audience_age_id_list` support `lang` i18n translation
+- `lang` parameter available on all search endpoints and lookalike
 
 ### v1.3.0
 - Updated all three platform search response fields per v1.4 API doc

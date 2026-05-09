@@ -456,6 +456,11 @@ function buildMaps(nodes, parentPath = []) {
     // Chinese name to ID mapping
     if (labelCn) {
       cnNameToIdMap.set(labelCn, value);
+      // Auto-extract short form: "美妆与个人护理" -> "美妆"
+      const shortCn = extractShortCn(labelCn);
+      if (shortCn && shortCn !== labelCn) {
+        cnNameToIdMap.set(shortCn, value);
+      }
     }
     
     // Recursively process children
@@ -465,7 +470,54 @@ function buildMaps(nodes, parentPath = []) {
   }
 }
 
+function extractShortCn(labelCn) {
+  // Extract the first segment as short name
+  // e.g. "美妆与个人护理" -> "美妆"
+  // e.g. "服装与时尚" -> "服装"
+  // e.g. "美食与饮品" -> "美食"
+  // e.g. "旅行与生活方式" -> "旅行"
+  const splitChars = ['与', '&', '和', '及'];
+  for (const ch of splitChars) {
+    const idx = labelCn.indexOf(ch);
+    if (idx > 0) {
+      return labelCn.slice(0, idx);
+    }
+  }
+  return null;
+}
+
 buildMaps(IndustryTree);
+
+// Additional common aliases (short form -> ID)
+const aliasToIdMap = new Map([
+  ['美妆', '25'],
+  ['游戏', '19'],
+  ['服装', '16'],
+  ['数码', '24'],
+  ['科技', '24'],
+  ['户外', '12'],
+  ['运动', '12'],
+  ['美食', '26'],
+  ['旅行', '15'],
+  ['生活', '15'],
+  ['电竞', '19'],
+  ['手游', '19'],
+  ['端游', '19'],
+  ['护肤', '25009'],
+  ['彩妆', '25006'],
+  ['穿搭', '16'],
+  ['潮牌', '16'],
+  ['健身', '12001'],
+  ['篮球', '12002'],
+  ['足球', '12002'],
+]);
+
+// Merge aliases into cnNameToIdMap
+for (const [alias, id] of aliasToIdMap) {
+  if (!cnNameToIdMap.has(alias)) {
+    cnNameToIdMap.set(alias, id);
+  }
+}
 
 /**
  * Get all level-3 (leaf) category IDs from a level-1 category ID
