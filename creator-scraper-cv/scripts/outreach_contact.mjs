@@ -9,14 +9,10 @@
  *   include_summary    — 是否包含 AI 总结（默认 true）
  */
 
-import { apiClient } from './_api_client.mjs';
+import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';
 
-const params = JSON.parse(process.argv[2] || '{}');
+const params = parseArgs();
+validateRequired(params, ['email']);
 
-if (!params.email) {
-  console.error('Error: "email" is required');
-  process.exit(1);
-}
-
-const result = await apiClient.post('/v1/outreach/contact', params);
+const result = await callAPI('/openapi/v1/outreach/contact', params, null, { skipUserIdentity: false });
 console.log(JSON.stringify(result, null, 2));

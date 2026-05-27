@@ -17,14 +17,14 @@
  *   attachment_ids       — 附件ID列表
  */
 
-import { apiClient } from './_api_client.mjs';
+import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';
 
-const params = JSON.parse(process.argv[2] || '{}');
+const params = parseArgs();
 
 if (!params.to && !params.recipients) {
-  console.error('Error: "to" or "recipients" is required');
+  console.error(JSON.stringify({ error: '"to" or "recipients" is required' }));
   process.exit(1);
 }
 
-const result = await apiClient.post('/v1/outreach/send', params);
+const result = await callAPI('/openapi/v1/outreach/send', params, null, { skipUserIdentity: false });
 console.log(JSON.stringify(result, null, 2));

@@ -9,8 +9,8 @@
  *   group_by   — 分组: day / week / month（不传则返回汇总）
  */
 
-import { apiClient } from './_api_client.mjs';
+import { callAPI, parseArgs } from './_api_client.mjs';
 
-const params = JSON.parse(process.argv[2] || '{}');
-const result = await apiClient.post('/v1/outreach/metrics', params);
+const params = parseArgs();
+const result = await callAPI('/openapi/v1/outreach/metrics', params, null, { skipUserIdentity: false });
 console.log(JSON.stringify(result, null, 2));

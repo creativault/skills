@@ -9,8 +9,8 @@
  *   include_overdue  — 是否包含超时未回复，默认 true
  */
 
-import { apiClient } from './_api_client.mjs';
+import { callAPI, parseArgs } from './_api_client.mjs';
 
-const params = JSON.parse(process.argv[2] || '{}');
-const result = await apiClient.post('/v1/outreach/todo', params);
+const params = parseArgs();
+const result = await callAPI('/openapi/v1/outreach/todo', params, null, { skipUserIdentity: false });
 console.log(JSON.stringify(result, null, 2));
