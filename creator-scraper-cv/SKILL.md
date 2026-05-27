@@ -1,13 +1,16 @@
 ---
 name: creator-scraper-cv
 description: |
-  Creativault creator data collection skill. Search and collect creator/influencer data
-  from TikTok, YouTube, and Instagram. Supports multi-dimensional search, similar/lookalike
-  creator discovery, batch collection by links/usernames/keywords, task tracking, and data
-  export (xlsx/csv/html).
+  Creativault creator data collection and outreach skill. Search and collect creator/influencer
+  data from TikTok, YouTube, and Instagram. Send outreach emails to discovered creators with
+  automatic conversation management, batch sending, and follow-up tracking.
+  Supports multi-dimensional search, similar/lookalike creator discovery, batch collection by
+  links/usernames/keywords, task tracking, data export (xlsx/csv/html), and email outreach
+  (single/batch send, templates, smart timing, metrics).
   Use when: creator search, influencer scraping, KOL search, KOL analytics, social media
   data extraction, TikTok scraper, YouTube scraper, Instagram scraper, influencer discovery,
-  similar creators, lookalike, 达人采集, KOL 搜索, 网红数据, 达人分析, 达人搜索, 相似达人, 社交媒体数据.
+  similar creators, lookalike, outreach, email outreach, send email to creator, batch email,
+  follow-up, 达人采集, KOL 搜索, 网红数据, 达人分析, 达人搜索, 相似达人, 社交媒体数据, 建联, 发邮件, 批量发送.
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
@@ -52,6 +55,13 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 | Export to local CSV | `scripts/export_to_csv.mjs` | Pipe input, incremental append |
 | Get file download URL | `scripts/get_download_url.mjs` | Sync |
 | Find similar creators | `scripts/find_lookalike.mjs` | Sync, auto-resolves username/URL |
+| Send outreach email | `scripts/outreach_send.mjs` | Async, returns task_id |
+| Query outreach task | `scripts/outreach_task.mjs` | Sync or auto-poll |
+| Query creator contact | `scripts/outreach_contact.mjs` | Sync |
+| Get follow-up todos | `scripts/outreach_todo.mjs` | Sync |
+| Get outreach metrics | `scripts/outreach_metrics.mjs` | Sync |
+| Get outreach config | `scripts/outreach_config.mjs` | Sync |
+| Upload attachment | `scripts/outreach_upload.mjs` | Sync |
 
 All scripts accept a JSON string as command-line argument. Results are output as JSON to stdout.
 
@@ -67,6 +77,11 @@ Before executing, determine the best approach based on user intent:
 | "Find similar/lookalike creators" given a profile link or username | `find_lookalike.mjs` | Instant (~2s) |
 | "Collect/scrape data" for specific creators (links or usernames) | `submit_collection_task.mjs` → poll → get data | 5~30 minutes |
 | "Find creators by keyword" and collect detailed data | `submit_keyword_task.mjs` → poll → get data | 5~30 minutes |
+| "Send email to creator" / "reach out" / "建联" | `outreach_send.mjs` → poll status | 3~10 seconds |
+| "Batch send emails" to a list of creators | `outreach_batch_send.mjs` → poll status | 1~5 minutes |
+| "Who needs follow-up?" / "待办" | `outreach_todo.mjs` | Instant |
+| "How are my campaigns doing?" / "效果" | `outreach_metrics.mjs` | Instant |
+| "What did I discuss with X?" / "沟通历史" | `outreach_history.mjs` | Instant |
 
 **Decision rules:**
 - If the user gives filter conditions (keyword, country, follower count) → use **search** first. It returns results instantly.
@@ -493,3 +508,137 @@ Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profil
 
 ### v1.0.0
 - Initial release: search, collection, polling, local CSV export
+
+---
+
+## Outreach (Email Outreach)
+
+Send outreach emails to creators discovered via search. 7 scripts covering the full outreach workflow.
+
+### Outreach Capabilities
+
+| Capability | Script | Mode |
+|------------|--------|------|
+| Send email (single/batch) | `scripts/outreach_send.mjs` | Async, returns task_id |
+| Query task (status+result) | `scripts/outreach_task.mjs` | Sync or auto-poll |
+| Query creator contact info | `scripts/outreach_contact.mjs` | Sync |
+| Get follow-up todo list | `scripts/outreach_todo.mjs` | Sync |
+| Get outreach metrics | `scripts/outreach_metrics.mjs` | Sync |
+| Get config (channels+templates) | `scripts/outreach_config.mjs` | Sync |
+| Upload attachment | `scripts/outreach_upload.mjs` | Sync |
+
+### Outreach Workflow: Search → Send → Track
+
+```bash
+# Step 1: Search creators with email
+node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","keyword":"beauty","has_email":true,"service_level":"S2"}'
+
+# Step 2: Check available channels and templates
+node {baseDir}/scripts/outreach_config.mjs '{}'
+
+# Step 3: Batch send (recipients format compatible with search results)
+node {baseDir}/scripts/outreach_send.mjs '{"recipients":[{"email":"c1@x.com","nickname":"Creator1"},{"email":"c2@x.com","nickname":"Creator2"}],"template_id":123}'
+
+# Step 4: Poll until complete (auto-poll mode)
+node {baseDir}/scripts/outreach_task.mjs '{"task_id":"batch_xxx","poll":true,"include_result":true}'
+
+# Step 5: Check follow-up todos after a few days
+node {baseDir}/scripts/outreach_todo.mjs '{"overdue_hours":48}'
+
+# Step 6: View creator's contact info + history + AI summary
+node {baseDir}/scripts/outreach_contact.mjs '{"email":"c1@x.com"}'
+
+# Step 7: Reply (system auto-detects existing conversation)
+node {baseDir}/scripts/outreach_send.mjs '{"to":"c1@x.com","body_html":"<p>Thanks!</p>"}'
+
+# Step 8: Check overall metrics
+node {baseDir}/scripts/outreach_metrics.mjs '{"date_from":"2025-05-01","group_by":"week"}'
+```
+
+### Outreach Script Parameters
+
+#### outreach_send.mjs
+
+`to` and `recipients` are mutually exclusive — pass exactly one.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `to` | string | Creator email (single send) |
+| `recipients` | object[] | Array of `{email, nickname/name, platform}` (batch send) |
+| `subject` | string | Email subject (optional if using template_id) |
+| `body_html` | string | HTML body (supports `{{creator_name}}` variables) |
+| `body_text` | string | Plain text body |
+| `channel` | string | `ses` (default) / `gmail` / `outlook` |
+| `template_id` | integer | Template ID (overrides subject/body) |
+| `send_mode` | string | `immediate` (default) / `smart` (timezone-optimized) |
+| `force_new` | boolean | Force new conversation (default false) |
+| `attachment_ids` | string[] | Attachment IDs from upload |
+
+#### outreach_task.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task_id` | string | **Required**. Task ID from send |
+| `include_result` | boolean | Attach per-recipient results when completed (default false) |
+| `result_filter` | string | Filter results: `all` / `sent` / `failed` |
+| `poll` | boolean | Auto-poll until terminal status (default false) |
+| `poll_interval` | integer | Poll interval seconds (default 5) |
+| `poll_max_attempts` | integer | Max poll attempts (default 60) |
+
+#### outreach_contact.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `email` | string | **Required**. Creator email |
+| `include_history` | boolean | Include message history (default true) |
+| `include_summary` | boolean | Include AI summary (default true) |
+
+#### outreach_todo.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `overdue_hours` | integer | Overdue threshold in hours (default 24) |
+| `include_unread` | boolean | Include unread conversations (default true) |
+| `include_overdue` | boolean | Include overdue conversations (default true) |
+
+#### outreach_metrics.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `date_from` | string | Start date YYYY-MM-DD (default: last 7 days) |
+| `date_to` | string | End date YYYY-MM-DD |
+| `group_by` | string | Group by: `day` / `week` / `month` |
+
+#### outreach_config.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `include_templates` | boolean | Include template list (default true) |
+| `template_page` | integer | Template pagination page (default 1) |
+| `template_size` | integer | Templates per page (default 20) |
+
+#### outreach_upload.mjs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file_path` | string | **Required**. Local file path (max 10MB) |
+
+### Outreach Credits
+
+| Action | Credits |
+|--------|---------|
+| Send single email | 1 |
+| Batch send (per recipient) | 1 |
+| All query endpoints | 0 (free) |
+
+### Outreach Decision Rules
+
+- "Send email" / "reach out" / "建联" → `outreach_send.mjs` with `to`
+- User has a list from search → `outreach_send.mjs` with `recipients`
+- After any send → `outreach_task.mjs` with `poll:true` to confirm delivery
+- "Who needs follow-up?" / "待办" → `outreach_todo.mjs`
+- "What did I discuss with X?" / "沟通历史" → `outreach_contact.mjs`
+- "How are campaigns doing?" / "效果" → `outreach_metrics.mjs`
+- First time / "what channels?" / "what templates?" → `outreach_config.mjs`
+- Template variables: `{{creator_name}}`, `{{creator_email}}`, `{{platform}}`
+
