@@ -89,6 +89,8 @@ Before executing, determine the best approach based on user intent:
 - If the user gives specific profile links or usernames → use **collection** (async).
 - If search results satisfy the user's needs → no need to submit a collection task.
 - Only use collection when the user explicitly needs detailed/enriched data for specific creators.
+- **When the user's goal is to send emails / outreach / 建联, recommend adding `has_email: true`** to avoid returning creators without contact info. If the user didn't specify, ask: "是否只筛选有邮箱的达人？"
+- **`lang` parameter only controls response display language (cn/en), it does NOT filter creators by their language.** Use `language_code` parameter to filter creators by their content language (e.g., `language_code: "zh"` for Chinese-speaking creators).
 - **After any collection task completes, ALWAYS call `export_task_data.mjs` to generate a downloadable file (default xlsx) and present the download link to the user. Do NOT just call `get_task_data.mjs` and show raw JSON.**
 
 ### Service Level Selection
@@ -304,16 +306,33 @@ Optional filters: `target_region`, `target_language`, `follower_min`, `follower_
 | `platform` | string | **Required**. `tiktok` / `youtube` / `instagram` |
 | `keyword` | string | Search keyword |
 | `country_code` | string | Country code, comma-separated (e.g., `US,CA`) |
+| `language_code` | string | Creator language filter, comma-separated (e.g., `en,zh,ja`). Filters by creator's content language |
 | `gender` | string | Gender filter |
 | `has_email` | boolean | Has email contact |
+| `has_mcn` | boolean | Has MCN (TikTok) |
+| `has_line` | boolean | Has Line (TikTok) |
+| `has_zalo` | boolean | Has Zalo (TikTok) |
+| `has_whatsapp` | boolean | Has WhatsApp (YouTube/Instagram) |
 | `followers_cnt_gte` | integer | Followers ≥ |
 | `followers_cnt_lte` | integer | Followers ≤ |
+| `last10_avg_video_views_cnt_gte` | number | Avg views (last 10 videos) ≥ |
+| `last10_avg_video_views_cnt_lte` | number | Avg views (last 10 videos) ≤ |
+| `last10_avg_video_interaction_rate_gte` | number | Avg engagement rate ≥ |
+| `last10_avg_video_interaction_rate_lte` | number | Avg engagement rate ≤ |
+| `last_video_publish_date_gte` | string | Last video date ≥ (YYYY-MM-DD) |
+| `last_video_publish_date_lte` | string | Last video date ≤ (YYYY-MM-DD) |
+| `industry` | string | Industry category (Chinese/English names, IDs, comma-separated) |
+| `audience_female_rate_gte` | number | Audience female ratio ≥ |
+| `audience_female_rate_lte` | number | Audience female ratio ≤ |
+| `audience_country_code_list` | string | Audience country codes, comma-separated |
+| `audience_language_code_list` | string | Audience language codes, comma-separated |
+| `audience_age_list` | string | Audience age ranges, comma-separated |
 | `page` | integer | Page number, default 1 |
 | `size` | integer | Page size, default 50, max 100 |
-| `sort_field` | string | Sort field (e.g., `followers_cnt`) |
+| `sort_field` | string | Sort field: `followers_cnt` / `last10_avg_video_views_cnt` / `last10_avg_video_interaction_rate` |
 | `sort_order` | string | `asc` / `desc` (default `desc`) |
-| `service_level` | string | Service level: `S1` (list only) / `S2` (precise reach) / `S3` (deep profile). Default `S2`. Different levels return different fields and consume different credits per record |
-| `lang` | string | Response language: `cn` (Chinese) / `en` (English). Translates code values like country_code, gender, audience_age_id_list, etc. |
+| `service_level` | string | `S1` (1 credit) / `S2` (3 credits, default) / `S3` (4 credits) |
+| `lang` | string | Response display language: `cn` / `en`. ⚠️ Only translates response values, does NOT filter creators. Use `language_code` to filter |
 
 **Platform-specific category parameters:**
 
