@@ -519,6 +519,51 @@ for (const [alias, id] of aliasToIdMap) {
   }
 }
 
+// Common English aliases/abbreviations → level-1 category ID
+const englishAliasMap = new Map([
+  ['fashion', '16'],
+  ['clothing', '16'],
+  ['apparel', '16'],
+  ['beauty', '25'],
+  ['cosmetics', '25'],
+  ['makeup', '25006'],
+  ['skincare', '25009'],
+  ['haircare', '25007'],
+  ['sports', '12'],
+  ['fitness', '12001'],
+  ['outdoor', '12'],
+  ['tech', '24'],
+  ['technology', '24'],
+  ['electronics', '24001'],
+  ['gadgets', '24'],
+  ['food', '26'],
+  ['cooking', '26003'],
+  ['travel', '15'],
+  ['lifestyle', '15002'],
+  ['gaming', '19'],
+  ['games', '19'],
+  ['esports', '19'],
+  ['entertainment', '5'],
+  ['pets', '9'],
+  ['animals', '9'],
+  ['home', '10'],
+  ['furniture', '10'],
+  ['art', '28'],
+  ['music', '28'],
+  ['education', '6'],
+  ['finance', '29'],
+  ['business', '29'],
+  ['parenting', '1'],
+  ['kids', '1'],
+  ['baby', '1'],
+  ['automotive', '17'],
+  ['cars', '17'],
+  ['health', '14'],
+  ['wellness', '14'],
+  ['books', '7'],
+  ['reading', '7'],
+]);
+
 /**
  * Get all level-3 (leaf) category IDs from a level-1 category ID
  * @param {string} level1Value - Level-1 category ID (e.g., "25")
@@ -543,7 +588,7 @@ export function getIndustryLeafCodes(level1Value) {
 
 /**
  * Get category ID by name (Chinese or English)
- * @param {string} name - Category name (e.g., "美妆", "Skincare", "Mobile Phones")
+ * @param {string} name - Category name (e.g., "美妆", "Skincare", "Mobile Phones", "Fashion", "Beauty")
  * @returns {string|null} Category ID or null if not found
  */
 export function getIndustryIdByName(name) {
@@ -558,6 +603,11 @@ export function getIndustryIdByName(name) {
   const lowerName = name.toLowerCase();
   if (nameToIdMap.has(lowerName)) {
     return nameToIdMap.get(lowerName);
+  }
+  
+  // Try English alias (common short names)
+  if (englishAliasMap.has(lowerName)) {
+    return englishAliasMap.get(lowerName);
   }
   
   return null;
@@ -583,33 +633,45 @@ export function isValidCategoryId(str) {
 
 /**
  * Convert category input to level-3 IDs
- * Supports: Chinese name, English name, level-1 ID, level-3 ID
- * @param {string} input - Category input
+ * Supports: Chinese name, English name, level-1 ID, level-3 ID, comma-separated values
+ * @param {string} input - Category input (single value or comma-separated)
  * @returns {string[]} Array of level-3 category IDs
  */
 export function convertToLeafIds(input) {
   if (!input) return [];
   
+  // Support comma-separated multi-value input
+  const parts = input.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length > 1) {
+    // Check if it's already all 8-digit IDs (don't re-process)
+    if (parts.every(p => /^\d{8}$/.test(p))) {
+      return parts;
+    }
+    return parts.flatMap(part => convertToLeafIds(part));
+  }
+  
+  const single = parts[0] || input.trim();
+  
   // If already a valid ID
-  if (isValidCategoryId(input)) {
+  if (isValidCategoryId(single)) {
     // Level-1 ID (2 digits) - expand to all level-3 IDs
-    if (input.length === 2) {
-      return getIndustryLeafCodes(input);
+    if (single.length === 2) {
+      return getIndustryLeafCodes(single);
     }
     // Level-3 ID (8 digits) - return as is
-    if (input.length === 8) {
-      return [input];
+    if (single.length === 8) {
+      return [single];
     }
     // Level-2 ID (5 digits) - expand to level-3 IDs
-    if (input.length === 5) {
-      const level1Id = input.slice(0, 2);
+    if (single.length === 5) {
+      const level1Id = single.slice(0, 2);
       const allLeafIds = getIndustryLeafCodes(level1Id);
-      return allLeafIds.filter(id => id.startsWith(input));
+      return allLeafIds.filter(id => id.startsWith(single));
     }
   }
   
   // Try to find by name (Chinese or English)
-  const categoryId = getIndustryIdByName(input);
+  const categoryId = getIndustryIdByName(single);
   if (categoryId) {
     // If found ID is level-1, expand to all level-3 IDs
     if (categoryId.length === 2) {

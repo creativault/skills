@@ -168,6 +168,14 @@ export async function preprocessIndustryParams(platform, params) {
     const leafIds = convertToLeafIds(input);
     if (leafIds.length > 0) {
       processed.industry = leafIds.join(',');
+    } else {
+      // Conversion failed — report error instead of silently passing invalid value
+      console.error(JSON.stringify({
+        error: `Unknown industry category: "${input}". Use category IDs (e.g., 25009001) or supported names.`,
+        hint: 'Common aliases: Fashion→16, Beauty→25, Sports→12, Tech→24, Food→26, Gaming→19, Travel→15',
+        reference: 'See references/industry-categories.md for full list',
+      }));
+      process.exit(1);
     }
   }
   

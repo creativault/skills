@@ -326,6 +326,20 @@ All platforms use the **`industry`** parameter for category filtering.
 - **Level-1 category IDs** (2-digit codes): `25` (expands to all Beauty & Personal Care subcategories)
 - **Chinese category names**: `美妆,科技数码` (auto-converts to IDs)
 - **English category names**: `Skincare,Mobile Phones` (auto-converts to IDs)
+- **Common English aliases**: `Fashion`, `Beauty`, `Sports`, `Tech`, `Food`, `Gaming`, `Travel` (auto-converts to IDs)
+- **Comma-separated mixed input**: `Fashion,Beauty` (each part resolved independently)
+
+**Common aliases reference:**
+
+| Alias | Maps to | ID |
+|-------|---------|-----|
+| Fashion / Clothing | Clothing & Fashion | 16 |
+| Beauty / Cosmetics | Beauty & Personal Care | 25 |
+| Sports / Fitness / Outdoor | Outdoor & Sports | 12 |
+| Tech / Technology / Electronics | Technology & Electronics | 24 |
+| Food / Cooking | Food & Beverages | 26 |
+| Gaming / Games / Esports | Games | 19 |
+| Travel / Lifestyle | Travel & Lifestyle | 15 |
 
 See [Industry Categories Reference](references/industry-categories.md) for complete mapping.
 
@@ -333,10 +347,12 @@ See [Industry Categories Reference](references/industry-categories.md) for compl
 
 ```bash
 # All platforms: use "industry" parameter, auto-converted to level-3 IDs
+node scripts/search_creators.mjs '{"platform":"tiktok","industry":"Fashion"}'
 node scripts/search_creators.mjs '{"platform":"tiktok","industry":"美妆"}'
 node scripts/search_creators.mjs '{"platform":"tiktok","industry":"Skincare"}'
 node scripts/search_creators.mjs '{"platform":"youtube","industry":"25"}'
 node scripts/search_creators.mjs '{"platform":"instagram","industry":"25009001"}'
+node scripts/search_creators.mjs '{"platform":"tiktok","industry":"Fashion,Beauty"}'
 ```
 
 #### Service Level Details
@@ -515,6 +531,15 @@ Returns: `items` array with `uid`, `username`, `nickname`, `avatar_url`, `profil
 
 Send outreach emails to creators discovered via search. 7 scripts covering the full outreach workflow.
 
+### ⚠️ Architecture Principle
+
+**Skill = 纯 HTTP 客户端，不做任何业务逻辑处理。**
+
+- Skill 脚本只负责组装 JSON 参数并调用 OpenAPI 接口
+- 所有业务逻辑（创建提报、创建达人记录、查找活跃会话、判断新建/回复）由 OpenAPI 接口内部完成
+- Skill 不需要知道 submission_id、influencer_id 等内部概念
+- 搜索后发送时，Skill 应将搜索结果中的 `uid` 和 `platform` 传给 outreach_send（OpenAPI 内部会根据 uid 从 Holo 查完整达人数据，自动创建与 web 端一致的提报达人记录）
+
 ### Outreach Capabilities
 
 | Capability | Script | Mode |
@@ -564,8 +589,11 @@ node {baseDir}/scripts/outreach_metrics.mjs '{"date_from":"2025-05-01","group_by
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `to` | string | Creator email (single send) |
-| `recipients` | object[] | Array of `{email, nickname/name, platform}` (batch send) |
-| `subject` | string | Email subject (optional if using template_id) |
+| `uid` | string | **Required for single send**. Creator platform UID (from search result's `uid` field, OpenAPI auto-fetches full data) |
+| `nickname` | string | Creator nickname (optional, for session display) |
+| `platform` | string | Creator platform: tiktok/youtube/instagram (recommended) |
+| `recipients` | object[] | Array of `{email, uid, nickname, platform}` (batch send) |
+| `subject` | string | Email subject |
 | `body_html` | string | HTML body (supports `{{creator_name}}` variables) |
 | `body_text` | string | Plain text body |
 | `channel` | string | `ses` (default) / `gmail` / `outlook` |
@@ -641,4 +669,33 @@ node {baseDir}/scripts/outreach_metrics.mjs '{"date_from":"2025-05-01","group_by
 - "How are campaigns doing?" / "效果" → `outreach_metrics.mjs`
 - First time / "what channels?" / "what templates?" → `outreach_config.mjs`
 - Template variables: `{{creator_name}}`, `{{creator_email}}`, `{{platform}}`
+- When sending after search/lookalike results, ALWAYS pass `creator_uid` (the `uid` field from search results) and `platform` to outreach_send (OpenAPI will auto-fetch full creator data from Holo to populate the submission, matching web frontend quality)
+
+### ⚠️ Send Confirmation (MANDATORY)
+
+**邮件发送是高风险操作，每次发送前必须获得用户明确确认。**
+
+**[禁止]** 用户说"帮我发邮件"后直接执行发送脚本。
+
+**[必须]** 在执行 `outreach_send.mjs` 之前，向用户展示以下确认摘要并等待明确同意：
+
+```
+📧 发送确认
+
+• 收件人：{email 或 N 个收件人列表}
+• 主题：{subject}
+• 渠道：{channel}
+• 模式：{send_mode}
+• 正文预览：{前 100 字符...}
+
+确认发送吗？(Y/N)
+```
+
+**规则：**
+1. 单笔发送：展示收件人邮箱、主题、正文预览，等待用户确认
+2. 批量发送：展示收件人数量、收件人列表（≤5 个全部展示，>5 个展示前 5 个 + "...及其他 N 个"）、主题、正文预览，等待用户确认
+3. 用户说"确认"/"发送"/"是"/"Y"/"好的"/"发吧" → 执行发送
+4. 用户说"取消"/"不发"/"修改"/"N" → 不执行，询问修改意见
+5. 回复已有会话也需要确认（展示回复内容预览）
+6. 唯一例外：用户在同一句话中明确说"直接发送不用确认"时可跳过
 
