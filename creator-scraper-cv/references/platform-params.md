@@ -1,6 +1,16 @@
 # 各平台特有筛选参数
 
-搜索达人时，除通用参数外，各平台有特有的筛选条件。
+搜索达人时，除通用参数外，各平台有特有的筛选条件。本文件以 `backend/src/openapi/models/creator_request.py` 中当前 HTTP Open API 请求模型为准。
+
+## 参数值规则
+
+- 性别：`"0"`=女性，`"1"`=男性。
+- boolean：使用 `true` / `false`，不要使用字符串或数字。`has_email`、`has_whatsapp`、`is_ai_creator`、`is_top_creator` 等均为 boolean。
+- 比例：互动率、受众女性比例、佣金率等筛选值使用 0~100 百分比数值，例如 3% 传 `3`。
+- 国家/语言多选：使用代码并以英文逗号分隔。
+- 日期：使用 `YYYY-MM-DD`。
+- `lang` 只翻译响应码值，不用于筛选，默认 `en`。
+- 未声明的旧字段可能被请求模型忽略并且不产生筛选效果，禁止继续使用旧字段名。
 
 ## TikTok 特有参数
 
@@ -12,14 +22,14 @@
 | `language_code` | string | 语言代码，多选逗号分隔（如 `en,zh`）|
 | `last10_avg_video_views_cnt_gte` | number | 近10条视频平均播放量 ≥ |
 | `last10_avg_video_views_cnt_lte` | number | 近10条视频平均播放量 ≤ |
-| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率 ≥ |
-| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率 ≤ |
+| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率 ≥，传 0~100 |
+| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率 ≤，传 0~100 |
 | `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD）|
 | `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD）|
 | `product_category_id_array` | string | 带货类目 ID，逗号分隔 |
-| `industry` | string | 行业三级类目，英文三级类目逗号分隔 |
-| `audience_female_rate_gte` | number | 粉丝女性比例 ≥ |
-| `audience_female_rate_lte` | number | 粉丝女性比例 ≤ |
+| `industry` | string | 行业 level-3 数字类目 ID，逗号分隔；skill 脚本可将名称或上级类目自动展开 |
+| `audience_female_rate_gte` | number | 粉丝女性比例 ≥，传 0~100 |
+| `audience_female_rate_lte` | number | 粉丝女性比例 ≤，传 0~100 |
 | `audience_age_list` | string | 粉丝主要年龄区间 |
 | `last30day_gmv_gte` | number | 近30天 GMV ≥ |
 | `last30day_gmv_lte` | number | 近30天 GMV ≤ |
@@ -27,8 +37,8 @@
 | `last30day_gpm_lte` | number | 近30天 GPM ≤ |
 | `last30day_gmv_per_buyer_gte` | number | 近30天客单价 ≥ |
 | `last30day_gmv_per_buyer_lte` | number | 近30天客单价 ≤ |
-| `last30day_commission_rate_gte` | number | 近30天佣金率 ≥ |
-| `last30day_commission_rate_lte` | number | 近30天佣金率 ≤ |
+| `last30day_commission_rate_gte` | number | 近30天佣金率 ≥，传 0~100 |
+| `last30day_commission_rate_lte` | number | 近30天佣金率 ≤，传 0~100 |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
 | `audience_language_code_list` | string | 受众语言代码，多选逗号分隔 |
 
@@ -40,11 +50,13 @@
 
 搜索接口支持 `service_level` 参数，控制返回字段范围和积分消耗。同时支持 `lang` 参数控制码值字段的国际化翻译（`cn` 中文 / `en` 英文）。
 
+对话中用户未指定 `service_level` 时，应先向用户展示三档含义并说明默认推荐 `S2`；用户确认默认、推荐或直接搜索时使用 `S2`。用户已明确指定等级，或本轮已展示过等级说明时，不要重复打断。
+
 | 等级 | 名称 | 包含数据字段 | 积分单价（每条） |
 |------|------|------------|------------|
-| S1 | 纯名单筛选 | uid、username、nickname、avatar_url、profile_url、followers_count、likes_count、video_count、has_showcase、has_email、has_mcn、has_line、has_zalo、last_video_publish_date | 1 积分 |
-| S2 | 精准触达 | S1 全部 + country_code、gender、engagement_rate、avg_views、views_per_follower、product_categories、industry_categories、bio、hashtags、email、联系方式字段、mcn、language | 3 积分 |
-| S3 | 深度画像 | S2 全部 + audience_female_rate、audience_country_code_list、audience_language_code_list、audience_age_id_list | 4 积分 |
+| S1 | 纯名单筛选 | 基础身份、主页、联系方式存在性、最近发布时间；具体字段因平台而异 | 1 积分 |
+| S2 | 精准触达 | S1 + 国家、性别、粉丝/播放/互动、行业、邮箱等；具体字段因平台而异 | 3 积分 |
+| S3 | 深度画像 | S2 + 受众性别、国家、语言、年龄分布 | 4 积分 |
 
 默认 `S2`。响应 `meta` 中会返回 `service_level`（实际使用的等级）、`credits_consumed`（本次扣减积分数）和 `lang`（翻译语言）。
 
@@ -57,24 +69,26 @@
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `has_whatsapp` | boolean | 是否有 WhatsApp |
-| `is_ai_creator` | string | 是否 AI 达人 |
-| `industry` | string | 三级英文类目，逗号分隔 |
+| `is_ai_creator` | boolean | 是否 AI 达人 |
+| `industry` | string | 行业 level-3 数字类目 ID，逗号分隔；skill 脚本可将名称或上级类目自动展开 |
 | `language_code` | string | 语言代码，多选逗号分隔 |
-| `last10_avg_video_view_count_all_gte` | number | 近10条视频平均播放量（全部）≥ |
-| `last10_avg_video_view_count_all_lte` | number | 近10条视频平均播放量（全部）≤ |
-| `last10_avg_video_view_count_short_gte` | number | 近10条短视频平均播放量 ≥ |
-| `last10_avg_video_view_count_short_lte` | number | 近10条短视频平均播放量 ≤ |
-| `last10_avg_interaction_rate_all_gte` | number | 近10条视频平均互动率（全部）≥ |
-| `last10_avg_interaction_rate_all_lte` | number | 近10条视频平均互动率（全部）≤ |
-| `last10_avg_interaction_rate_short_gte` | number | 近10条短视频平均互动率 ≥ |
-| `last10_avg_interaction_rate_short_lte` | number | 近10条短视频平均互动率 ≤ |
-| `last_video_publish_time_gte` | string | 最近视频发布时间起始 |
-| `last_video_publish_time_lte` | string | 最近视频发布时间截止 |
+| `last10_avg_video_views_cnt_gte` | number | 近10条视频平均播放量（全部）≥ |
+| `last10_avg_video_views_cnt_lte` | number | 近10条视频平均播放量（全部）≤ |
+| `last10_avg_video_views_cnt_short_gte` | number | 近10条短视频平均播放量 ≥ |
+| `last10_avg_video_views_cnt_short_lte` | number | 近10条短视频平均播放量 ≤ |
+| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率（全部）≥，传 0~100 |
+| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率（全部）≤，传 0~100 |
+| `last10_avg_video_interaction_rate_short_gte` | number | 近10条短视频平均互动率 ≥，传 0~100 |
+| `last10_avg_video_interaction_rate_short_lte` | number | 近10条短视频平均互动率 ≤，传 0~100 |
+| `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD） |
+| `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD） |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
-| `audience_language_list` | string | 受众语言，多选逗号分隔 |
+| `audience_language_code_list` | string | 受众语言代码，多选逗号分隔 |
 | `audience_age_list` | string | 受众年龄，多选逗号分隔 |
-| `female_ratio_gte` | number | 受众女性占比 ≥ |
-| `female_ratio_lte` | number | 受众女性占比 ≤ |
+| `audience_female_rate_gte` | number | 受众女性占比 ≥，传 0~100 |
+| `audience_female_rate_lte` | number | 受众女性占比 ≤，传 0~100 |
+
+不要使用旧字段名 `last10_avg_video_view_count_all_*`、`last10_avg_interaction_rate_all_*`、`female_ratio_*`。
 
 ---
 
@@ -83,26 +97,23 @@
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `has_whatsapp` | boolean | 是否有 WhatsApp |
-| `is_product_kol` | boolean | 是否带货达人 |
 | `is_top_creator` | boolean | 是否顶级 Amazon 带货达人 |
-| `is_ai_creator` | string | 是否 AI 达人 |
-| `industry` | string | 三级英文类目，逗号分隔 |
+| `is_ai_creator` | boolean | 是否 AI 达人 |
+| `industry` | string | 行业 level-3 数字类目 ID，逗号分隔；skill 脚本可将名称或上级类目自动展开 |
 | `language_code` | string | 语言代码，多选逗号分隔 |
-| `last10_avg_video_view_count_gte` | number | 近10条视频平均播放量 ≥ |
-| `last10_avg_video_view_count_lte` | number | 近10条视频平均播放量 ≤ |
-| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率 ≥ |
-| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率 ≤ |
-| `last30day_gmv_gte` | number | 近30天 GMV ≥ |
-| `last30day_gmv_lte` | number | 近30天 GMV ≤ |
-| `last30day_prod_sales_show_gte` | number | 近30天销售商品数 ≥ |
-| `last30day_prod_sales_show_lte` | number | 近30天销售商品数 ≤ |
-| `last_video_publish_time_gte` | string | 最近视频发布时间起始 |
-| `last_video_publish_time_lte` | string | 最近视频发布时间截止 |
+| `last10_avg_video_views_cnt_gte` | number | 近10条视频平均播放量 ≥ |
+| `last10_avg_video_views_cnt_lte` | number | 近10条视频平均播放量 ≤ |
+| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率 ≥，传 0~100 |
+| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率 ≤，传 0~100 |
+| `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD） |
+| `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD） |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
 | `audience_language_list` | string | 受众语言，多选逗号分隔 |
 | `audience_age_list` | string | 受众年龄，多选逗号分隔 |
-| `female_ratio_gte` | number | 受众女性占比 ≥ |
-| `female_ratio_lte` | number | 受众女性占比 ≤ |
+| `audience_female_rate_gte` | number | 受众女性占比 ≥，传 0~100 |
+| `audience_female_rate_lte` | number | 受众女性占比 ≤，传 0~100 |
+
+当前 HTTP Open API 不支持 `is_product_kol`、GMV 和销售商品数筛选。不要使用旧字段名 `last10_avg_video_view_count_*`、`last_video_publish_time_*`、`female_ratio_*`。
 
 ---
 

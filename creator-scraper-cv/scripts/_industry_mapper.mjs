@@ -1,8 +1,10 @@
 // Industry category mapper module
 // Converts between category names (Chinese/English) and category IDs
 
+import { readFileSync } from 'node:fs';
+
 // Industry tree data structure (from industry-categories.md)
-const IndustryTree = [
+const fallbackIndustryTree = [
   {
     value: '19',
     label: 'Games',
@@ -438,10 +440,29 @@ const IndustryTree = [
   },
 ];
 
+function loadIndustryTree() {
+  try {
+    return JSON.parse(
+      readFileSync(
+        new URL('./influencer_industry_tree.json', import.meta.url),
+        'utf8',
+      ),
+    );
+  } catch (error) {
+    console.error(
+      `[industry-mapper] Failed to load complete industry tree, using fallback tree: ${error.message}`,
+    );
+    return fallbackIndustryTree;
+  }
+}
+
+const IndustryTree = loadIndustryTree();
+
 // Build lookup maps
 const idToNameMap = new Map();
 const nameToIdMap = new Map();
 const cnNameToIdMap = new Map();
+const childrenByIdMap = new Map();
 
 function buildMaps(nodes, parentPath = []) {
   for (const node of nodes) {
@@ -465,6 +486,7 @@ function buildMaps(nodes, parentPath = []) {
     
     // Recursively process children
     if (children && children.length > 0) {
+      childrenByIdMap.set(value, children.map((child) => child.value));
       buildMaps(children, [...parentPath, label]);
     }
   }
@@ -544,6 +566,8 @@ const englishAliasMap = new Map([
   ['games', '19'],
   ['esports', '19'],
   ['entertainment', '5'],
+  ['comedy', '5001'],
+  ['humor', '5001'],
   ['pets', '9'],
   ['animals', '9'],
   ['home', '10'],
@@ -565,25 +589,91 @@ const englishAliasMap = new Map([
 ]);
 
 /**
- * Get all level-3 (leaf) category IDs from a level-1 category ID
- * @param {string} level1Value - Level-1 category ID (e.g., "25")
+ * Get all level-3 (leaf) category IDs below any known category ID.
+ * Leaf IDs are returned unchanged.
+ * @param {string} categoryId - Any known category ID
  * @returns {string[]} Array of level-3 category IDs
  */
-export function getIndustryLeafCodes(level1Value) {
-  const node = IndustryTree.find((n) => n.value === level1Value);
-  if (!node?.children) return [node?.value ?? level1Value];
-  
-  const codes = [];
-  for (const l2 of node.children) {
-    if (!l2.children?.length) {
-      codes.push(l2.value);
-    } else {
-      for (const l3 of l2.children) {
-        codes.push(l3.value);
-      }
-    }
+export function getIndustryLeafCodes(categoryId) {
+  if (!idToNameMap.has(categoryId)) {
+    return [];
   }
-  return codes;
+
+  const childIds = childrenByIdMap.get(categoryId);
+  if (!childIds?.length) {
+    return [categoryId];
+  }
+
+  const leafIds = [];
+  for (const childId of childIds) {
+    leafIds.push(...getIndustryLeafCodes(childId));
+  }
+  return leafIds;
+}
+
+function normalizeIndustryName(name) {
+  return String(name).trim().replace(/\s+/g, ' ');
+}
+
+function resolveIndustryId(value) {
+  const normalized = normalizeIndustryName(value);
+  if (!normalized) {
+    return null;
+  }
+
+  if (isValidCategoryId(normalized)) {
+    return normalized;
+  }
+
+  return getIndustryIdByName(normalized);
+}
+
+function convertSingleToLeafIds(value) {
+  const categoryId = resolveIndustryId(value);
+  if (!categoryId) {
+    return [];
+  }
+
+  return getIndustryLeafCodes(categoryId);
+}
+
+function unique(values) {
+  return [...new Set(values)];
+}
+
+function splitIndustryInput(input) {
+  if (Array.isArray(input)) {
+    return input.flatMap((value) => splitIndustryInput(value));
+  }
+
+  return String(input)
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Validate and convert every input item. If any item is unknown, return an
+ * empty result so callers fail before sending a partially-filtered request.
+ */
+export function convertToLeafIds(input) {
+  if (!input) return [];
+
+  const parts = splitIndustryInput(input);
+  if (parts.length === 0) {
+    return [];
+  }
+
+  const leafIds = [];
+  for (const part of parts) {
+    const converted = convertSingleToLeafIds(part);
+    if (converted.length === 0) {
+      return [];
+    }
+    leafIds.push(...converted);
+  }
+
+  return unique(leafIds);
 }
 
 /**
@@ -593,14 +683,16 @@ export function getIndustryLeafCodes(level1Value) {
  */
 export function getIndustryIdByName(name) {
   if (!name) return null;
+
+  const normalizedName = normalizeIndustryName(name);
   
   // Try Chinese name first
-  if (cnNameToIdMap.has(name)) {
-    return cnNameToIdMap.get(name);
+  if (cnNameToIdMap.has(normalizedName)) {
+    return cnNameToIdMap.get(normalizedName);
   }
   
   // Try English name (case-insensitive)
-  const lowerName = name.toLowerCase();
+  const lowerName = normalizedName.toLowerCase();
   if (nameToIdMap.has(lowerName)) {
     return nameToIdMap.get(lowerName);
   }
@@ -623,71 +715,11 @@ export function getIndustryNameById(id) {
 }
 
 /**
- * Check if a string is a valid category ID (2, 5, or 8 digits)
+ * Check if a string is a known category ID.
  * @param {string} str - String to check
  * @returns {boolean} True if valid ID format
  */
 export function isValidCategoryId(str) {
-  return /^\d{2}$|^\d{5}$|^\d{8}$/.test(str);
-}
-
-/**
- * Convert category input to level-3 IDs
- * Supports: Chinese name, English name, level-1 ID, level-3 ID, comma-separated values
- * @param {string} input - Category input (single value or comma-separated)
- * @returns {string[]} Array of level-3 category IDs
- */
-export function convertToLeafIds(input) {
-  if (!input) return [];
-  
-  // Support comma-separated multi-value input
-  const parts = input.split(',').map(s => s.trim()).filter(Boolean);
-  if (parts.length > 1) {
-    // Check if it's already all 8-digit IDs (don't re-process)
-    if (parts.every(p => /^\d{8}$/.test(p))) {
-      return parts;
-    }
-    return parts.flatMap(part => convertToLeafIds(part));
-  }
-  
-  const single = parts[0] || input.trim();
-  
-  // If already a valid ID
-  if (isValidCategoryId(single)) {
-    // Level-1 ID (2 digits) - expand to all level-3 IDs
-    if (single.length === 2) {
-      return getIndustryLeafCodes(single);
-    }
-    // Level-3 ID (8 digits) - return as is
-    if (single.length === 8) {
-      return [single];
-    }
-    // Level-2 ID (5 digits) - expand to level-3 IDs
-    if (single.length === 5) {
-      const level1Id = single.slice(0, 2);
-      const allLeafIds = getIndustryLeafCodes(level1Id);
-      return allLeafIds.filter(id => id.startsWith(single));
-    }
-  }
-  
-  // Try to find by name (Chinese or English)
-  const categoryId = getIndustryIdByName(single);
-  if (categoryId) {
-    // If found ID is level-1, expand to all level-3 IDs
-    if (categoryId.length === 2) {
-      return getIndustryLeafCodes(categoryId);
-    }
-    // If found ID is level-3, return as is
-    if (categoryId.length === 8) {
-      return [categoryId];
-    }
-    // If found ID is level-2, expand to level-3 IDs
-    if (categoryId.length === 5) {
-      const level1Id = categoryId.slice(0, 2);
-      const allLeafIds = getIndustryLeafCodes(level1Id);
-      return allLeafIds.filter(id => id.startsWith(categoryId));
-    }
-  }
-  
-  return [];
+  const normalized = String(str).trim();
+  return /^\d+$/.test(normalized) && idToNameMap.has(normalized);
 }

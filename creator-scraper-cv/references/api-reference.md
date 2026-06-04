@@ -25,16 +25,21 @@
     "page": 1,
     "size": 50,
     "total": 1200,
-    "quota_remaining": -1
+    "quota_remaining": -1,
+    "credits_consumed": 150,
+    "credits_remaining": 131500
   }
 }
 ```
 
-`meta.quota_remaining`: remaining daily quota. `-1` means unlimited.
+`meta.quota_remaining`: remaining daily API request quota. It is **not** a credits balance. `-1` means unlimited.
 `meta.service_level`: service level used for this search request (`S1`/`S2`/`S3`). Only present in search responses. Default is `S2`.
 `meta.credits_consumed`: credits deducted for this request. `0` means no charge.
+`meta.credits_remaining`: actual OpenAPI credits balance. `-1` means unlimited. This field may be absent from non-billed endpoints.
 `meta.total`: total matching records. For search endpoints, only returned when filter conditions > 2 (excluding `page`, `size`, `sort_field`, `sort_order`, `service_level`). Returns `null` when ≤ 2 filters.
 `meta.lang`: response translation language (`cn`/`en`). `null` when `lang` param not provided.
+
+Never report insufficient credits from `quota_remaining`. Only error code `40201` confirms insufficient credits.
 
 ## Endpoints
 

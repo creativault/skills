@@ -47,8 +47,15 @@ Valid format: `cv_live_` prefix + random string, e.g., `cv_live_Y8nil_BsKAbITdqj
 ### Daily quota
 
 - Resets at UTC 00:00 daily
-- `meta.quota_remaining` in responses shows remaining quota
+- `meta.quota_remaining` shows remaining daily API request count, not credits
 - `-1` means unlimited
+- Do not display a credits warning based on `quota_remaining`
+
+### Insufficient credits
+
+- Only error code `40201` confirms insufficient credits
+- `meta.credits_remaining` is the actual OpenAPI credits balance when present
+- A successful response must never be converted into an insufficient-credits warning
 
 ### Collection task timeout
 

@@ -86,11 +86,20 @@ export async function callAPI(path, body = {}, platform = null, options = {}) {
     }
 
     if (!data.success) {
-      console.error(JSON.stringify({
+      const errorOutput = {
         error: data.error?.message || 'Request failed',
         code: data.error?.code,
         request_id: data.meta?.request_id,
-      }, null, 2));
+      };
+      if (data.error?.code === 40201) {
+        errorOutput.insufficient_credits = true;
+        errorOutput.credits_remaining = data.meta?.credits_remaining;
+      }
+      if (data.error?.code === 42902) {
+        errorOutput.daily_quota_exhausted = true;
+        errorOutput.daily_quota_remaining = data.meta?.quota_remaining;
+      }
+      console.error(JSON.stringify(errorOutput, null, 2));
       process.exit(1);
     }
 
@@ -158,12 +167,6 @@ export async function preprocessIndustryParams(platform, params) {
   if (processed.industry) {
     const input = processed.industry;
     
-    // If it's already a comma-separated list of IDs, validate and keep
-    if (typeof input === 'string' && /^\d{8}(,\d{8})*$/.test(input)) {
-      // Already in correct format
-      return processed;
-    }
-    
     // Convert input to array of level-3 IDs
     const leafIds = convertToLeafIds(input);
     if (leafIds.length > 0) {
@@ -171,7 +174,7 @@ export async function preprocessIndustryParams(platform, params) {
     } else {
       // Conversion failed — report error instead of silently passing invalid value
       console.error(JSON.stringify({
-        error: `Unknown industry category: "${input}". Use category IDs (e.g., 25009001) or supported names.`,
+        error: `Unknown or invalid industry category: "${input}". Every value must be a known category ID or supported name.`,
         hint: 'Common aliases: Fashion→16, Beauty→25, Sports→12, Tech→24, Food→26, Gaming→19, Travel→15',
         reference: 'See references/industry-categories.md for full list',
       }));
