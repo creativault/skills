@@ -1,7 +1,7 @@
 ---
 name: creator-collection
 description: |
-  批量达人数据采集与导出能力，支持链接批量、用户名批量、关键词采集三种模式。异步任务机制，含提交、轮询、取数、导出完整生命周期。
+  批量达人数据采集与导出能力，支持 TikTok、YouTube、Instagram、Twitter 四平台。支持链接批量、用户名批量、关键词采集三种模式。异步任务机制，含提交、轮询、取数、导出完整生命周期。
   Use when: 批量采集, 数据导出, 离线采集, batch collection, data export, keyword collection
 compatibility: Node.js 20.6+
 metadata:
@@ -12,6 +12,10 @@ metadata:
 ## 概述
 
 批量达人数据采集与导出能力。支持通过链接、用户名或关键词提交异步采集任务，自动轮询任务状态，完成后导出为 xlsx/csv/html 文件并提供下载链接。
+
+支持平台：TikTok、YouTube、Instagram、Twitter。
+
+> **Twitter 平台限制**：仅支持 `LINK_BATCH`（链接采集）和 `FILE_UPLOAD`（用户名采集），不支持视频采集（`CREATOR_VIDEO`、`POST_VIDEO`）。
 
 ## 脚本引用
 
@@ -69,7 +73,21 @@ node ../../scripts/submit_collection_task.mjs '{"task_type":"FILE_UPLOAD","platf
 
 # 关键词采集
 node ../../scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["beauty tips","skincare routine"]}'
+
+# Twitter 链接批量采集
+node ../../scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"twitter","values":["https://x.com/creator1","https://x.com/creator2"],"task_name":"Twitter collection"}'
 ```
+
+## 平台支持矩阵
+
+| 平台 | `LINK_BATCH` | `FILE_UPLOAD` | `CREATOR_VIDEO` | `POST_VIDEO` | 关键词采集 |
+|------|:---:|:---:|:---:|:---:|:---:|
+| TikTok | ✅ | ✅ | ✅ | ✅ | ✅ |
+| YouTube | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Instagram | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Twitter | ✅ | ✅ | ❌ | ❌ | ✅ |
+
+> **Twitter 限制**：仅支持链接采集和用户名采集，不支持视频采集（`CREATOR_VIDEO`、`POST_VIDEO`）。
 
 ## 参数说明
 
@@ -78,8 +96,8 @@ node ../../scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["be
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `task_type` | string | **必填**。`LINK_BATCH`（链接）/ `FILE_UPLOAD`（用户名） |
-| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` |
-| `values` | string[] | **必填**。链接或用户名数组，最多 500 条 |
+| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` / `twitter` |
+| `values` | string[] | **必填**。链接或用户名数组，最多 200 条 |
 | `task_name` | string | 任务名称 |
 | `webhook_url` | string | 完成回调 URL（HTTPS） |
 
@@ -87,7 +105,7 @@ node ../../scripts/submit_keyword_task.mjs '{"platform":"tiktok","keywords":["be
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` |
+| `platform` | string | **必填**。`tiktok` / `youtube` / `instagram` / `twitter` |
 | `keywords` | string[] | **必填**。关键词列表，最多 10 个 |
 | `task_name` | string | 任务名称 |
 | `webhook_url` | string | 完成回调 URL（HTTPS） |

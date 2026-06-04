@@ -2,13 +2,13 @@
 name: creator-scraper-cv
 description: |
   Creativault creator data collection and outreach skill. Search and collect creator/influencer
-  data from TikTok, YouTube, and Instagram. Send outreach emails to discovered creators with
+  data from TikTok, YouTube, Instagram, and Twitter. Send outreach emails to discovered creators with
   automatic conversation management, batch sending, and follow-up tracking.
   Supports multi-dimensional search, similar/lookalike creator discovery, batch collection by
   links/usernames/keywords, task tracking, data export (xlsx/csv/html), and email outreach
   (single/batch send, templates, smart timing, metrics).
   Use when: creator search, influencer scraping, KOL search, KOL analytics,
-  social media data extraction, TikTok scraper, YouTube scraper, Instagram scraper,
+  social media data extraction, TikTok scraper, YouTube scraper, Instagram scraper, Twitter scraper,
   influencer discovery, similar creators, lookalike, outreach, email outreach,
   send email to creator, batch email, follow-up, 达人采集, KOL 搜索, 网红数据,
   达人分析, 达人搜索, 相似达人, 社交媒体数据, 建联, 发邮件, 批量发送.
