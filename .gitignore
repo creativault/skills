@@ -48,6 +48,7 @@ Thumbs.db
 !tsconfig.json
 !mcp.json
 !influencer_industry_tree.json
+!creator-scraper-cv/**/*.json
 
 creativault-business-frontend-production
 creativault-business-backend-cv-dev-v0.3.0-20260429

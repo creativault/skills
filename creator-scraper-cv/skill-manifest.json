@@ -1,0 +1,51 @@
+{
+  "name": "creator-scraper-cv",
+  "latest_version": "1.6.0",
+  "min_supported_version": "1.5.0",
+  "channel": "stable",
+  "branch": "main",
+  "release_notes": [
+    "拆分达人搜索、采集、相似达人、建联等子能力",
+    "优化行业识别与相似行业候选提示",
+    "修复批量建联服务配置问题",
+    "新增 skill 版本检测与自动更新提示",
+    "新增 manifest 一键生成脚本"
+  ],
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
+      "sha256": "7e60efca0de78301e37fa10fd5de6625303d772c3c394a4a6152e4d6f871a544"
+    },
+    {
+      "path": "skill.json",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
+      "sha256": "fcea1ee1edbc1aac4bec99b041dca8c016747062ffd4883d90de0677a971e502"
+    },
+    {
+      "path": "discovery/creator-search/SKILL.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
+      "sha256": "7d8b6870eac567e1fc51a20a0f8097102875ea69ec29b4a94763aa6eb10b09af"
+    },
+    {
+      "path": "scripts/_api_client.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_api_client.mjs",
+      "sha256": "19fcaef3dddf3c0c06c8464a97cb8938025865a13666f9ccf787ba5e71f46a7d"
+    },
+    {
+      "path": "scripts/_industry_mapper.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_industry_mapper.mjs",
+      "sha256": "22275d116b46945bcfd1e49a2a239a0d44f66d303c7388524394353ef0cfd611"
+    },
+    {
+      "path": "scripts/skill_update.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/skill_update.mjs",
+      "sha256": "1b4f7cf9a73a6e355b59a338868dca7f1100724c8310b04e7a782b5b8ab4ca69"
+    },
+    {
+      "path": "scripts/generate_manifest.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/generate_manifest.mjs",
+      "sha256": "cd19c5e77e27f4534ed76b029e4afd1f09c69e5acbecd00431273efcce5d5e27"
+    }
+  ]
+}
