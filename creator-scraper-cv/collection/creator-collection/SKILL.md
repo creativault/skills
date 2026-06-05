@@ -41,11 +41,26 @@ metadata:
 | 阶段 | 脚本 | 说明 |
 |------|------|------|
 | 1. 提交 | `submit_collection_task.mjs` / `submit_keyword_task.mjs` | 返回 task_id |
-| 2. 轮询 | `poll_task_status.mjs` | 每 60s 自动轮询直到完成 |
+| 2. 轮询 | `poll_task_status.mjs` | 每 60s 自动轮询直到终态 |
 | 3. 取数 | `get_task_data.mjs` | 分页获取原始 JSON 数据（仅在用户明确要求时使用） |
 | 4. 导出 | `export_task_data.mjs` | 生成文件并返回下载链接 |
 
-> **规则**：采集完成后，**必须**先调用 `export_task_data.mjs` 生成可下载文件并展示链接给用户。不要直接调用 `get_task_data.mjs` 输出原始 JSON。
+### 任务状态与终态判断
+
+| 状态 | 含义 | 是否终态 |
+|------|------|---------|
+| `processing` | 处理中（爬取中或数据入库中） | ❌ 继续轮询 |
+| `completed` | 已完成 | ✅ 可取数/导出 |
+| `failed` | 失败 | ✅ 报告错误 |
+| `timeout` | 超时 | ✅ 报告超时 |
+
+> **[禁止] 在 `status: "processing"` 时提前报告结果。**
+> 即使 `progress: 100%`，只要 `status` 仍为 `processing`，说明数据仍在入库处理中，**不能**判定为"0 条数据"或"无匹配结果"。
+> 必须等到 `status` 变为 `completed` / `failed` / `timeout` 之一后，才能向用户报告最终结果。
+>
+> **典型场景**：`progress: 100%, completed: 0, status: processing` — 爬取已完成但数据尚未入库，继续轮询等待 `completed` 状态。
+
+> **规则**：采集完成后（`status: completed`），**必须**先调用 `export_task_data.mjs` 生成可下载文件并展示链接给用户。不要直接调用 `get_task_data.mjs` 输出原始 JSON。
 
 > **积分提醒规则**：仅当接口明确返回错误码 `40201` 时提示积分不足。`meta.quota_remaining` 是当天剩余 API 请求次数，不是积分余额；采集、轮询或导出成功后，禁止根据该字段生成“剩余积分不足”提醒。
 

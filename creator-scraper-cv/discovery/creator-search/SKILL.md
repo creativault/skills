@@ -162,6 +162,13 @@ Instagram 不要使用旧字段名 `last10_avg_video_view_count_*`、`last_video
 | # | 用户名 | 频道名 | 订阅数 | 总观看 | 平均播放 | 互动率 | 国家 | 频道链接 |
 ```
 
+### Fuzzy Industry Guidance
+
+- High confidence terms can be searched directly. Examples: `skincare`, `skin care`, `funny`, `home cleaning`, `pet supplies`, `kids toys`, `phone accessories`.
+- If the user gives a broad business phrase, map it to the closest supported category and briefly state the interpretation before searching. Example: "cleaning creators" -> `Home Cleaning`; "funny creators" -> `Comedy & Humor`.
+- If the phrase is ambiguous, do not silently guess. Show 2-3 likely categories and ask the user to confirm. Examples: "toy" may mean `Children's Toys`, `Pet Toys`, `Model Toys`, or `Adult Art Toys`; "home" may mean `Home Cleaning`, `Home Decoration`, `Home Appliances`, or `Kitchen & Tableware`.
+- When the script returns `suggestions`, present those category names to the user and ask which one to use instead of sending a request with an unknown industry value.
+
 ### Instagram
 
 ```

@@ -1,12 +1,43 @@
 // Creativault Open API client module
 // Shared authentication, request, error handling, and retry logic
 
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const API_BASE = (process.env.CV_API_BASE_URL || 'http://api.creativault.vip').replace(/\/+$/, '');
 const API_KEY = process.env.CV_API_KEY;
 const USER_IDENTITY = process.env.CV_USER_IDENTITY;
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const SKILL_META = loadSkillMeta();
 
 const MAX_RETRIES = 3;
 const DEFAULT_RETRY_AFTER = 60;
+
+function loadSkillMeta() {
+  try {
+    return JSON.parse(readFileSync(new URL('../skill.json', import.meta.url), 'utf8'));
+  } catch {
+    const fallback = {
+      name: 'creator-scraper-cv',
+      version: 'unknown',
+      channel: 'stable',
+    };
+    try {
+      const skillMd = readFileSync(new URL('../SKILL.md', import.meta.url), 'utf8');
+      const versionMatch = skillMd.match(/version:\s*"?([^"\n]+)"?/);
+      if (versionMatch?.[1]) {
+        fallback.version = versionMatch[1].trim();
+      }
+    } catch {
+      // Keep default fallback metadata.
+    }
+    return {
+      ...fallback,
+    };
+  }
+}
 
 if (!API_KEY) {
   console.error(JSON.stringify({
@@ -55,6 +86,9 @@ export async function callAPI(path, body = {}, platform = null, options = {}) {
       const headers = {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
+        'X-CV-Skill-Name': SKILL_META.name || 'creator-scraper-cv',
+        'X-CV-Skill-Version': SKILL_META.version || 'unknown',
+        'X-CV-Skill-Channel': SKILL_META.channel || 'unknown',
       };
       if (!options.skipUserIdentity) {
         headers['X-User-Identity'] = USER_IDENTITY;
@@ -103,12 +137,49 @@ export async function callAPI(path, body = {}, platform = null, options = {}) {
       process.exit(1);
     }
 
+    maybeHandleSkillUpdateMeta(data.meta);
     return data;
   }
 
   // All retries exhausted
   console.error(JSON.stringify({ error: `Rate limit: max retries (${MAX_RETRIES}) exhausted`, url }));
   process.exit(1);
+}
+
+function maybeHandleSkillUpdateMeta(meta = {}) {
+  const latestVersion = meta?.skill_latest_version;
+  const updateRequired = Boolean(meta?.skill_update_required);
+  const updateAvailable = updateRequired || Boolean(meta?.skill_update_available);
+  if (!latestVersion && !updateAvailable) {
+    return;
+  }
+
+  const message = meta?.skill_update_message
+    || `creator-scraper-cv has a newer version: current=${SKILL_META.version}, latest=${latestVersion || 'unknown'}`;
+
+  console.error(JSON.stringify({
+    skill_update: {
+      required: updateRequired,
+      current_version: SKILL_META.version,
+      latest_version: latestVersion || null,
+      min_supported_version: meta?.skill_min_supported_version || null,
+      message,
+      update_command: 'node scripts/skill_update.mjs --yes',
+    },
+  }, null, 2));
+
+  if (process.env.CV_SKILL_AUTO_UPDATE === 'true') {
+    const result = spawnSync(process.execPath, [join(SCRIPT_DIR, 'skill_update.mjs'), '--yes'], {
+      encoding: 'utf8',
+      stdio: 'inherit',
+    });
+    if (result.status !== 0) {
+      console.error(JSON.stringify({
+        skill_update_error: 'Auto update failed. Please run node scripts/skill_update.mjs --yes manually.',
+        exit_code: result.status,
+      }));
+    }
+  }
 }
 
 /**
@@ -160,7 +231,7 @@ export function validatePlatform(platform) {
  */
 export async function preprocessIndustryParams(platform, params) {
   // Import industry mapper functions dynamically
-  const { convertToLeafIds } = await import('./_industry_mapper.mjs');
+  const { convertToLeafIds, suggestIndustryMatches } = await import('./_industry_mapper.mjs');
   
   const processed = { ...params };
   
@@ -173,9 +244,11 @@ export async function preprocessIndustryParams(platform, params) {
       processed.industry = leafIds.join(',');
     } else {
       // Conversion failed — report error instead of silently passing invalid value
+      const suggestions = suggestIndustryMatches(input);
       console.error(JSON.stringify({
         error: `Unknown or invalid industry category: "${input}". Every value must be a known category ID or supported name.`,
-        hint: 'Common aliases: Fashion→16, Beauty→25, Sports→12, Tech→24, Food→26, Gaming→19, Travel→15',
+        hint: 'Use one exact category, a known alias, or choose from the suggested categories below. If the user intent is ambiguous, ask for confirmation before searching.',
+        suggestions,
         reference: 'See references/industry-categories.md for full list',
       }));
       process.exit(1);

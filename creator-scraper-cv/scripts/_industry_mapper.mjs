@@ -463,6 +463,26 @@ const idToNameMap = new Map();
 const nameToIdMap = new Map();
 const cnNameToIdMap = new Map();
 const childrenByIdMap = new Map();
+const normalizedNameToIdMap = new Map();
+
+function normalizeIndustryKey(name) {
+  return String(name)
+    .normalize('NFKC')
+    .trim()
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function registerNormalizedName(name, id) {
+  const key = normalizeIndustryKey(name);
+  if (key && !normalizedNameToIdMap.has(key)) {
+    normalizedNameToIdMap.set(key, id);
+  }
+}
 
 function buildMaps(nodes, parentPath = []) {
   for (const node of nodes) {
@@ -473,14 +493,17 @@ function buildMaps(nodes, parentPath = []) {
     
     // Name to ID mapping (case-insensitive)
     nameToIdMap.set(label.toLowerCase(), value);
+    registerNormalizedName(label, value);
     
     // Chinese name to ID mapping
     if (labelCn) {
       cnNameToIdMap.set(labelCn, value);
+      registerNormalizedName(labelCn, value);
       // Auto-extract short form: "美妆与个人护理" -> "美妆"
       const shortCn = extractShortCn(labelCn);
       if (shortCn && shortCn !== labelCn) {
         cnNameToIdMap.set(shortCn, value);
+        registerNormalizedName(shortCn, value);
       }
     }
     
@@ -539,6 +562,7 @@ for (const [alias, id] of aliasToIdMap) {
   if (!cnNameToIdMap.has(alias)) {
     cnNameToIdMap.set(alias, id);
   }
+  registerNormalizedName(alias, id);
 }
 
 // Common English aliases/abbreviations → level-1 category ID
@@ -588,6 +612,144 @@ const englishAliasMap = new Map([
   ['reading', '7'],
 ]);
 
+// Business-friendly aliases and common fuzzy phrases.
+const businessAliasMap = new Map([
+  ['outfit', '16'],
+  ['outfits', '16'],
+  ['styling', '16'],
+  ['streetwear', '16'],
+  ['shoes', '16007001'],
+  ['footwear', '16007001'],
+  ['bags', '16005001'],
+  ['luggage', '16005001'],
+  ['watch', '16006006'],
+  ['watches', '16006006'],
+  ['sunglasses', '16006003'],
+
+  ['personal care', '25'],
+  ['make up', '25006'],
+  ['beauty tools', '25003'],
+  ['skin care', '25009'],
+  ['skin-care', '25009'],
+  ['hair care', '25007'],
+  ['hair-care', '25007'],
+  ['oral care', '25004001'],
+  ['body care', '25013001'],
+  ['nail', '25012001'],
+  ['nails', '25012001'],
+  ['nail art', '25012001'],
+  ['perfume', '25014001'],
+  ['fragrance', '25014001'],
+  ['fragrances', '25014001'],
+
+  ['gym', '12001'],
+  ['workout', '12001'],
+  ['yoga', '12001006'],
+  ['pilates', '12001006'],
+  ['basketball', '12002'],
+  ['football', '12002'],
+  ['soccer', '12002'],
+  ['outdoors', '12'],
+
+  ['digital', '24'],
+  ['smart devices', '24'],
+  ['smart home', '24003'],
+  ['mobile phone', '24001003'],
+  ['mobile phones', '24001003'],
+  ['phone', '24001003'],
+  ['phones', '24001003'],
+  ['phone accessories', '24002002'],
+  ['mobile accessories', '24002002'],
+  ['headphones', '24001007'],
+  ['earbuds', '24001007'],
+  ['camera', '24001002'],
+  ['cameras', '24001002'],
+  ['computer', '24001004'],
+  ['computers', '24001004'],
+
+  ['cook', '26003'],
+  ['recipe', '26003'],
+  ['recipes', '26003'],
+  ['beverage', '26002'],
+  ['beverages', '26002'],
+  ['kitchen', '10002'],
+  ['kitchenware', '10002001'],
+  ['tableware', '10002001'],
+
+  ['e sports', '19'],
+  ['e-sports', '19'],
+  ['mobile games', '19'],
+  ['pc games', '19'],
+
+  ['humour', '5001'],
+  ['funny', '5001'],
+  ['joke', '5001'],
+  ['jokes', '5001'],
+  ['meme', '5001'],
+  ['memes', '5001'],
+  ['prank', '5001'],
+  ['pranks', '5001'],
+
+  ['pet', '9'],
+  ['pet supplies', '9002'],
+  ['pet products', '9002'],
+  ['pet food', '9002004'],
+  ['pet toys', '9002002'],
+
+  ['home living', '10'],
+  ['home and living', '10'],
+  ['home decor', '10007'],
+  ['home decoration', '10007'],
+  ['home appliance', '10008'],
+  ['home appliances', '10008'],
+  ['household appliance', '10008005'],
+  ['household appliances', '10008005'],
+  ['home cleaning', '10006'],
+  ['house cleaning', '10006'],
+  ['household cleaning', '10006'],
+  ['cleaning', '10006'],
+  ['cleaning products', '10006'],
+  ['home org', '10'],
+  ['home organization', '10'],
+  ['home organising', '10'],
+  ['home organizing', '10'],
+  ['organization', '10'],
+  ['organising', '10'],
+  ['organizing', '10'],
+  ['storage', '10'],
+
+  ['learning', '6'],
+  ['study', '6'],
+
+  ['family', '1'],
+  ['mother', '1'],
+  ['mom', '1'],
+  ['mum', '1'],
+  ['maternity', '1002'],
+  ['children', '1'],
+  ['child', '1'],
+  ['baby products', '1002002'],
+
+  ['auto', '17'],
+  ['car', '17'],
+
+  ['toys', '20'],
+  ['toy', '20'],
+  ['kids toys', '20001'],
+  ['children toys', '20001'],
+  ['childrens toys', '20001'],
+  ['educational toys', '20004'],
+  ['building blocks', '20005'],
+  ['blocks', '20005'],
+  ['lego', '20005'],
+  ['model toys', '20003'],
+  ['collectible toys', '20002'],
+]);
+
+for (const [alias, id] of [...englishAliasMap, ...businessAliasMap]) {
+  registerNormalizedName(alias, id);
+}
+
 /**
  * Get all level-3 (leaf) category IDs below any known category ID.
  * Leaf IDs are returned unchanged.
@@ -612,7 +774,7 @@ export function getIndustryLeafCodes(categoryId) {
 }
 
 function normalizeIndustryName(name) {
-  return String(name).trim().replace(/\s+/g, ' ');
+  return String(name).normalize('NFKC').trim().replace(/\s+/g, ' ');
 }
 
 function resolveIndustryId(value) {
@@ -685,10 +847,18 @@ export function getIndustryIdByName(name) {
   if (!name) return null;
 
   const normalizedName = normalizeIndustryName(name);
+  const normalizedKey = normalizeIndustryKey(normalizedName);
   
   // Try Chinese name first
   if (cnNameToIdMap.has(normalizedName)) {
     return cnNameToIdMap.get(normalizedName);
+  }
+  if (normalizedNameToIdMap.has(normalizedKey)) {
+    return normalizedNameToIdMap.get(normalizedKey);
+  }
+  const tokenKey = tokenizeIndustryName(normalizedKey).join(' ');
+  if (tokenKey && normalizedNameToIdMap.has(tokenKey)) {
+    return normalizedNameToIdMap.get(tokenKey);
   }
   
   // Try English name (case-insensitive)
@@ -701,8 +871,120 @@ export function getIndustryIdByName(name) {
   if (englishAliasMap.has(lowerName)) {
     return englishAliasMap.get(lowerName);
   }
+  if (businessAliasMap.has(lowerName)) {
+    return businessAliasMap.get(lowerName);
+  }
   
   return null;
+}
+
+function tokenizeIndustryName(value) {
+  return normalizeIndustryKey(value)
+    .split(' ')
+    .filter((token) => token.length >= 3)
+    .filter((token) => !['and', 'the', 'for', 'with', 'kol', 'kols', 'creator', 'creators', 'influencer', 'influencers', 'product', 'products'].includes(token));
+}
+
+function levenshteinDistance(a, b) {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = new Array(b.length + 1);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + substitutionCost,
+      );
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[b.length];
+}
+
+function scoreIndustryCandidate(queryKey, candidateKey) {
+  if (!queryKey || !candidateKey) return 0;
+  if (queryKey === candidateKey) return 1;
+  if (candidateKey.includes(queryKey) || queryKey.includes(candidateKey)) return 0.88;
+
+  const queryTokens = tokenizeIndustryName(queryKey);
+  const candidateTokens = tokenizeIndustryName(candidateKey);
+  if (queryTokens.length > 0 && candidateTokens.length > 0) {
+    const overlap = queryTokens.filter((token) => candidateTokens.includes(token)).length;
+    if (overlap > 0) {
+      return 0.62 + Math.min(overlap / Math.max(queryTokens.length, candidateTokens.length), 1) * 0.24;
+    }
+  }
+
+  if (queryKey.length >= 5 && candidateKey.length >= 5) {
+    const distance = levenshteinDistance(queryKey, candidateKey);
+    const ratio = 1 - distance / Math.max(queryKey.length, candidateKey.length);
+    if (ratio >= 0.72) {
+      return ratio * 0.72;
+    }
+  }
+
+  return 0;
+}
+
+function candidateDisplayName(id) {
+  const name = idToNameMap.get(id);
+  const leaves = getIndustryLeafCodes(id);
+  return {
+    id,
+    name,
+    leaf_count: leaves.length,
+  };
+}
+
+/**
+ * Suggest likely industry categories without converting the request.
+ * Used when confidence is too low to safely send a filtered OpenAPI request.
+ * @param {string|string[]} input
+ * @param {number} limit
+ * @returns {{input:string, suggestions:Array<{id:string,name:string,leaf_count:number,score:number}>}[]}
+ */
+export function suggestIndustryMatches(input, limit = 5) {
+  const parts = splitIndustryInput(input);
+  return parts.map((part) => {
+    const queryKey = normalizeIndustryKey(part);
+    const scored = [];
+
+    for (const [candidateKey, id] of normalizedNameToIdMap) {
+      const score = scoreIndustryCandidate(queryKey, candidateKey);
+      if (score >= 0.5) {
+        scored.push({ id, score });
+      }
+    }
+
+    const uniqueById = new Map();
+    for (const item of scored.sort((a, b) => b.score - a.score)) {
+      const existing = uniqueById.get(item.id);
+      if (!existing || item.score > existing.score) {
+        uniqueById.set(item.id, item);
+      }
+    }
+
+    const suggestions = [...uniqueById.values()]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map((item) => ({
+        ...candidateDisplayName(item.id),
+        score: Number(item.score.toFixed(2)),
+      }));
+
+    return {
+      input: part,
+      suggestions,
+    };
+  });
 }
 
 /**

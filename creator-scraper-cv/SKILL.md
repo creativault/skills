@@ -15,7 +15,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Creativault Creator Ecosystem
@@ -43,6 +43,29 @@ metadata:
 **路由规则**：AI Agent 根据用户意图匹配上表关键词，加载对应子 skill。无法匹配时展示本表供用户选择。
 
 ## Prerequisites
+
+Optional update variables:
+
+- `CV_SKILL_UPDATE_MANIFEST_URL` - Remote manifest URL for skill update checks.
+- `CV_SKILL_AUTO_UPDATE=true` - Allow automatic update when the API reports this skill is outdated.
+
+Manual check:
+
+```bash
+node scripts/skill_update.mjs --check
+```
+
+Confirmed update:
+
+```bash
+node scripts/skill_update.mjs --yes
+```
+
+Generate release manifest:
+
+```bash
+node scripts/generate_manifest.mjs --note "Describe this release"
+```
 
 Set the following environment variables:
 
