@@ -7,7 +7,7 @@
 //   node scripts/generate_manifest.mjs --include scripts/new_file.mjs
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,15 +15,16 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const skillRoot = resolve(scriptDir, '..');
 const skillMetaPath = join(skillRoot, 'skill.json');
 const manifestPath = join(skillRoot, 'skill-manifest.json');
-const defaultFiles = [
-  'SKILL.md',
-  'skill.json',
-  'discovery/creator-search/SKILL.md',
-  'scripts/_api_client.mjs',
-  'scripts/_industry_mapper.mjs',
-  'scripts/skill_update.mjs',
-  'scripts/generate_manifest.mjs',
+const excludedPathPrefixes = [
+  '.git/',
+  '.skill-backups/',
+  'node_modules/',
+  '__pycache__/',
 ];
+const excludedPathNames = new Set([
+  '.DS_Store',
+  'Thumbs.db',
+]);
 
 function readJSON(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -76,17 +77,29 @@ function assertSafeRelativePath(path) {
   return normalized;
 }
 
-function uniquePaths(paths) {
-  const seen = new Set();
-  const result = [];
-  for (const path of paths) {
-    const normalized = assertSafeRelativePath(path);
-    if (!seen.has(normalized)) {
-      seen.add(normalized);
-      result.push(normalized);
+function isExcludedPath(relativePath) {
+  const normalized = assertSafeRelativePath(relativePath);
+  const name = normalized.split('/').pop();
+  return excludedPathNames.has(name) || excludedPathPrefixes.some((prefix) => normalized.startsWith(prefix));
+}
+
+function scanSkillFiles(root = skillRoot, prefix = '') {
+  const paths = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const normalized = assertSafeRelativePath(relativePath);
+    if (isExcludedPath(normalized)) {
+      continue;
+    }
+
+    const fullPath = join(root, entry.name);
+    if (entry.isDirectory()) {
+      paths.push(...scanSkillFiles(fullPath, normalized));
+    } else if (entry.isFile()) {
+      paths.push(normalized);
     }
   }
-  return result;
+  return paths.sort((left, right) => left.localeCompare(right));
 }
 
 function sha256ForTextFile(path) {
@@ -119,21 +132,23 @@ function buildManifest({ args, skillMeta, currentManifest }) {
 
   const skillName = currentManifest.name || skillMeta.name;
   const rawBase = (args.rawBase || deriveRawBase(currentManifest, skillName)).replace(/\/$/, '');
-  const existingPaths = Array.isArray(currentManifest.files)
-    ? currentManifest.files.map((file) => file.path)
-    : defaultFiles;
-  const paths = uniquePaths([...existingPaths, ...defaultFiles, ...args.includes]);
+  const paths = [...new Set([...scanSkillFiles(), ...args.includes.map(assertSafeRelativePath)])].sort(
+    (left, right) => left.localeCompare(right),
+  );
 
   const files = paths.map((relativePath) => {
     const fullPath = join(skillRoot, relativePath);
-    if (!existsSync(fullPath)) {
+    if (!existsSync(fullPath) || !statSync(fullPath).isFile()) {
       throw new Error(`Manifest file does not exist: ${relativePath}`);
     }
-    return {
+    const file = {
       path: relativePath,
       url: `${rawBase}/${relativePath}`,
-      sha256: sha256ForTextFile(fullPath),
     };
+    if (relativePath !== 'skill-manifest.json') {
+      file.sha256 = sha256ForTextFile(fullPath);
+    }
+    return file;
   });
 
   return {
@@ -143,6 +158,12 @@ function buildManifest({ args, skillMeta, currentManifest }) {
     channel: skillMeta.channel || currentManifest.channel || 'stable',
     branch: currentManifest.branch || 'main',
     release_notes: args.notes.length > 0 ? args.notes : currentManifest.release_notes || [],
+    sync: {
+      mode: 'mirror',
+      delete_missing: true,
+      managed_roots: ['.'],
+      exclude: ['.skill-backups/**'],
+    },
     files,
   };
 }

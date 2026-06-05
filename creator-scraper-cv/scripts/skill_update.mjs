@@ -4,6 +4,7 @@
 // Usage:
 //   node scripts/skill_update.mjs --check
 //   node scripts/skill_update.mjs --yes
+//   node scripts/skill_update.mjs --sync
 //
 // Required:
 //   CV_SKILL_UPDATE_MANIFEST_URL=https://.../creator-scraper-cv.manifest.json
@@ -20,7 +21,16 @@
 // }
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -76,18 +86,114 @@ function sha256(text) {
 }
 
 function assertSafeRelativePath(path) {
-  const normalized = normalize(path);
+  const normalized = normalize(path).replaceAll('\\', '/');
   if (
     !normalized ||
     isAbsolute(normalized) ||
     normalized.startsWith('..') ||
-    normalized.includes(`..\\`) ||
     normalized.includes('../') ||
+    normalized.includes('/../') ||
+    normalized === '.' ||
     resolve(skillRoot, normalized) === skillRoot
   ) {
     throw new Error(`Unsafe manifest file path: ${path}`);
   }
   return normalized;
+}
+
+function isSyncExcluded(relativePath) {
+  const normalized = assertSafeRelativePath(relativePath);
+  return (
+    normalized.startsWith('.skill-backups/')
+    || normalized.startsWith('.git/')
+    || normalized.startsWith('node_modules/')
+    || normalized.includes('/__pycache__/')
+    || normalized.endsWith('/.DS_Store')
+    || normalized.endsWith('/Thumbs.db')
+  );
+}
+
+function listLocalFiles(root, prefix = '') {
+  if (!existsSync(root)) {
+    return [];
+  }
+
+  const paths = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const normalized = assertSafeRelativePath(relativePath);
+    if (isSyncExcluded(normalized)) {
+      continue;
+    }
+
+    const fullPath = join(root, entry.name);
+    if (entry.isDirectory()) {
+      paths.push(...listLocalFiles(fullPath, normalized));
+    } else if (entry.isFile()) {
+      paths.push(normalized);
+    }
+  }
+  return paths;
+}
+
+function getManagedRoots(manifest) {
+  const roots = manifest.sync?.managed_roots;
+  if (!Array.isArray(roots) || roots.length === 0) {
+    return [];
+  }
+  return roots.map((root) => {
+    if (root === '.') {
+      return '.';
+    }
+    return assertSafeRelativePath(root);
+  });
+}
+
+function listMissingLocalFiles(manifestFiles, managedRoots) {
+  if (managedRoots.length === 0) {
+    return [];
+  }
+
+  const remotePaths = new Set(manifestFiles);
+  const localPaths = [];
+  for (const root of managedRoots) {
+    const fullRoot = root === '.' ? skillRoot : join(skillRoot, root);
+    const prefix = root === '.' ? '' : root;
+    localPaths.push(...listLocalFiles(fullRoot, prefix));
+  }
+
+  return [...new Set(localPaths)]
+    .filter((path) => !remotePaths.has(path))
+    .filter((path) => !isSyncExcluded(path))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function backupAndRemoveFile(relativePath, backupRoot) {
+  const target = join(skillRoot, relativePath);
+  if (!existsSync(target) || !statSync(target).isFile()) {
+    return false;
+  }
+
+  const backup = join(backupRoot, relativePath);
+  mkdirSync(dirname(backup), { recursive: true });
+  renameSync(target, backup);
+  return true;
+}
+
+function pruneEmptyDirectories(startDir) {
+  if (!existsSync(startDir) || startDir === skillRoot) {
+    return;
+  }
+
+  let current = startDir;
+  while (current !== skillRoot && existsSync(current)) {
+    const entries = readdirSync(current);
+    if (entries.length > 0) {
+      break;
+    }
+    rmSync(current, { recursive: false, force: true });
+    current = dirname(current);
+  }
 }
 
 async function fetchJSON(url) {
@@ -155,10 +261,10 @@ async function check() {
   };
 }
 
-async function update({ dryRun = false } = {}) {
+async function update({ dryRun = false, force = false } = {}) {
   const result = await check();
   if (!result.ok) return result;
-  if (!result.update_available) return result;
+  if (!result.update_available && !force) return result;
 
   const { manifest } = result;
   if (!Array.isArray(manifest.files) || manifest.files.length === 0) {
@@ -166,8 +272,10 @@ async function update({ dryRun = false } = {}) {
   }
 
   const staged = [];
+  const manifestPaths = [];
   for (const file of manifest.files) {
     const relativePath = assertSafeRelativePath(file.path);
+    manifestPaths.push(relativePath);
     const text = await fetchText(file.url);
     if (file.sha256 && sha256(text) !== file.sha256) {
       throw new Error(`Checksum mismatch for ${relativePath}`);
@@ -175,11 +283,17 @@ async function update({ dryRun = false } = {}) {
     staged.push({ relativePath, text });
   }
 
+  const managedRoots = manifest.sync?.delete_missing ? getManagedRoots(manifest) : [];
+  const staleFiles = listMissingLocalFiles(manifestPaths, managedRoots);
+
   if (dryRun) {
     return {
       ...result,
       dry_run: true,
+      sync_forced: force,
       file_count: staged.length,
+      stale_file_count: staleFiles.length,
+      stale_files: staleFiles,
     };
   }
 
@@ -194,11 +308,20 @@ async function update({ dryRun = false } = {}) {
     }
     writeFileSync(target, item.text, 'utf8');
   }
+  let deletedFileCount = 0;
+  for (const relativePath of staleFiles) {
+    if (backupAndRemoveFile(relativePath, backupRoot)) {
+      deletedFileCount += 1;
+      pruneEmptyDirectories(dirname(join(skillRoot, relativePath)));
+    }
+  }
 
   return {
     ...result,
     updated: true,
+    sync_forced: force,
     file_count: staged.length,
+    deleted_file_count: deletedFileCount,
     backup_dir: relative(skillRoot, backupRoot),
   };
 }
@@ -206,10 +329,11 @@ async function update({ dryRun = false } = {}) {
 async function main() {
   const args = new Set(process.argv.slice(2));
   const yes = args.has('--yes') || process.env.CV_SKILL_AUTO_UPDATE === 'true';
+  const forceSync = args.has('--sync');
   const dryRun = args.has('--dry-run');
-  const checkOnly = args.has('--check') || (!yes && !dryRun);
+  const checkOnly = args.has('--check') || (!yes && !dryRun && !forceSync);
 
-  const result = checkOnly ? await check() : await update({ dryRun });
+  const result = checkOnly ? await check() : await update({ dryRun, force: forceSync });
   printResult(result);
 
   if (result.ok && result.update_required && !yes) {
