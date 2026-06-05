@@ -27,6 +27,7 @@ import {
   readdirSync,
   readFileSync,
   renameSync,
+  rmdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -83,6 +84,10 @@ function compareVersion(a, b) {
 
 function sha256(text) {
   return createHash('sha256').update(text).digest('hex');
+}
+
+function sha256LocalFile(path) {
+  return sha256(readFileSync(path, 'utf8').replace(/\r\n/g, '\n'));
 }
 
 function assertSafeRelativePath(path) {
@@ -191,7 +196,7 @@ function pruneEmptyDirectories(startDir) {
     if (entries.length > 0) {
       break;
     }
-    rmSync(current, { recursive: false, force: true });
+    rmdirSync(current);
     current = dirname(current);
   }
 }
@@ -273,9 +278,16 @@ async function update({ dryRun = false, force = false } = {}) {
 
   const staged = [];
   const manifestPaths = [];
+  const skippedFiles = [];
   for (const file of manifest.files) {
     const relativePath = assertSafeRelativePath(file.path);
     manifestPaths.push(relativePath);
+    const target = join(skillRoot, relativePath);
+    if (file.sha256 && existsSync(target) && statSync(target).isFile() && sha256LocalFile(target) === file.sha256) {
+      skippedFiles.push(relativePath);
+      continue;
+    }
+
     const text = await fetchText(file.url);
     if (file.sha256 && sha256(text) !== file.sha256) {
       throw new Error(`Checksum mismatch for ${relativePath}`);
@@ -292,6 +304,7 @@ async function update({ dryRun = false, force = false } = {}) {
       dry_run: true,
       sync_forced: force,
       file_count: staged.length,
+      skipped_file_count: skippedFiles.length,
       stale_file_count: staleFiles.length,
       stale_files: staleFiles,
     };
@@ -321,6 +334,7 @@ async function update({ dryRun = false, force = false } = {}) {
     updated: true,
     sync_forced: force,
     file_count: staged.length,
+    skipped_file_count: skippedFiles.length,
     deleted_file_count: deletedFileCount,
     backup_dir: relative(skillRoot, backupRoot),
   };
