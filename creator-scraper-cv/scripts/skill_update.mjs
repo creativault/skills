@@ -289,10 +289,11 @@ async function update({ dryRun = false, force = false } = {}) {
     }
 
     const text = await fetchText(file.url);
-    if (file.sha256 && sha256(text) !== file.sha256) {
+    const normalizedText = text.replace(/\r\n/g, '\n');
+    if (file.sha256 && sha256(normalizedText) !== file.sha256) {
       throw new Error(`Checksum mismatch for ${relativePath}`);
     }
-    staged.push({ relativePath, text });
+    staged.push({ relativePath, text: normalizedText });
   }
 
   const managedRoots = manifest.sync?.delete_missing ? getManagedRoots(manifest) : [];
