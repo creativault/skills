@@ -15,7 +15,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.7.4"
+  version: "1.7.1"
 ---
 
 # Creativault Creator Ecosystem
@@ -109,6 +109,21 @@ $env:CV_USER_IDENTITY = "your_email@example.com"
 - `meta.credits_consumed` 只表示本次请求消耗的积分。
 - 请求成功时，不要因为任何 quota 数值主动发布“积分余额不足提醒”。
 - 只有收到 `40201` 后，才停止后续付费调用并提示用户充值或调整任务规模。
+
+## 版本更新提示规则
+
+当 API 响应 `meta` 中 `skill_update_available: true` 时，需要提示用户更新：
+
+> ⚠️ **Skill 有新版本可用**
+> 当前版本：{skill_current_version} → 最新版本：{skill_latest_version}
+> 更新命令：`node scripts/skill_update.mjs --yes`
+> 新版本可能包含字段修正、行业映射优化或新平台支持，建议尽快更新。
+
+规则：
+- `skill_update_available: true` 且 `skill_update_required: false` → 建议更新（非强制），展示提示但不阻断操作
+- `skill_update_required: true` → 强制更新提示，告知用户当前版本低于最低支持版本，继续使用可能导致参数不兼容或结果异常
+- `skill_update_available: false` → 不提示，已是最新
+- 所有 `skill_*` 字段为 null → 不提示（Postman 等非 skill 客户端调用）
 
 ## References
 

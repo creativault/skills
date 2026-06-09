@@ -115,6 +115,8 @@ function isSyncExcluded(relativePath) {
     || normalized.includes('/__pycache__/')
     || normalized.endsWith('/.DS_Store')
     || normalized.endsWith('/Thumbs.db')
+    || normalized === '.env'
+    || normalized.endsWith('/.env')
   );
 }
 

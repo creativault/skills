@@ -24,6 +24,7 @@ const excludedPathPrefixes = [
 const excludedPathNames = new Set([
   '.DS_Store',
   'Thumbs.db',
+  '.env',
 ]);
 
 function readJSON(path) {
