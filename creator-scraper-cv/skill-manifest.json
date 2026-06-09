@@ -1,6 +1,6 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.7.2",
+  "latest_version": "1.7.3",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
@@ -179,12 +179,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "f24e9f1112b3adc2fd7165bcb0f33a7b293578abc06b98735d6c6334972577e8"
+      "sha256": "4cf12882c3e17193bf63c1c76921b4c9cbacccdcb143ffe598a81af967075467"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "ac18151e0ff08202ba6cc557d8cdfe9b99176ab9660f7a643104ab4c69edcaae"
+      "sha256": "6840ab1389fb140de77024a68e7a02e3d84a538719376ad826932890fb3cbb62"
     },
     {
       "path": "workflow/SKILL.md",
