@@ -32,12 +32,12 @@ node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","country_code":
 1. `platform` 必须转换为小写：`tiktok` / `youtube` / `instagram`。
 2. 达人性别必须映射为编码：女性/女/female → `"0"`，男性/男/male → `"1"`。禁止传 `"女性"`、`"男性"`、`"female"`、`"male"`。
 3. 所有比例筛选参数使用 **0~100 的百分比数值**：用户说“互动率至少 3%”时传 `3`，不能传 `0.03`；“女性受众至少 70%”传 `70`。
-4. boolean 参数必须传 JSON boolean：`true` / `false`，不能传 `"true"` / `"false"`、`1` / `0`。`has_email`、`has_whatsapp`、`is_ai_creator`、`is_top_creator` 等均属于 boolean。
+4. boolean 参数必须传 JSON boolean：`true` / `false`，不能传 `"true"` / `"false"`、`1` / `0`。`has_email`、`has_whatsapp`、`is_ai_creator`、`is_product_kol` 等均属于 boolean。
 5. 国家和语言必须转换为代码；多选使用英文逗号连接，例如 `country_code: "US,CA"`、`language_code: "en,fr"`。
 6. 日期筛选统一传 `YYYY-MM-DD`。
 7. `lang` 只控制响应码值翻译，不用于筛选达人，默认 `en`。筛选达人内容语言使用 `language_code`。
 8. 只传目标平台支持的字段。三平台播放量、互动率、受众语言等字段名并不完全相同。
-9. 当前 HTTP Open API 不支持 Instagram 的 `is_product_kol`、GMV、销售商品数筛选，不要发送这些字段。
+9. 当前 HTTP Open API 不支持 Instagram 的 GMV、销售商品数筛选，不要发送这些字段。
 10. 不要发送旧字段名。HTTP Open API 请求模型会忽略未声明字段，旧字段可能请求成功但实际没有产生筛选效果。
 
 ## 服务等级
@@ -100,26 +100,27 @@ TikTok `sort_field`：`followers_cnt` / `last10_avg_video_views_cnt` / `last10_a
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `has_whatsapp` / `is_ai_creator` | boolean | 是否有 WhatsApp / 是否 AI 达人 |
-| `last10_avg_video_views_cnt_gte` / `_lte` | number | 近 10 条全部视频平均播放量范围 |
-| `last10_avg_video_views_cnt_short_gte` / `_lte` | number | 近 10 条短视频平均播放量范围 |
-| `last10_avg_video_interaction_rate_gte` / `_lte` | number | 近 10 条全部视频平均互动率范围，传 0~100 |
-| `last10_avg_video_interaction_rate_short_gte` / `_lte` | number | 近 10 条短视频平均互动率范围，传 0~100 |
+| `last10_avg_video_view_count_all_gte` / `_lte` | number | 近 10 条全部视频平均播放量范围 |
+| `last10_avg_video_view_count_short_gte` / `_lte` | number | 近 10 条短视频平均播放量范围 |
+| `last10_avg_interaction_rate_all_gte` / `_lte` | number | 近 10 条全部视频平均互动率范围，传 0~100 |
+| `last10_avg_interaction_rate_short_gte` / `_lte` | number | 近 10 条短视频平均互动率范围，传 0~100 |
 | `last_video_publish_date_gte` / `_lte` | string | 最近视频发布日期范围，`YYYY-MM-DD` |
 | `audience_language_code_list` | string | 受众语言代码，多选逗号分隔 |
 
-YouTube 不要使用旧字段名 `last10_avg_video_view_count_all_*`、`last10_avg_interaction_rate_all_*`、`female_ratio_*`。
+YouTube 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last10_avg_video_views_cnt_short_*`、`last10_avg_video_interaction_rate_*`、`last10_avg_video_interaction_rate_short_*`。
 
 ## Instagram 参数
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `has_whatsapp` / `is_top_creator` / `is_ai_creator` | boolean | 是否有 WhatsApp / Amazon 顶级带货达人 / AI 达人 |
-| `last10_avg_video_views_cnt_gte` / `_lte` | number | 近 10 条视频平均播放量范围 |
+| `has_whatsapp` / `is_product_kol` / `is_ai_creator` | boolean | 是否有 WhatsApp / 带货达人 / AI 达人 |
+| `last10_avg_video_view_count_gte` / `_lte` | number | 近 10 条视频平均播放量范围 |
 | `last10_avg_video_interaction_rate_gte` / `_lte` | number | 近 10 条视频平均互动率范围，传 0~100 |
-| `last_video_publish_date_gte` / `_lte` | string | 最近视频发布日期范围，`YYYY-MM-DD` |
+| `last_video_publish_time_gte` / `_lte` | string | 最近视频发布日期范围，`YYYY-MM-DD` |
+| `female_ratio_gte` / `_lte` | number | 受众女性占比范围，传 0~100（Instagram 专用，替代通用 `audience_female_rate_*`） |
 | `audience_language_list` | string | 受众语言，多选逗号分隔 |
 
-Instagram 不要使用旧字段名 `last10_avg_video_view_count_*`、`last_video_publish_time_*`、`female_ratio_*`。
+Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_publish_date_*`、`audience_female_rate_*`、`is_top_creator`。
 
 ## Category Input（industry 参数说明）
 
@@ -141,11 +142,11 @@ Instagram 不要使用旧字段名 `last10_avg_video_view_count_*`、`last_video
 ```
 
 ```json
-{"platform":"youtube","country_code":"US","last10_avg_video_views_cnt_short_gte":50000,"audience_female_rate_gte":70,"service_level":"S3"}
+{"platform":"youtube","country_code":"US","last10_avg_video_view_count_short_gte":50000,"audience_female_rate_gte":70,"service_level":"S3"}
 ```
 
 ```json
-{"platform":"instagram","industry":"Beauty","is_top_creator":true,"audience_language_list":"en","service_level":"S2"}
+{"platform":"instagram","industry":"Beauty","is_product_kol":true,"audience_language_list":"en","service_level":"S2"}
 ```
 
 ## 输出格式

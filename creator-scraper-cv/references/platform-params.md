@@ -5,7 +5,7 @@
 ## 参数值规则
 
 - 性别：`"0"`=女性，`"1"`=男性。
-- boolean：使用 `true` / `false`，不要使用字符串或数字。`has_email`、`has_whatsapp`、`is_ai_creator`、`is_top_creator` 等均为 boolean。
+- boolean：使用 `true` / `false`，不要使用字符串或数字。`has_email`、`has_whatsapp`、`is_ai_creator`、`is_product_kol` 等均为 boolean。
 - 比例：互动率、受众女性比例、佣金率等筛选值使用 0~100 百分比数值，例如 3% 传 `3`。
 - 国家/语言多选：使用代码并以英文逗号分隔。
 - 日期：使用 `YYYY-MM-DD`。
@@ -72,14 +72,14 @@
 | `is_ai_creator` | boolean | 是否 AI 达人 |
 | `industry` | string | 行业 level-3 数字类目 ID，逗号分隔；skill 脚本可将名称或上级类目自动展开 |
 | `language_code` | string | 语言代码，多选逗号分隔 |
-| `last10_avg_video_views_cnt_gte` | number | 近10条视频平均播放量（全部）≥ |
-| `last10_avg_video_views_cnt_lte` | number | 近10条视频平均播放量（全部）≤ |
-| `last10_avg_video_views_cnt_short_gte` | number | 近10条短视频平均播放量 ≥ |
-| `last10_avg_video_views_cnt_short_lte` | number | 近10条短视频平均播放量 ≤ |
-| `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率（全部）≥，传 0~100 |
-| `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率（全部）≤，传 0~100 |
-| `last10_avg_video_interaction_rate_short_gte` | number | 近10条短视频平均互动率 ≥，传 0~100 |
-| `last10_avg_video_interaction_rate_short_lte` | number | 近10条短视频平均互动率 ≤，传 0~100 |
+| `last10_avg_video_view_count_all_gte` | number | 近10条视频平均播放量（全部）≥ |
+| `last10_avg_video_view_count_all_lte` | number | 近10条视频平均播放量（全部）≤ |
+| `last10_avg_video_view_count_short_gte` | number | 近10条短视频平均播放量 ≥ |
+| `last10_avg_video_view_count_short_lte` | number | 近10条短视频平均播放量 ≤ |
+| `last10_avg_interaction_rate_all_gte` | number | 近10条视频平均互动率（全部）≥，传 0~100 |
+| `last10_avg_interaction_rate_all_lte` | number | 近10条视频平均互动率（全部）≤，传 0~100 |
+| `last10_avg_interaction_rate_short_gte` | number | 近10条短视频平均互动率 ≥，传 0~100 |
+| `last10_avg_interaction_rate_short_lte` | number | 近10条短视频平均互动率 ≤，传 0~100 |
 | `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD） |
 | `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD） |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
@@ -88,7 +88,7 @@
 | `audience_female_rate_gte` | number | 受众女性占比 ≥，传 0~100 |
 | `audience_female_rate_lte` | number | 受众女性占比 ≤，传 0~100 |
 
-不要使用旧字段名 `last10_avg_video_view_count_all_*`、`last10_avg_interaction_rate_all_*`、`female_ratio_*`。
+不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last10_avg_video_views_cnt_short_*`、`last10_avg_video_interaction_rate_*`、`last10_avg_video_interaction_rate_short_*`。
 
 ---
 
@@ -97,23 +97,23 @@
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `has_whatsapp` | boolean | 是否有 WhatsApp |
-| `is_top_creator` | boolean | 是否顶级 Amazon 带货达人 |
+| `is_product_kol` | boolean | 是否带货达人 |
 | `is_ai_creator` | boolean | 是否 AI 达人 |
 | `industry` | string | 行业 level-3 数字类目 ID，逗号分隔；skill 脚本可将名称或上级类目自动展开 |
 | `language_code` | string | 语言代码，多选逗号分隔 |
-| `last10_avg_video_views_cnt_gte` | number | 近10条视频平均播放量 ≥ |
-| `last10_avg_video_views_cnt_lte` | number | 近10条视频平均播放量 ≤ |
+| `last10_avg_video_view_count_gte` | number | 近10条视频平均播放量 ≥ |
+| `last10_avg_video_view_count_lte` | number | 近10条视频平均播放量 ≤ |
 | `last10_avg_video_interaction_rate_gte` | number | 近10条视频平均互动率 ≥，传 0~100 |
 | `last10_avg_video_interaction_rate_lte` | number | 近10条视频平均互动率 ≤，传 0~100 |
-| `last_video_publish_date_gte` | string | 最近视频发布时间起始（YYYY-MM-DD） |
-| `last_video_publish_date_lte` | string | 最近视频发布时间截止（YYYY-MM-DD） |
+| `last_video_publish_time_gte` | string | 最近视频发布时间起始（YYYY-MM-DD） |
+| `last_video_publish_time_lte` | string | 最近视频发布时间截止（YYYY-MM-DD） |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
 | `audience_language_list` | string | 受众语言，多选逗号分隔 |
 | `audience_age_list` | string | 受众年龄，多选逗号分隔 |
-| `audience_female_rate_gte` | number | 受众女性占比 ≥，传 0~100 |
-| `audience_female_rate_lte` | number | 受众女性占比 ≤，传 0~100 |
+| `female_ratio_gte` | number | 受众女性占比 ≥，传 0~100 |
+| `female_ratio_lte` | number | 受众女性占比 ≤，传 0~100 |
 
-当前 HTTP Open API 不支持 `is_product_kol`、GMV 和销售商品数筛选。不要使用旧字段名 `last10_avg_video_view_count_*`、`last_video_publish_time_*`、`female_ratio_*`。
+当前 HTTP Open API 不支持 GMV 和销售商品数筛选。不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_publish_date_*`、`audience_female_rate_*`、`is_top_creator`。
 
 ---
 

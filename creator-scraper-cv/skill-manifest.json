@@ -1,6 +1,6 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.6.0",
+  "latest_version": "1.7.1",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
@@ -35,7 +35,7 @@
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "7d8b6870eac567e1fc51a20a0f8097102875ea69ec29b4a94763aa6eb10b09af"
+      "sha256": "feeae0c889c466c126f922ebab1d1696e1d3460ac35a3a0de8a2c3d0a5963f63"
     },
     {
       "path": "outreach/creator-outreach/SKILL.md",
@@ -70,7 +70,7 @@
     {
       "path": "references/platform-params.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/platform-params.md",
-      "sha256": "258ac5c242891d5b057e6f0c3853ae3c64f83c6c38e0c1f509c93c91e9a1000b"
+      "sha256": "0c713f78b89a63008998f7eb73c2862b323aab0786b1978c1e5bf20f94717acb"
     },
     {
       "path": "scripts/_api_client.mjs",
@@ -179,12 +179,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "fcea1ee1edbc1aac4bec99b041dca8c016747062ffd4883d90de0677a971e502"
+      "sha256": "20ad1c618af990c21ff30540b84dbf6e86e3a112014e826d5698f07a3a70b6fc"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "7e60efca0de78301e37fa10fd5de6625303d772c3c394a4a6152e4d6f871a544"
+      "sha256": "19ec492338f0dd31a5953b046d505b142cccf0ffd3d6b331d14ab047b1c30334"
     },
     {
       "path": "workflow/SKILL.md",
