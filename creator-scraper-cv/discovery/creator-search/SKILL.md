@@ -39,6 +39,11 @@ node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","country_code":
 8. 只传目标平台支持的字段。三平台播放量、互动率、受众语言等字段名并不完全相同。
 9. 当前 HTTP Open API 不支持 Instagram 的 GMV、销售商品数筛选，不要发送这些字段。
 10. 不要发送旧字段名。HTTP Open API 请求模型会忽略未声明字段，旧字段可能请求成功但实际没有产生筛选效果。
+11. **行业 vs 关键词的决策逻辑**：
+    - **用户明确指定**"行业"或"关键词"时，按用户意图走,不要替换。例如用户说"关键词搜 funny"就用 `keyword`，说"行业选美妆"就用 `industry`。
+    - **用户未明确区分**时（如"找搞笑达人"、"美妆博主"），优先映射为 `industry`。常见映射：搞笑/funny → Comedy & Humor, 美妆/beauty → Skincare 或 Beauty, 科技/tech → Technology, 宠物/pet → Pet Supplies, 美食/food → Food & Beverage。
+    - **行业搜索结果为空时**（返回 0 条），自动用同义词降级为 `keyword` 重新搜索,并告知用户"行业筛选无结果,已改用关键词搜索"。例如 `industry: "Comedy & Humor"` 返回空 → 用 `keyword: "funny"` 重搜。
+    - `keyword` 仅用于：搜索具体用户名/昵称、精确主题词、或行业降级兜底。
 
 ## 服务等级
 

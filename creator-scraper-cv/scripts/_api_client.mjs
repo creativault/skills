@@ -6,11 +6,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const API_BASE = (process.env.CV_API_BASE_URL || 'http://api.creativault.vip').replace(/\/+$/, '');
-const API_KEY = process.env.CV_API_KEY;
-const USER_IDENTITY = process.env.CV_USER_IDENTITY;
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SKILL_META = loadSkillMeta();
+
+const API_BASE = (process.env.CV_API_BASE_URL || '').replace(/\/+$/, '');
+const API_KEY = process.env.CV_API_KEY;
+const USER_IDENTITY = process.env.CV_USER_IDENTITY || '';
 
 const MAX_RETRIES = 3;
 const DEFAULT_RETRY_AFTER = 60;
@@ -39,6 +40,15 @@ function loadSkillMeta() {
   }
 }
 
+if (!API_BASE) {
+  console.error(JSON.stringify({
+    error: 'API base URL is not configured',
+    hint: 'Set CV_API_BASE_URL environment variable, or configure "api_base_url" in skill.json',
+    example: 'export CV_API_BASE_URL=https://your-api-host.com',
+  }));
+  process.exit(1);
+}
+
 if (!API_KEY) {
   console.error(JSON.stringify({
     error: 'CV_API_KEY environment variable is not set',
@@ -51,7 +61,8 @@ function ensureUserIdentity() {
   if (!USER_IDENTITY) {
     console.error(JSON.stringify({
       error: 'CV_USER_IDENTITY environment variable is not set',
-      hint: 'Set it via: export CV_USER_IDENTITY=your_email@example.com',
+      hint: 'Most API endpoints require user identity. Set it via: export CV_USER_IDENTITY=your_email@example.com',
+      note: 'This should be the email associated with your API Key account.',
     }));
     process.exit(1);
   }
