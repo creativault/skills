@@ -298,7 +298,6 @@ node ../../scripts/video_audit_result.mjs '{"task_id":"550e8400-e29b-41d4-a716-4
 | `audit_result.scores.subscores.rhythm_design` | 0~10 | 节奏设计 |
 | `audit_result.scores.subscores.selling_point_delivery` | 0~10 | 卖点传递 |
 | `audit_result.scores.subscores.creative_highlight` | 0~10 | 创意亮点 |
-| `audit_result.scores.subscores.conversion_guidance` | 0~10 | 转化引导 |
 | `audit_result.scores.subscores.production_quality` | 0~10 | 制作质量 |
 | `audit_result.diagnosis_level` | enum | `excellent` / `good` / `average` / `weak` / `critical` |
 | `audit_result.confidence.overall_confidence` | 0~1 | 整体置信度，<0.6 建议提示需要人工复核 |
