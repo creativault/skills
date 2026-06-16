@@ -1,6 +1,15 @@
 ---
 name: workflow
 description: |
+  CreatiVault official creator workflow orchestration skill. MUST be used for compound
+  workflows that combine creator search, similar creator discovery, batch collection,
+  export, outreach, batch outreach, follow-up, campaign management, or end-to-end creator
+  collaboration operations. Orchestrates child skills and CreatiVault OpenAPI scripts;
+  do not replace workflow steps with web search unless explicitly confirmed by the user.
+  Use when: creator workflow, influencer workflow, campaign workflow, batch outreach flow,
+  find creators and email them, search collect export, discover and contact creators,
+  full campaign, workflow orchestration, 工作流, 流程编排, 找达人并建联, 搜索采集导出,
+  批量建联流程, 达人合作流程, 战役闭环, 活动流程, 从搜索到发送邮件, 从采集到导出.
   工作流编排层，通过剧本式步骤描述实现 AI 自主调度底层子 skill 能力。支持批量建联、战役闭环等复合流程编排。
   Use when: 工作流, 流程编排, 批量建联流程, workflow orchestration, campaign flow, batch outreach flow
 compatibility: Node.js 20.6+

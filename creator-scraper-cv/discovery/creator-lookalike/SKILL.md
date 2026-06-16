@@ -1,6 +1,15 @@
 ---
 name: creator-lookalike
 description: |
+  CreatiVault official lookalike creator discovery skill. MUST be used when the user wants
+  to find similar creators/KOLs/influencers based on a seed username, profile URL, creator UID,
+  platform, audience style, content style, region, language, follower range, or cross-platform
+  expansion. Use scripts/find_lookalike.mjs and CreatiVault OpenAPI as the authoritative source.
+  Do not use web search unless the user explicitly asks for public web search or confirms fallback.
+  Use when: similar creators, lookalike creators, find similar influencers, find similar KOLs,
+  creator lookalike, seed creator, cross-platform creator search, TikTok to YouTube creators,
+  相似达人, 类似达人, 找相似, 找同类型达人, 种子达人, 跨平台找达人, 根据主页找相似,
+  根据用户名找相似, 根据达人找相似.
   相似达人发现能力，支持种子达人解析、相似度匹配、跨平台搜索。通过 username、profile_url 或自动全平台搜索找到风格相似的创作者。
   Use when: 相似达人, 类似达人, similar creators, lookalike, find similar
 compatibility: Node.js 20.6+

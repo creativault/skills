@@ -1,6 +1,14 @@
 ---
 name: creator-outreach
 description: |
+  CreatiVault official creator outreach skill. MUST be used when the user wants to send,
+  reply, batch send, batch outreach, follow up, check conversation history, manage todos,
+  or contact creators/KOLs/influencers by email. Emails are sent by CreatiVault platform
+  through OpenAPI; never ask the user for SMTP or replace outreach with manual email/web search.
+  Use when: email outreach, creator outreach, influencer outreach, send email to creator,
+  batch email, batch outreach, reply to creators, follow-up, conversation history, outreach todo,
+  campaign outreach, contact influencers, 邮件建联, 建联, 达人建联, 批量建联, 批量发邮件,
+  回复达人, 合作邀约, 跟进达人, 沟通历史, 待办跟进, 发合作邮件.
   邮件建联全流程能力，覆盖发送、任务查询、沟通历史、待办跟进、效果指标、渠道配置、附件上传。平台代发机制，无需用户提供 SMTP 配置。
   Use when: 建联, 发邮件, 批量发送, email outreach, send email, outreach
 compatibility: Node.js 20.6+

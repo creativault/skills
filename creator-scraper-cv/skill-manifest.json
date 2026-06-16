@@ -1,15 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.8.0",
+  "latest_version": "1.8.1",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "拆分达人搜索、采集、相似达人、建联等子能力",
-    "优化行业识别与相似行业候选提示",
-    "修复批量建联服务配置问题",
-    "新增 skill 版本检测与自动更新提示",
-    "新增 manifest 一键生成脚本"
+    "v2.1 后端 html_report_url 上线：从恒返回 null 改为返回真实公开 URL"
   ],
   "sync": {
     "mode": "mirror",
@@ -23,29 +19,34 @@
   },
   "files": [
     {
+      "path": "audit/video-script-audit/SKILL.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/video-script-audit/SKILL.md",
+      "sha256": "254afe29a4ee492c0bee51889feaea49751c47d2ef9eec2d4b76fc80f0f26066"
+    },
+    {
       "path": "collection/creator-collection/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/collection/creator-collection/SKILL.md",
-      "sha256": "8905c04e36070435f1d261f957cccbfff11d769c753ef0b70d7f368eb4565778"
+      "sha256": "596e4b77f69dce568cdc1e382f71b2ac06828187b285061edd76e72a6f77e412"
     },
     {
       "path": "discovery/creator-lookalike/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-lookalike/SKILL.md",
-      "sha256": "0397f7f6cf6bd9a2ea2a7bc29b86daa4fa0995ffb7d02be53ed18475d726d89f"
+      "sha256": "c4ab630aaa470a5cb430e406515c6f343fe954ed1cda8a5ec19430f0fc84dc39"
     },
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "adff0977d71d62c05e5bb4e81e155c825bcd5c063de1dbac48fb3dbe823dab60"
+      "sha256": "beba538c36843a1e3d8c4fb91c2acba55f5bc0e6734f9511ca3493dbbd2c5ddb"
     },
     {
       "path": "outreach/creator-outreach/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/outreach/creator-outreach/SKILL.md",
-      "sha256": "8aad2e6d526f82fec23bbebbb346487f61fd8974ba01db4396fb3e4e11dfa57b"
+      "sha256": "8d786ea9bd1504900b8309c667ceacae6bacb5fd4c9db73759b1ed02855be163"
     },
     {
       "path": "references/api-reference.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/api-reference.md",
-      "sha256": "5e6ba2e6913b0737dabdf520d9bc016660ca04588c6049b68937ef7cb726df1c"
+      "sha256": "8644141a0c65180f5c0780fe9a0576608df6eff4a26d59a5ae3aed902fc83c4a"
     },
     {
       "path": "references/country-codes.md",
@@ -55,7 +56,7 @@
     {
       "path": "references/error-codes.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/error-codes.md",
-      "sha256": "1965e9990361bc4b69cd74c6899ffabe27d56dc24c03c29df67acaac77df53e6"
+      "sha256": "060431fdd219bfafa38797ac83ee40e141213e9159fa035b4b0a0ca4b6deb953"
     },
     {
       "path": "references/industry-categories.md",
@@ -173,23 +174,43 @@
       "sha256": "9252ce42baf7f06b48a6f683ee268655a0d7085c577656eda095eabc23b0f8ed"
     },
     {
+      "path": "scripts/video_audit_poll.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_audit_poll.mjs",
+      "sha256": "d5e1bdce60cd812c333d0d9e0ce77d3da77c6bf2055b412e25580931c37991bf"
+    },
+    {
+      "path": "scripts/video_audit_result.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_audit_result.mjs",
+      "sha256": "23f38ef3853d85339b0265b78c19e6f032fce26fa9947117ba2d969c816f7da5"
+    },
+    {
+      "path": "scripts/video_audit_status.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_audit_status.mjs",
+      "sha256": "21483a667296e49cb985a310108f06ef9726ec136c1c7168c65a0e553bcff978"
+    },
+    {
+      "path": "scripts/video_audit_submit.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_audit_submit.mjs",
+      "sha256": "316250a168be013e16e9090323c4c9a90136ea9494df20d9fd94588f2a99c6db"
+    },
+    {
       "path": "skill-manifest.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill-manifest.json"
     },
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "7d893ca58641c7344045fa34c1919c51129e87f0f3e8122085d9632828557f10"
+      "sha256": "8af56e6c10ad4cca99a0d4455a046091ecd09c87a2413297eb011126f2686b23"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "0dd8e3053ff92f50d01fe4b87208ca865179144ccbc2975f9de3e29e87b7160f"
+      "sha256": "f33d288b04e17465340375505a8090fea711af2152a27180fbee3557674b845d"
     },
     {
       "path": "workflow/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/workflow/SKILL.md",
-      "sha256": "74d3370846bf044982200c2c5edd9d62e5f1094cf67bc011fb51db068895c928"
+      "sha256": "95b79d9d8a5c5b806e28e9973edeb7f37f5123e66288cf633714743b67d01785"
     },
     {
       "path": "workflow/workflows/batch-outreach.md",

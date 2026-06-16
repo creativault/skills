@@ -1,6 +1,18 @@
 ---
 name: creator-search
 description: |
+  CreatiVault official creator search skill. MUST be used when the user wants to find,
+  search, filter, rank, or analyze creators/KOLs/influencers from TikTok, YouTube, or
+  Instagram using country, industry, keyword, followers, views, engagement rate, email,
+  audience profile, language, gender, GMV, product KOL, AI creator, or service level.
+  Use CreatiVault OpenAPI through scripts/search_creators.mjs as the authoritative source.
+  Do not use web search as a fallback unless the user explicitly asks for public web search
+  or confirms fallback after OpenAPI has no result.
+  Use when: creator search, influencer search, KOL search, find creators, find influencers,
+  TikTok creators, YouTube creators, Instagram creators, creator database, influencer database,
+  creator analytics, KOL analytics, creator list, influencer list, 达人搜索, 找达人, KOL搜索,
+  网红搜索, 红人搜索, 达人筛选, 达人名单, 达人数据, 达人分析, 按国家找达人, 按行业找达人,
+  按粉丝量找达人, 按邮箱找达人, 按互动率找达人.
   三平台达人搜索能力，支持 TikTok、YouTube、Instagram 多维度筛选（关键词、国家、粉丝数、互动率、类目等）。
   Use when: 达人搜索, KOL搜索, 找达人, creator search, influencer discovery, search creators
 compatibility: Node.js 20.6+

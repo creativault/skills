@@ -55,6 +55,9 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | Export task data | `/openapi/v1/collection/tasks/export` | Export to xlsx/csv/html file |
 | Get file download URL | `/openapi/v1/files/download-url` | Get temporary download URL |
 | Find similar creators | `/openapi/v1/creators/lookalike` | Lookalike search by username/URL, auto-resolves platform ID |
+| Submit video script audit | `/openapi/v1/video-script-audit/tasks/submit` | Async single-video audit, fixed 100 credits/call |
+| Query audit task status | `/openapi/v1/video-script-audit/tasks/status` | Poll audit task (recommended interval: 10s) |
+| Get audit task result | `/openapi/v1/video-script-audit/tasks/result` | Fetch full 12-dimension audit JSON when status=completed |
 
 ## Task Types
 
@@ -257,3 +260,93 @@ Callback payload:
 
 Signature: `X-Webhook-Signature` header, HMAC-SHA256.
 Retry policy: max 3 attempts (10s → 30s → 90s).
+
+## Video Script Audit
+
+Async single-video audit pipeline with **two ingestion paths**:
+
+| Path | Input | Use case | Creator data dimensions |
+|------|-------|----------|------------------------|
+| **Path 1 (Social URL)** | `url` | Published video analysis | ✅ Lookback creator data (followers, avg views, viral level) |
+| **Path 2 (Upload)** | `uploaded_oss_key` (via `/media/upload`) | Pre-publish self-audit | `creator_metadata.status=not_applicable` |
+
+Submit returns a UUID `task_id`; backend runs the full audit
+(download → transcribe → storyboard → viral factor → benchmark → score) in ~3-5 minutes.
+
+### Endpoints
+
+| Endpoint | Path | Body | Notes |
+|----------|------|------|-------|
+| Upload media | `/openapi/v1/media/upload` | `multipart/form-data: file` | 20 credits/call; returns `oss_key` for path 2 |
+| Submit | `/openapi/v1/video-script-audit/tasks/submit` | `{url?, uploaded_oss_key?, brief?, ...}` | Fixed 100 credits/call; `url` and `uploaded_oss_key` are mutually exclusive |
+| Status | `/openapi/v1/video-script-audit/tasks/status` | `{task_id}` | Free, but counts toward daily quota |
+| Result | `/openapi/v1/video-script-audit/tasks/result` | `{task_id}` | Free; only when status=completed |
+
+### Upload Media Request (Path 2 Step 1)
+
+```http
+POST /openapi/v1/media/upload
+Content-Type: multipart/form-data
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file` | file | ✓ | Video file (mp4/mov/avi/mkv/webm, ≤ 500MB) |
+
+**Response**: `{oss_key, oss_url, filename, size_bytes}`. Pass `oss_key` as `uploaded_oss_key` to submit.
+
+### Submit Request Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | △ | Path 1: Video URL (TikTok / Instagram Reels / YouTube Shorts) |
+| `uploaded_oss_key` | string | △ | Path 2: OSS key from `/media/upload` response |
+| `brief` | string | × | Customer brief, enables `brief_compliance` audit |
+| `user_id` | string | × | Business user id; defaults to `X-User-Identity` |
+| `campaign_id` | string | × | Campaign id for archival |
+| `audit_mode` | string | × | `high` (default) / `low` |
+| `is_benchmark` | boolean | × | Mark as benchmark case (skips benchmark comparison) |
+| `enable_benchmark` | boolean | × | Compare against benchmark library |
+| `oss_url_override` | string | × | [Legacy workaround] pre-uploaded OSS URL; prefer `uploaded_oss_key` for new integrations |
+
+> △ `url` and `uploaded_oss_key`: provide exactly one, not both, not neither.
+
+### Audit Task Status
+
+| status | Description | progress |
+|--------|-------------|----------|
+| `pending` | Queued | 0 |
+| `processing` | Downloading / analyzing / persisting | 50 |
+| `completed` | Result available | 100 |
+| `failed` | See `error_message` | 0 |
+
+### Result Payload Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `task_id` | string | Audit task UUID |
+| `audit_result.storyboard` | object | Shot list, script structure, content theme, cinematography stats |
+| `audit_result.viral_factors` | object | Hook / rhythm / selling-point integration / pain point / conversion / emotional value |
+| `audit_result.content_audit` | object | Brief compliance, content standard, common pitfalls, risks, QA baseline |
+| `audit_result.benchmark_comparison` | object \| null | Gap analysis vs benchmark library; `null` when `enable_benchmark=false` |
+| `audit_result.suggestions` | array | Prioritized improvement actions (`P0`/`P1`/`P2`) |
+| `audit_result.scores` | object | Overall + 6 sub-scores (0-10) and `diagnosis_level` |
+| `audit_result.confidence` | object | Overall + per-dimension confidence; `requires_human_review` flag |
+| `audit_result.creator_metadata` | object | Account background (followers, last10 avg views/interaction) |
+| `audit_result.video_metrics` | object | Video metrics (views, likes, interaction rate, viral level) |
+| `html_report_url` | string \| null | Public HTML report URL (`https://oss.creativault.tech/video_audit/reports/{ts}_{id}.html`), no auth required. `null` only if HTML generation failed (rare), does not block `audit_result` |
+
+### Audit-Specific Errors
+
+| code | HTTP | Description |
+|------|------|-------------|
+| 40001 | 200 | Task not found (invalid task_id) |
+| 40002 | 200 | Task not completed (status ≠ completed); keep polling |
+| 40003 | 200 | Audit result missing (cleaned up); resubmit |
+
+### Billing
+
+- 100 credits charged on `submit` only.
+- Status / result calls do not consume credits.
+- `meta.credits_consumed=100` only appears in submit success responses.
+

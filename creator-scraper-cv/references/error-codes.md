@@ -24,6 +24,23 @@
 | Task has no data to export | 404 | No data available for export |
 | OSS upload / DB insert / signing failed | 500 | Export failed |
 
+## Video Script Audit Errors
+
+| code | HTTP | Description | Action |
+|------|------|-------------|--------|
+| 40001 | 200 | Audit task not found (invalid `task_id`) | Verify the task UUID; ensure it was submitted by the same tenant |
+| 40002 | 200 | Audit task not completed yet (`status ≠ completed`) | Continue polling via `/tasks/status`; do not retry `result` immediately |
+| 40003 | 200 | Audit result missing (cleaned up) | Resubmit the video; old task results are not recoverable |
+
+## Media Upload Errors
+
+| code | HTTP | Description | Action |
+|------|------|-------------|--------|
+| 40001 | 200 | Unsupported file format or file too large | Check extension (mp4/mov/avi/mkv/webm) and size (≤ 500MB) |
+
+> 40002 is a business state, not a hard failure. Treat it as "keep polling" rather than triggering retry/backoff.
+> Submit-time `40201` (insufficient credits) follows the global rule — only this code confirms a credits shortage.
+
 ## Troubleshooting
 
 ### Environment variables not set
