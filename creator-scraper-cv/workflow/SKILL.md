@@ -61,6 +61,7 @@ metadata:
 |---------|------|--------|
 | `workflows/batch-outreach.md` | 批量建联流程：从搜索到发送到跟进的 6 步闭环 | 6 |
 | `workflows/full-campaign.md` | 战役闭环流程：从发现到复盘的 ≥8 步完整链路 | ≥8 |
+| `workflows/brand-video-to-outreach.md` | 品牌内容发现→分析→建联：从视频搜索到脚本分析到达人建联的 9 步端到端链路 | 9 |
 
 ## 调度规则
 

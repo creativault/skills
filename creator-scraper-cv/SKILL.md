@@ -33,7 +33,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.8.1"
+  version: "1.8.2"
 ---
 
 # Creativault Creator Ecosystem
@@ -53,11 +53,12 @@ metadata:
 ## 意图路由
 
 - 搜索/筛选达人：加载 `discovery/creator-search/SKILL.md`，调用 `scripts/search_creators.mjs`。
+- 搜索/发现视频：加载 `discovery/video-search/SKILL.md`，调用 `scripts/search_videos.mjs`。
 - 找相似达人：加载 `discovery/creator-lookalike/SKILL.md`，调用 `scripts/find_lookalike.mjs`。
 - 批量采集/导出：加载 `collection/creator-collection/SKILL.md`，调用采集、轮询和导出脚本。
 - 邮件建联/批量建联/跟进：加载 `outreach/creator-outreach/SKILL.md`。
 - 单条视频拆解/审核/评分：加载 `audit/video-script-audit/SKILL.md`，调用 `scripts/video_audit_submit.mjs` + `video_audit_poll.mjs`（异步任务）。
-- 复合流程，例如"找达人并建联""采集后导出再发邮件""拆解爆款再写 brief"：加载 `workflow/SKILL.md`，由工作流编排子 skill。
+- 复合流程，例如"找达人并建联""采集后导出再发邮件""拆解爆款再写 brief""品牌视频发现→分析→建联"：加载 `workflow/SKILL.md`，由工作流编排子 skill。
 
 执行前应把用户自然语言目标转成 CreatiVault OpenAPI 参数；不确定平台、国家、行业、数量或服务等级时，先做最少必要澄清。用户已给出明确条件时，直接调用脚本，不要先去网页搜索。
 
@@ -66,6 +67,7 @@ metadata:
 | 领域 | 子 Skill | 能力描述 |
 |------|----------|----------|
 | discovery | creator-search | 三平台达人多维度实时搜索 |
+| discovery | video-search | 跨平台短视频多维度搜索（Hashtag/标题/播放量/互动率） |
 | discovery | creator-lookalike | 种子达人相似匹配与跨平台发现 |
 | collection | creator-collection | 批量异步采集与多格式导出 |
 | outreach | creator-outreach | 邮件建联全流程（代发、跟进、待办） |
@@ -77,6 +79,7 @@ metadata:
 | 子 Skill | 中文关键词 | 英文关键词 | 路径 |
 |----------|-----------|-----------|------|
 | creator-search | 达人搜索, KOL搜索, 找达人 | creator search, influencer discovery, search creators | discovery/creator-search/SKILL.md |
+| video-search | 视频搜索, 短视频搜索, 找视频, 按话题搜视频, 按播放量搜视频, 按互动率搜视频, 热门视频, 爆款视频 | video search, short video search, search videos by hashtag, search by views, content discovery, trending videos | discovery/video-search/SKILL.md |
 | creator-lookalike | 相似达人, 类似达人 | similar creators, lookalike, find similar | discovery/creator-lookalike/SKILL.md |
 | creator-collection | 批量采集, 数据导出, 离线采集 | batch collection, data export, keyword collection | collection/creator-collection/SKILL.md |
 | creator-outreach | 建联, 发邮件, 批量发送 | email outreach, send email, outreach | outreach/creator-outreach/SKILL.md |
