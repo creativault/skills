@@ -9,7 +9,17 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SKILL_META = loadSkillMeta();
 
-const API_BASE = (process.env.CV_API_BASE_URL || '').replace(/\/+$/, '');
+const CV_BASE_PROD    = 'https://creativault-business.creativault.ai';
+const CV_BASE_STAGING = 'https://dev01-creativault-business.tec-develop.cn';
+
+function resolveApiBase() {
+  const explicit = (process.env.CV_API_BASE_URL || '').trim();
+  if (explicit) return explicit.replace(/\/+$/, '');
+  // channel 'stable' → prod; anything else (beta/dev/nightly) → staging
+  return (SKILL_META.channel === 'stable') ? CV_BASE_PROD : CV_BASE_STAGING;
+}
+
+const API_BASE = resolveApiBase();
 const API_KEY = process.env.CV_API_KEY;
 const USER_IDENTITY = process.env.CV_USER_IDENTITY || '';
 
