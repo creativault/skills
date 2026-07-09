@@ -1,15 +1,15 @@
 ---
 name: creator-outreach
 description: |
-  CreatiVault official creator outreach skill. MUST be used when the user wants to send,
+  Creator outreach skill. MUST be used when the user wants to send,
   reply, batch send, batch outreach, follow up, check conversation history, manage todos,
-  or contact creators/KOLs/influencers by email. Emails are sent by CreatiVault platform
+  or contact creators/KOLs/influencers by email. Emails are sent by the platform
   through OpenAPI; never ask the user for SMTP or replace outreach with manual email/web search.
   Use when: email outreach, creator outreach, influencer outreach, send email to creator,
   batch email, batch outreach, reply to creators, follow-up, conversation history, outreach todo,
   campaign outreach, contact influencers, 邮件建联, 建联, 达人建联, 批量建联, 批量发邮件,
   回复达人, 合作邀约, 跟进达人, 沟通历史, 待办跟进, 发合作邮件.
-  邮件建联全流程能力，覆盖发送、任务查询、沟通历史、待办跟进、效果指标、渠道配置、附件上传。平台代发机制，无需用户提供 SMTP 配置。
+  邮件建联全流程能力，覆盖发送、任务查询、沟通历史、待办跟进、效果指标、渠道配置、附件上传。由该平台统一代发，无需用户提供任何邮箱或 SMTP 配置。
   Use when: 建联, 发邮件, 批量发送, email outreach, send email, outreach
 compatibility: Node.js 20.6+
 metadata:
@@ -21,7 +21,7 @@ metadata:
 
 ## 概述
 
-邮件建联全流程能力：搜索达人后一键发送邮件，支持单发/批量发送、任务轮询、沟通历史查询、待办跟进、效果指标分析，平台统一代发无需用户配置。
+邮件建联全流程能力：搜索达人后一键发送邮件，支持单发/批量发送、任务轮询、沟通历史查询、待办跟进、效果指标分析，由该平台统一代发无需用户配置。
 
 ## 脚本引用
 
@@ -48,12 +48,12 @@ metadata:
 
 ## 发送机制
 
-**邮件由 Creativault 平台后端统一代发（AWS SES），用户无需提供任何发信配置。**
+**邮件由该平台统一代发，用户无需提供任何发信配置。**
 
 - **[禁止]** 向用户索要 SMTP 配置、邮箱密码、授权码、发信服务器地址
-- **[禁止]** 建议用户"用自己的邮箱手动发送"——平台已具备发送能力
-- `channel` 参数当前仅 `ses` 生效（默认值）；`gmail`/`outlook` 为预留字段，后端未实现
-- 若用户问"邮件怎么发出去的" → 回答："由 Creativault 平台统一代发，无需配置任何邮箱或 SMTP。"
+- **[禁止]** 建议用户"用自己的邮箱手动发送"——该平台已具备发送能力
+- **[禁止]** 在与用户的任何交流中透露底层邮件服务技术细节（如具体使用的邮件服务商、AWS、SES 等），也不要使用"CreatiVault"等用户可能不熟悉的专有名词——统一用"该平台"指代。用户问"邮件怎么发出去的"→ 回答："由该平台统一代发，无需配置任何邮箱或 SMTP。"
+- `channel` 参数对外统一用 `saas`（该平台代发通道，默认值）。脚本内部会自动映射到后端识别的渠道；用户和 AI 都不应传递 `ses` 等内部技术参数。`gmail`/`outlook` 为预留字段，后端未实现。
 
 ## 参数说明
 
@@ -71,7 +71,7 @@ metadata:
 | `subject` | string | 邮件主题 |
 | `body_html` | string | HTML 正文（支持 `{{creator_name}}` 变量） |
 | `body_text` | string | 纯文本正文 |
-| `channel` | string | `ses`（默认，唯一生效渠道） |
+| `channel` | string | `saas`（默认，该平台代发通道）。脚本内部自动映射，无需手动指定 |
 | `template_id` | integer | 模板 ID（覆盖 subject/body） |
 | `send_mode` | string | `immediate`（默认）/ `smart`（时区优化） |
 | `force_new` | boolean | 强制新建会话（默认 false） |
@@ -104,20 +104,48 @@ metadata:
 | `include_unread` | boolean | 包含未读会话（默认 true） |
 | `include_overdue` | boolean | 包含超时会话（默认 true） |
 
+## 产品信息收集（建议提供，不强制）
+
+**起草邮件正文前，建议先了解用户的产品基本信息**，这能让邮件内容更具体、更有针对性（避免出现"our cup / drinkware products"这种过于笼统的表述）。
+
+但**不强制要求用户提供全部字段**——用户可以只给产品名称就发邮件，也可以补充更多细节。AI 应主动给出参考模板，用户按需提供即可。
+
+### 产品信息参考模板
+
+以下字段作为参考，用户按需提供（有则用，没有不追问）：
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| 具体产品名称 | 产品/品牌的准确名称 | "SnowPeak 钛金属双层保温杯" |
+| 产品卖点 | 区别于竞品的核心卖点（1-3 个） | "48h 保温、钛金属轻量、户外便携" |
+| 价格区间 | 零售价区间（便于匹配达人调性） | "$30-50" |
+| 是否 TikTok Shop 在售 | 是否有 TikTok 小店可挂车 | "是，TikTok Shop US 在售" |
+| 是否可寄样 | 能否寄送样品给达人 | "可以寄样" |
+| 佣金比例 | 联盟佣金比例 | "15%" |
+| 是否需要挂车 | 是否要求达人挂购物车 | "需要挂车" |
+| 内容要求 | 对达人内容形式的期望 | "开箱测评 + 使用场景展示，30s 以上" |
+
+### 引导方式
+
+1. 用户首次提出建联需求时，**简要提示**上述参考模板（如"为提升邮件针对性，建议提供产品名称、卖点、是否寄样等信息，按需提供即可"），不要逐条追问
+2. 用户提供的部分信息，AI 结构化整理后复用，后续建联无需重复询问
+3. 若用户只给了产品名称就要发邮件，直接基于名称起草，不强求补充其他字段
+4. 若用户主动提供更多信息，及时更新到产品信息中
+
 ## 安全规则
 
 **邮件发送是高风险操作，每次发送前必须获得用户明确确认。**
 
 **[禁止]** 用户说"帮我发邮件"后直接执行发送脚本。
 
-**[必须]** 在执行 `outreach_send.mjs` 之前，展示收件人列表并等待用户确认：
-
-1. **单笔发送**：展示收件人邮箱、主题、正文预览
-2. **批量发送**：展示收件人数量（≤5 全部展示，>5 展示前 5 个 + "...及其他 N 个"）、主题、正文预览
-3. 用户说"确认"/"发送"/"是"/"Y" → 执行发送
-4. 用户说"取消"/"不发"/"修改" → 不执行，询问修改意见
-5. 回复已有会话也需要确认
-6. 唯一例外：用户明确说"直接发送不用确认"时可跳过
+**[必须]** 在执行 `outreach_send.mjs` 之前，展示以下信息并等待用户确认：
+1. **产品信息摘要**（如果用户提供了产品信息，展示供确认；未提供则跳过此项）
+2. **收件人列表**（单笔展示邮箱；批量≤5 全展示，>5 展示前 5 + "...及其他 N 个"）
+3. **邮件主题与正文预览**（正文前 100 字符）
+4. 用户说"确认"/"发送"/"是"/"Y" → 执行发送
+5. 用户说"取消"/"不发"/"修改" → 不执行，询问修改意见
+6. 回复已有会话也需要确认
+7. 唯一例外：用户明确说"直接发送不用确认"时可跳过
 
 ## 输出格式
 
@@ -126,11 +154,14 @@ metadata:
 ```
 📧 发送确认
 
-• 收件人：{email 或 N 个收件人列表}
-• 主题：{subject}
-• 渠道：{channel}
-• 模式：{send_mode}
-• 正文预览：{前 100 字符...}
+📦 产品信息：
+  • 产品：{产品名称}
+  • 卖点：{核心卖点}
+  • 寄样：{是/否} | 挂车：{是/否} | 佣金：{比例}
+
+👤 收件人：{email 或 N 个收件人列表}
+📝 主题：{subject}
+📨 正文预览：{前 100 字符...}
 
 确认发送吗？(Y/N)
 ```

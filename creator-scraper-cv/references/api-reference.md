@@ -33,7 +33,7 @@
 ```
 
 `meta.quota_remaining`: remaining daily API request quota. It is **not** a credits balance. `-1` means unlimited.
-`meta.service_level`: service level used for this search request (`S1`/`S2`/`S3`). Only present in search responses. Default is `S2`.
+`meta.service_level`: service level used for this search request (`S1`/`S2`/`S3`). Only present in search responses. Default is `S2`. Note: Navos users automatically default to `S3` (handled by `_api_client.mjs`).
 `meta.credits_consumed`: credits deducted for this request. `0` means no charge.
 `meta.credits_remaining`: actual OpenAPI credits balance. `-1` means unlimited. This field may be absent from non-billed endpoints.
 `meta.total`: total matching records. For search endpoints, only returned when filter conditions > 2 (excluding `page`, `size`, `sort_field`, `sort_order`, `service_level`). Returns `null` when ≤ 2 filters.
@@ -48,6 +48,7 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | Search TikTok creators | `/openapi/v1/creators/tiktok/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
 | Search YouTube creators | `/openapi/v1/creators/youtube/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
 | Search Instagram creators | `/openapi/v1/creators/instagram/search` | Multi-dimensional filtering, supports `service_level` (S1/S2/S3) |
+| Natural-language creator search | `/openapi/v1/creators/nl-search` | Single-platform search from one natural-language query |
 | Submit collection task | `/openapi/v1/collection/tasks/submit` | Batch collect by links/usernames |
 | Submit keyword collection | `/openapi/v1/collection/tasks/keyword-submit` | Collect by keywords |
 | Query task status | `/openapi/v1/collection/tasks/status` | Check collection progress |
@@ -55,6 +56,7 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | Export task data | `/openapi/v1/collection/tasks/export` | Export to xlsx/csv/html file |
 | Get file download URL | `/openapi/v1/files/download-url` | Get temporary download URL |
 | Find similar creators | `/openapi/v1/creators/lookalike` | Lookalike search by username/URL, auto-resolves platform ID |
+| Audit creator fake-follower risk | `/openapi/v1/fake-follower-audit/run` | Synchronous creator-level authenticity and engagement-quality audit |
 | Submit video script audit | `/openapi/v1/video-script-audit/tasks/submit` | Async single-video audit, fixed 100 credits/call |
 | Query audit task status | `/openapi/v1/video-script-audit/tasks/status` | Poll audit task (recommended interval: 10s) |
 | Get audit task result | `/openapi/v1/video-script-audit/tasks/result` | Fetch full 12-dimension audit JSON when status=completed |
@@ -82,6 +84,68 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | TikTok | `tiktok` | ✅ | ✅ | ✅ | ✅ |
 | YouTube | `youtube` | ✅ | ✅ | ✅ | ✅ |
 | Instagram | `instagram` | ✅ | ✅ | ✅ | ✅ |
+
+## Natural-Language Creator Search
+
+Use `POST /openapi/v1/creators/nl-search` for content direction, creator profile, style, scenario, and product-fit descriptions that are difficult to express as exact structured fields.
+
+Request body:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `query` | string | Yes | Natural-language requirement, 1-1000 characters |
+| `platform` | string | No | `instagram` (default), `tiktok`, or `youtube`; common aliases are accepted |
+| `limit` | integer | No | Result limit, default 20, range 1-100; channel limits still apply |
+
+Do not send `lang`, `service_level`, `debug`, route tuning, pagination, or structured filters. Search one platform per request.
+
+The API Key must have `creator:nl_search` or `creator:*` scope.
+
+Billing is fixed at 15 credits per request, independent of `limit`, returned item count, platform, or recall type. Instagram `scalar_fallback` happens inside the same request and is not billed again. Multi-platform searches require separate requests and therefore cost 15 credits per platform.
+
+Recall behavior:
+
+- Instagram uses vector recall when the query contains content topic, style, or commercial semantics.
+- Instagram automatically uses `scalar_fallback` when there is not enough semantic content.
+- TikTok and YouTube currently use scalar recall.
+- Instagram vector recall does not execute email-availability or update-time constraints. Use structured search when either is mandatory.
+
+Response items contain only `uid`, `username`, `nickname`, `avatar_url`, `profile_url`, `country_code`, `followers_count`, `avg_views`, `engagement_rate`, and `match_score`. `engagement_rate` is a decimal ratio, so `0.0432` means `4.32%`. `match_score` is meaningful only within the same request.
+
+Inspect `meta.recall_type` for `vector`, `scalar`, or `scalar_fallback`. This endpoint has a fixed compact response and does not expose S1/S2/S3 selection or S3 audience fields.
+
+## Fake Follower Audit
+
+Use `POST /openapi/v1/fake-follower-audit/run` to inspect one TikTok, Instagram, or YouTube creator for fake-follower and suspicious-engagement risk.
+
+Provide exactly one target form:
+
+```json
+{"profile_url":"https://www.tiktok.com/@creator","lang":"cn"}
+```
+
+```json
+{"platform":"instagram","platform_user_id":"creator","lang":"en"}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `profile_url` | string | Conditional | Creator profile URL |
+| `platform` | string | Conditional | `tiktok` / `instagram` / `youtube` |
+| `platform_user_id` | string | Conditional | username / union_user_id / sec_user_id |
+| `service_level` | string | No | Defaults to `S1` |
+| `lang` | string | No | `cn` / `en`; controls `conclusion`, default `en` |
+
+Response fields include:
+
+- `quality_score`: 0-100, higher means healthier engagement.
+- `fake_follower_rate`: decimal estimate; `0.12` means 12%.
+- `risk_level`: `low` / `medium` / `high` / `critical`.
+- `conclusion`, `abnormal_types`, and `signals`.
+- `creator_profile`: nickname, avatar, followers, following, and available audience distributions.
+- `partial_result` and `warnings`: degradation caused by insufficient content, comments, or profile data.
+
+The fake-follower rate is an estimate, not a platform-provided follower-by-follower audit. When `partial_result=true`, present the response as partial data and include relevant warnings. Billing is determined by the active backend rule for this endpoint; do not hard-code a credit amount.
 
 ## Search Response Fields by Service Level
 

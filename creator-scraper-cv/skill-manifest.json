@@ -1,11 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.8.3",
+  "latest_version": "1.8.9",
   "min_supported_version": "1.5.0",
-  "channel": "stable",
+  "channel": "beta",
   "branch": "main",
   "release_notes": [
-    "回填表扩展字段+批量并发+飞书回填表"
+    "同步 OpenAPI v2.1 自然语言搜索与 v2.2 达人假粉检测能力"
   ],
   "sync": {
     "mode": "mirror",
@@ -19,9 +19,19 @@
   },
   "files": [
     {
+      "path": "audit/fake-follower-audit/SKILL.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/fake-follower-audit/SKILL.md",
+      "sha256": "1cff7b4b583a2e820c16db79b5f25919582ac43b1df53bd0ce4f8c353e8952f3"
+    },
+    {
       "path": "audit/video-script-audit/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/video-script-audit/SKILL.md",
       "sha256": "b8bb56bba29758f1771eecd88ac58e6ff4cfd4c2890c1023307372537f4e2418"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
+      "sha256": "58ac1443f721ce9226167145dfe9e055ee9fcd0f48cb1281f1e95a708a8b83ab"
     },
     {
       "path": "collection/creator-collection/SKILL.md",
@@ -36,7 +46,7 @@
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "beba538c36843a1e3d8c4fb91c2acba55f5bc0e6734f9511ca3493dbbd2c5ddb"
+      "sha256": "f190664e55e5e4079b68a30e7b91b1dfa8420118b81bcf83472f85877d742a13"
     },
     {
       "path": "discovery/video-search/SKILL.md",
@@ -46,12 +56,27 @@
     {
       "path": "outreach/creator-outreach/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/outreach/creator-outreach/SKILL.md",
-      "sha256": "8d786ea9bd1504900b8309c667ceacae6bacb5fd4c9db73759b1ed02855be163"
+      "sha256": "35f21bb7f7fad7beea65ff19b02ed1455fe29deb34928e589ffc7cb8502d0976"
+    },
+    {
+      "path": "profiles/common.json",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/profiles/common.json",
+      "sha256": "6b25e5310c29a263343b94deb9351359de9767a56a89c4ddd23ef5488d016fef"
+    },
+    {
+      "path": "profiles/navos-cn.json",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/profiles/navos-cn.json",
+      "sha256": "0fae93168ced23b1e33c005366a39477c9619df776fc8c43490ef2e693c8df32"
+    },
+    {
+      "path": "profiles/navos-global.json",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/profiles/navos-global.json",
+      "sha256": "616f10349534a6375b7d7ffdcd917eb6ec0ff85cf94c96456cf20eef835eb0b9"
     },
     {
       "path": "references/api-reference.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/api-reference.md",
-      "sha256": "b4be01ffd2bb3d47b92bbe469873913a12c527771733673e26b5b2e32faf27e5"
+      "sha256": "007855d4546accf839ebd165ea58bdcadf6cbd9967e97e163d913abddf8aa40a"
     },
     {
       "path": "references/country-codes.md",
@@ -81,12 +106,42 @@
     {
       "path": "scripts/_api_client.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_api_client.mjs",
-      "sha256": "8094148f1fe45a877136257fd492b61c3b4f8263c3f843984ec60837f139c567"
+      "sha256": "409a757c57ed69c966e61d06f0c41102a039b7aa6d14c698bcfbbd23abffca71"
+    },
+    {
+      "path": "scripts/_cv_credentials.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_cv_credentials.mjs",
+      "sha256": "3ac102a9ab05816f4d1336d1cbf1c76526229c140ae8a896ece93584bb7ba30b"
     },
     {
       "path": "scripts/_industry_mapper.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_industry_mapper.mjs",
       "sha256": "22275d116b46945bcfd1e49a2a239a0d44f66d303c7388524394353ef0cfd611"
+    },
+    {
+      "path": "scripts/_navos_balance.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_navos_balance.mjs",
+      "sha256": "bdb5fbe784a672bae2115a218ede743d844ff5f7270747637f28d8ebfc2b78b1"
+    },
+    {
+      "path": "scripts/_navos_identity.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_navos_identity.mjs",
+      "sha256": "f81ce7918faea11a04e3f23a2eb6295d37ceaf39393994d9115b9a4fa22e9319"
+    },
+    {
+      "path": "scripts/_runtime_profile.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_runtime_profile.mjs",
+      "sha256": "d90221829c2154677b8feaf0be1337a2ecedf40abf6045fc12a5a4d91c7bcc09"
+    },
+    {
+      "path": "scripts/check_navos_balance.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/check_navos_balance.mjs",
+      "sha256": "97c5ddeefcdaf17baf015401729a1a774d49d008e9333f7f2d44c455b237f031"
+    },
+    {
+      "path": "scripts/ensure_api_key.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/ensure_api_key.mjs",
+      "sha256": "8cbc3c8d91c99d4291f3fb5385672c5b39c9b36926a31bc3c34fd6f88618ac48"
     },
     {
       "path": "scripts/export_task_data.mjs",
@@ -97,6 +152,11 @@
       "path": "scripts/export_to_csv.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/export_to_csv.mjs",
       "sha256": "98689e28904daa8aec0d9da36d472f223fb3d3ec5d1705623418f19759516c35"
+    },
+    {
+      "path": "scripts/fake_follower_audit.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/fake_follower_audit.mjs",
+      "sha256": "ae30217e7227df35274d87c3821fde0b0a48a76732233f6baadd738b29d8bbf9"
     },
     {
       "path": "scripts/find_lookalike.mjs",
@@ -129,11 +189,6 @@
       "sha256": "18697fec2095870e75823586275ba6c6f3c66c5c6bdccc599ff4031fb287a64b"
     },
     {
-      "path": "scripts/langfuse/test_cases.json",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/langfuse/test_cases.json",
-      "sha256": "263a39d70be1217de55932c90bcc01d93ca954c5e3a4ad082d5cdf971fc315c2"
-    },
-    {
       "path": "scripts/media_upload.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/media_upload.mjs",
       "sha256": "fd01809bf45049ed2ba508560c0b2794693136a498655eaf80f817e2b346cd47"
@@ -146,7 +201,7 @@
     {
       "path": "scripts/outreach_send.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/outreach_send.mjs",
-      "sha256": "1bcbafea9cec313c31766afa00271ec65f95d7c333ea670b65d3cbe55d3d51c7"
+      "sha256": "6cbec65d332334672479df9c06ab3337224a3d160932d8639a232933102b735c"
     },
     {
       "path": "scripts/outreach_task.mjs",
@@ -164,6 +219,11 @@
       "sha256": "cfbdef3b77cd800d09eb9c7d65c66feb9fe38fdbcce17e422e126e3f75829ba9"
     },
     {
+      "path": "scripts/search_creators_nl.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_creators_nl.mjs",
+      "sha256": "c651fadab0cf20426d15ca9994162d41c11e1e5683f43bdc18dac1e307cb0f1c"
+    },
+    {
       "path": "scripts/search_creators.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_creators.mjs",
       "sha256": "b15d69878e378b7a0fde749394053b644f353e73908dd00a2b5e2667ea5b61c9"
@@ -176,7 +236,7 @@
     {
       "path": "scripts/skill_update.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/skill_update.mjs",
-      "sha256": "61147fbca20b5fe8cd59db6366db6bb7684713774cfb0b2f40ffa1f1707fb5a3"
+      "sha256": "41397ffd545bfcfcbe02fec696083a43b292e08c5785e7497735fd7487b2bf79"
     },
     {
       "path": "scripts/submit_collection_task.mjs",
@@ -215,12 +275,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "ed0e25b1e25f2146268e11782094a85b58ada049002333607b14ae14741524e1"
+      "sha256": "d70ac80cfca3ed6ce93acec1722e9e0c2aadd9688300da5920b113ed19878c26"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "2b0918edf497a2f3a30a38b2f34f1638d544923c9f73826a03225b4ca6395a97"
+      "sha256": "e207b8355bb80e340dcbbe00497d370e07cfe55adff538b594174dad6f47e848"
     },
     {
       "path": "workflow/SKILL.md",

@@ -13,7 +13,7 @@
  *   subject              — 邮件主题
  *   body_html            — HTML 正文
  *   body_text            — 纯文本正文
- *   channel              — 渠道: ses(默认) / gmail / outlook
+ *   channel              — 渠道: saas(默认，平台代发) / gmail / outlook。脚本内部 saas→ses 映射
  *   template_id          — 模板ID
  *   send_mode            — immediate(默认) / smart
  *   force_new            — 强制新建会话（默认 false）
@@ -27,6 +27,15 @@ const params = parseArgs();
 if (!params.to && !params.recipients) {
   console.error(JSON.stringify({ error: '"to" or "recipients" is required' }));
   process.exit(1);
+}
+
+// channel 参数映射：对外统一用 saas（平台代发），后端只认 ses。
+// 用户传 saas 或不传 → 映射为 ses；传 ses/gmail/outlook 保持原样。
+const CHANNEL_MAP = { saas: 'ses' };
+if (params.channel && CHANNEL_MAP[params.channel]) {
+  params.channel = CHANNEL_MAP[params.channel];
+} else if (!params.channel) {
+  params.channel = 'ses';
 }
 
 const result = await callAPI('/openapi/v1/outreach/send', params, null, { skipUserIdentity: false });
