@@ -48,6 +48,8 @@ metadata:
 |------|----------|------|
 | search_creators_nl.mjs | `../../scripts/search_creators_nl.mjs` | ✅ 可用 |
 | search_creators.mjs | `../../scripts/search_creators.mjs` | ✅ 可用 |
+| find_brand_collaboration_creators.mjs | `../../scripts/find_brand_collaboration_creators.mjs` | ✅ 可用 |
+| submit_brand_realtime_mentions.mjs | `../../scripts/submit_brand_realtime_mentions.mjs` | ✅ 可用 |
 
 自然语言搜索调用格式：
 
@@ -60,6 +62,32 @@ node {baseDir}/scripts/search_creators_nl.mjs '{"platform":"instagram","query":"
 ```bash
 node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","country_code":"US","gender":"0","followers_cnt_gte":100000,"service_level":"S2"}'
 ```
+
+## 竞品品牌找达人
+
+当用户要找“某个竞品/品牌合作过的达人”“Fenty Beauty 合作达人”“某品牌种草达人”时，优先使用这里的品牌发现链路，不要先走公开网页搜索。
+
+离线合作达人查询：
+
+```bash
+node {baseDir}/scripts/find_brand_collaboration_creators.mjs '{"brand_name":"Fenty Beauty","platforms":["tiktok","instagram"],"limit":20}'
+```
+
+- 离线查询用于找已沉淀在 CreatiVault 数据库里的品牌合作达人，优先级最高。
+- 当前离线查询支持 TikTok / Instagram。
+- `items[].creator` 是合作达人，`items[].brand_account` 是匹配到的品牌账号，`items[].evidence_videos` 是合作证据视频。
+- `collaboration_count > 0` 是合作达人命中依据；`evidence_videos` 只是解释字段。若 `evidence_available=false`，仍可展示该合作达人，但需要说明当前未取到可展示的视频证据。
+- 如果离线查询没有结果，停止并说明“当前未找到已沉淀的品牌合作记录”，再询问是否要启动实时关键词采集；不要静默切换到网页搜索或普通达人搜索。
+
+轻量实时品牌提及采集：
+
+```bash
+node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok","brand_name":"Fenty Beauty"}'
+```
+
+- 仅在用户明确要找近期提及、潜在种草候选，或确认离线无结果后继续实时采集时使用。
+- 实时采集是异步任务，返回 task id 后用 `get_task_status.mjs` 查询状态，用 `get_task_data.mjs` 拉取结果。
+- 实时结果来自品牌名/关键词采集，是候选达人或内容提及，不等同于离线确认过的品牌合作记录。
 
 ## 搜索方式选择
 

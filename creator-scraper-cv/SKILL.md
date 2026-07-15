@@ -53,7 +53,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.8.9"
+  version: "1.9.0"
 ---
 
 # Creativault Creator Ecosystem

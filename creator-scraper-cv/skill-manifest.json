@@ -1,11 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.8.9",
+  "latest_version": "1.9.0",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "发布 stable common 默认配置，避免普通环境误走 Navos profile"
+    "新增竞品品牌找达人能力：支持离线合作达人查询与轻量实时品牌提及采集，并区分通用版与 Navos 使用口径"
   ],
   "sync": {
     "mode": "mirror",
@@ -31,7 +31,7 @@
     {
       "path": "CHANGELOG.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
-      "sha256": "58ac1443f721ce9226167145dfe9e055ee9fcd0f48cb1281f1e95a708a8b83ab"
+      "sha256": "94cfd3150d01264e87b4b595a4bd428789c6508f7cabfd4de022c95a531e69de"
     },
     {
       "path": "collection/creator-collection/SKILL.md",
@@ -46,7 +46,7 @@
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "f190664e55e5e4079b68a30e7b91b1dfa8420118b81bcf83472f85877d742a13"
+      "sha256": "b34661e0d2e792caae7ae225b086078f9082f2b1abdae3563d0216e59b1e9d4c"
     },
     {
       "path": "discovery/video-search/SKILL.md",
@@ -159,6 +159,11 @@
       "sha256": "ae30217e7227df35274d87c3821fde0b0a48a76732233f6baadd738b29d8bbf9"
     },
     {
+      "path": "scripts/find_brand_collaboration_creators.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/find_brand_collaboration_creators.mjs",
+      "sha256": "32bc50db93c0880812508b96cc1ab1b9ea9d4e009dd0c490b8df2999f3e894e5"
+    },
+    {
       "path": "scripts/find_lookalike.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/find_lookalike.mjs",
       "sha256": "1c257b1bd7e2e32b6541db0831e029931f4629d4d12357d404a2be939b05c74b"
@@ -239,6 +244,11 @@
       "sha256": "41397ffd545bfcfcbe02fec696083a43b292e08c5785e7497735fd7487b2bf79"
     },
     {
+      "path": "scripts/submit_brand_realtime_mentions.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/submit_brand_realtime_mentions.mjs",
+      "sha256": "5a1fc16c968d0173e8c30663797d4523aa564e97c015521ae4f8ef86b92dc7b3"
+    },
+    {
       "path": "scripts/submit_collection_task.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/submit_collection_task.mjs",
       "sha256": "9ce8175a9f8387ab326d17a262cd99339584f0ede20510ff9d183cc96f24ac6c"
@@ -275,12 +285,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "f62b052fece90eb7653e9317494377d8d58b0da9edff8135d599c4c3a20fb2c3"
+      "sha256": "1a6e5b0b63b259c8246d6119a963b202732025fc264c1b06ba7ed928a767799c"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "e207b8355bb80e340dcbbe00497d370e07cfe55adff538b594174dad6f47e848"
+      "sha256": "43e30a60fb92543f0fb11ecb840d48ca41c8e0374cb08548408a5bf1f56c3536"
     },
     {
       "path": "workflow/SKILL.md",
