@@ -1,11 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.9.0",
+  "latest_version": "1.9.2",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "新增竞品品牌找达人能力：支持离线合作达人查询与轻量实时品牌提及采集，并区分通用版与 Navos 使用口径"
+    "Add brand video insight display guidance"
   ],
   "sync": {
     "mode": "mirror",
@@ -31,7 +31,7 @@
     {
       "path": "CHANGELOG.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
-      "sha256": "94cfd3150d01264e87b4b595a4bd428789c6508f7cabfd4de022c95a531e69de"
+      "sha256": "503cf16644d7f0790a93d44f7f680bc992605c631f9ced370f4404c554f54835"
     },
     {
       "path": "collection/creator-collection/SKILL.md",
@@ -46,12 +46,12 @@
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "b34661e0d2e792caae7ae225b086078f9082f2b1abdae3563d0216e59b1e9d4c"
+      "sha256": "2f6dbed27939e1076c0adeebd90579412a2d0de794e189465e1b9c0a777d0c40"
     },
     {
       "path": "discovery/video-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/video-search/SKILL.md",
-      "sha256": "1f61672ee4d3269db53db719aecddd236ec9567d5779a8c62470e1a1c5bbf75d"
+      "sha256": "60ddea5a4ba8a73010eac222afa393fa7f7e0ca0c3ae763c29c2db9fec12c2d8"
     },
     {
       "path": "outreach/creator-outreach/SKILL.md",
@@ -76,7 +76,7 @@
     {
       "path": "references/api-reference.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/api-reference.md",
-      "sha256": "007855d4546accf839ebd165ea58bdcadf6cbd9967e97e163d913abddf8aa40a"
+      "sha256": "cb7830a9d332d2b5c40b210124fa9dfa68aad9dd18b4c80b85021aca06dcd4c6"
     },
     {
       "path": "references/country-codes.md",
@@ -106,7 +106,7 @@
     {
       "path": "scripts/_api_client.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/_api_client.mjs",
-      "sha256": "409a757c57ed69c966e61d06f0c41102a039b7aa6d14c698bcfbbd23abffca71"
+      "sha256": "1b1f84a30ba9877140d9ef4c4073948271ae9e267426295d5cc0d137092022e5"
     },
     {
       "path": "scripts/_cv_credentials.mjs",
@@ -224,6 +224,11 @@
       "sha256": "cfbdef3b77cd800d09eb9c7d65c66feb9fe38fdbcce17e422e126e3f75829ba9"
     },
     {
+      "path": "scripts/search_brand_video_insights.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_brand_video_insights.mjs",
+      "sha256": "3e31f381c32511533ac535d655e174f6aa1eb4160c46d03f6821c6f6e3230ee5"
+    },
+    {
       "path": "scripts/search_creators_nl.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_creators_nl.mjs",
       "sha256": "c651fadab0cf20426d15ca9994162d41c11e1e5683f43bdc18dac1e307cb0f1c"
@@ -231,7 +236,7 @@
     {
       "path": "scripts/search_creators.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_creators.mjs",
-      "sha256": "b15d69878e378b7a0fde749394053b644f353e73908dd00a2b5e2667ea5b61c9"
+      "sha256": "95c962478ed039ad1d13a38ff880248b75b16e361a87cd8515932c8f6baf340d"
     },
     {
       "path": "scripts/search_videos.mjs",
@@ -285,12 +290,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "1a6e5b0b63b259c8246d6119a963b202732025fc264c1b06ba7ed928a767799c"
+      "sha256": "0a4b47ef013f34b61b42b79c0bb4397e02d9beab184d2b64ec69500482c8c570"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "43e30a60fb92543f0fb11ecb840d48ca41c8e0374cb08548408a5bf1f56c3536"
+      "sha256": "8c178490c73c1a7a80c22f42f055802a062b4c64daabc5bb91b4aa4d33c9b3a6"
     },
     {
       "path": "workflow/SKILL.md",

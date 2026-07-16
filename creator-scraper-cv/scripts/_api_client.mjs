@@ -2,6 +2,7 @@
 // Shared request, retry, auth, runtime profile, and response shaping logic.
 
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -159,6 +160,106 @@ async function getCredentials({ forceRefresh = false } = {}) {
     });
   }
   return _credsPromise;
+}
+
+function buildPartnerHeaders(partnerCode) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Partner-Code': partnerCode,
+    'X-Timestamp': Math.floor(Date.now() / 1000).toString(),
+    'X-Nonce': randomBytes(16).toString('hex'),
+  };
+  if (RUNTIME_PROFILE.navos_region) {
+    headers['X-Navos-Region'] = String(RUNTIME_PROFILE.navos_region);
+  }
+  return headers;
+}
+
+function resolveCreatorUid(item = {}) {
+  return (
+    item.union_user_id
+    || item.uid
+    || item.user_id
+    || item.kol_id
+    || item.channel_id
+    || item.id
+    || ''
+  ).toString().trim();
+}
+
+async function createCreatorDetailTicket({ platform, creatorUid }) {
+  if (!isNavosProfile(RUNTIME_PROFILE) || !creatorUid) return null;
+
+  const creds = await getCredentials();
+  const { loadNavosIdentity } = await import('./_navos_identity.mjs');
+  const identity = loadNavosIdentity();
+  const partnerCode = creds.partnerCode || PARTNER_CODE || 'navos-global';
+  const url = `${API_BASE}/internal/partners/${encodeURIComponent(partnerCode)}/creator-detail-ticket`;
+  const body = {
+    uid: identity.uid,
+    token: identity.token,
+    email: creds.userIdentity || identity.email,
+    client_version: SKILL_META.channel || '',
+    platform,
+    creator_uid: creatorUid,
+    locale: RUNTIME_PROFILE.default_lang === 'en' ? 'en' : 'zh',
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: buildPartnerHeaders(partnerCode),
+    body: JSON.stringify(body),
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok || payload?.code !== 200 || !payload?.data?.detail_url) {
+    const reason = payload?.en_message || payload?.zh_message || `HTTP ${response.status}`;
+    throw new Error(`CV creator detail ticket rejected: ${reason}`);
+  }
+
+  return payload.data;
+}
+
+function getResultItems(result) {
+  if (Array.isArray(result?.data)) return result.data;
+  if (Array.isArray(result?.data?.items)) return result.data.items;
+  if (Array.isArray(result?.data?.list)) return result.data.list;
+  if (Array.isArray(result?.data?.records)) return result.data.records;
+  return [];
+}
+
+export async function attachCreatorDetailUrls(result, platform) {
+  if (!isNavosProfile(RUNTIME_PROFILE)) return result;
+
+  const items = getResultItems(result);
+  if (items.length === 0) return result;
+
+  await Promise.all(items.map(async (item) => {
+    const creatorUid = resolveCreatorUid(item);
+    if (!creatorUid || item.cv_detail_url) return;
+
+    try {
+      const ticket = await createCreatorDetailTicket({ platform, creatorUid });
+      if (ticket?.detail_url) {
+        item.cv_detail_url = ticket.detail_url;
+        item.cv_detail_expires_at = ticket.expires_at || null;
+      }
+    } catch (err) {
+      console.error(JSON.stringify({
+        cv_detail_url_warning: 'Failed to create creator detail link; keeping platform profile link only.',
+        creator_uid: creatorUid,
+        reason: err.message,
+      }));
+    }
+  }));
+
+  return result;
 }
 
 function ensureUserIdentity(creds) {

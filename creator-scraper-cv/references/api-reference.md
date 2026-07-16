@@ -57,6 +57,7 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | Get file download URL | `/openapi/v1/files/download-url` | Get temporary download URL |
 | Find similar creators | `/openapi/v1/creators/lookalike` | Lookalike search by username/URL, auto-resolves platform ID |
 | Audit creator fake-follower risk | `/openapi/v1/fake-follower-audit/run` | Synchronous creator-level authenticity and engagement-quality audit |
+| Search brand video insights | `/openapi/v1/brand-discovery/video-insights/search` | Expand a brand into up to 5 hashtags, search existing videos, and summarize brand content signals |
 | Submit video script audit | `/openapi/v1/video-script-audit/tasks/submit` | Async single-video audit, fixed 100 credits/call |
 | Query audit task status | `/openapi/v1/video-script-audit/tasks/status` | Poll audit task (recommended interval: 10s) |
 | Get audit task result | `/openapi/v1/video-script-audit/tasks/result` | Fetch full 12-dimension audit JSON when status=completed |
@@ -146,6 +147,47 @@ Response fields include:
 - `partial_result` and `warnings`: degradation caused by insufficient content, comments, or profile data.
 
 The fake-follower rate is an estimate, not a platform-provided follower-by-follower audit. When `partial_result=true`, present the response as partial data and include relevant warnings. Billing is determined by the active backend rule for this endpoint; do not hard-code a credit amount.
+
+## Brand Video Insight Search
+
+Use `POST /openapi/v1/brand-discovery/video-insights/search` when the user wants brand/competitor video insight, such as "find Fenty Beauty related videos", "brand hashtag performance", or "竞品品牌视频洞察".
+
+This endpoint reuses CreatiVault keyword-monitor hashtag expansion logic, but it only searches existing indexed videos. It does not trigger realtime collection. If the user wants fresh collection after seeing no results, ask for confirmation before calling `/openapi/v1/brand-discovery/realtime-mentions`.
+
+Request body:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `brand_name` | string | Yes | Brand or competitor name |
+| `platforms` | string[] | No | `tiktok`, `youtube`, `instagram`; defaults to `["tiktok"]` |
+| `hashtags` | string[] | No | Manual hashtags, max 5. If provided, auto expansion is skipped |
+| `expand_count` | integer | No | Auto-expanded hashtag count, default 5, range 1-5 |
+| `limit` | integer | No | Max returned videos, default 20, range 1-50 |
+| `per_hashtag_size` | integer | No | Candidate videos per platform and hashtag, default 10, range 1-10 |
+| `video_views_cnt_gte` / `video_views_cnt_lte` | integer | No | View-count filters |
+| `video_interaction_rate_gte` / `video_interaction_rate_lte` | number | No | Percentage filters, so `3` means 3% |
+| `video_publish_date_gte` / `video_publish_date_lte` | string | No | `YYYY-MM-DD` filters |
+
+Example:
+
+```json
+{
+  "brand_name": "Fenty Beauty",
+  "platforms": ["tiktok"],
+  "expand_count": 5,
+  "video_interaction_rate_gte": 3,
+  "limit": 20
+}
+```
+
+Response `data` includes:
+
+- `keyword_expansion.used_hashtags`: the actual search hashtags.
+- `items`: matched videos, each with `matched_hashtag`.
+- `summary`: video count, platform distribution, top hashtags, top creators.
+- `realtime_collection`: future collection hook, with `triggered=false`.
+
+Important: `/openapi/v1/videos/search` accepts up to 5 hashtags, but multiple hashtags are strict filters. For brand insight, use this endpoint because it searches each expanded hashtag separately and merges results.
 
 ## Search Response Fields by Service Level
 

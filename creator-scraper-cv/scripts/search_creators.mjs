@@ -10,7 +10,7 @@
 //   - Level-1 ID:   '{"platform":"tiktok","industry":"25"}'
 //   - Level-3 ID:   '{"platform":"instagram","industry":"25009001"}'
 
-import { callAPI, parseArgs, validatePlatform } from './_api_client.mjs';
+import { attachCreatorDetailUrls, callAPI, parseArgs, validatePlatform } from './_api_client.mjs';
 
 const params = parseArgs();
 const { platform, ...searchParams } = params;
@@ -18,4 +18,5 @@ const { platform, ...searchParams } = params;
 validatePlatform(platform);
 
 const result = await callAPI(`/openapi/v1/creators/${platform}/search`, searchParams, platform);
+await attachCreatorDetailUrls(result, platform);
 console.log(JSON.stringify(result, null, 2));

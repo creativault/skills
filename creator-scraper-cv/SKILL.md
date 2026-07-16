@@ -53,7 +53,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.9.0"
+  version: "1.9.1"
 ---
 
 # Creativault Creator Ecosystem
@@ -100,8 +100,10 @@ metadata:
 Navos profile 会在结构化达人搜索脚本中自动注入 `service_level: "S3"`。S3 不只代表“更准的搜索”，也代表响应里可能包含受众画像字段。展示结构化达人搜索结果时必须把 S3 字段当作用户已付费获取的数据来呈现：
 
 1. 不要只输出摘要表头（例如达人、国家、粉丝、均播、互动率、受众女性、主要受众国家、邮箱）。
-2. 默认拆成两张连续表：第一张展示基础身份、联系方式和表现指标；第二张展示 S3 受众画像（受众女性、受众国家、受众语言、受众年龄等）。
-3. 字段只有在接口实际返回且至少一条结果有有效值时才展示；不要编造空缺字段。
+2. 默认用一张动态宽表展示同一批达人，S1 / S2 / S3 实际返回且有值的字段都在同一张表里展开；不要再把 S3 受众画像单独拆成第二张表。表格变宽可以横向滚动，但不能因此省略受众女性、受众国家、受众语言、受众年龄等 S3 字段。
+3. `avatar_url` 属于 S1 基础字段。只要接口返回 `avatar_url`，Navos 搜索结果表必须默认增加独立「头像」列，并用 40px 方形外框裁切渲染；不要只保留达人主页文字链，也不要只裸写 `<img width height>` 导致 Navos 表格把竖图压窄。头像缺失时该单元格留空，不要编造头像或占位图。
+4. 字段只有在接口实际返回且至少一条结果有有效值时才展示；不要编造空缺字段。
+5. Navos profile 下，`scripts/search_creators.mjs` 会尽量为每条结果补充 `cv_detail_url`。如果该字段存在，达人名/昵称优先链接到 `cv_detail_url`，用于在 Navos 内置浏览器打开 CreatiVault 只读详情预览页；平台主页链接（TikTok/Instagram `profile_url`，YouTube `channel_url`）应保留为单独「平台主页」字段或表格下方引用链接。common profile 或 `cv_detail_url` 缺失时，达人名/昵称仍链接到平台主页，不要声称能打开 CV 详情。
 
 `scripts/search_creators_nl.mjs` 是例外：自然语言搜索接口不支持 `service_level`，只返回固定精简字段。不要把 Navos 的 S3 展示规则套到该接口；如果用户需要完整联系方式或受众画像，应说明需要改用结构化搜索，并在再次调用前征得确认。
 
@@ -123,7 +125,7 @@ Navos profile 会在结构化达人搜索脚本中自动注入 `service_level: "
 | 子 Skill | 中文关键词 | 英文关键词 | 路径 |
 |----------|-----------|-----------|------|
 | creator-search | 达人搜索, KOL搜索, 找达人 | creator search, influencer discovery, search creators | discovery/creator-search/SKILL.md |
-| video-search | 视频搜索, 短视频搜索, 找视频, 按话题搜视频, 按播放量搜视频, 按互动率搜视频, 热门视频, 爆款视频 | video search, short video search, search videos by hashtag, search by views, content discovery, trending videos | discovery/video-search/SKILL.md |
+| video-search | 视频搜索, 短视频搜索, 找视频, 按话题搜视频, 品牌视频洞察, 竞品视频洞察, 品牌相关视频, 按播放量搜视频, 按互动率搜视频, 热门视频, 爆款视频 | video search, short video search, brand video insight, competitor video insight, search videos by hashtag, search by views, content discovery, trending videos | discovery/video-search/SKILL.md |
 | creator-lookalike | 相似达人, 类似达人 | similar creators, lookalike, find similar | discovery/creator-lookalike/SKILL.md |
 | creator-collection | 批量采集, 数据导出, 离线采集 | batch collection, data export, keyword collection | collection/creator-collection/SKILL.md |
 | creator-outreach | 建联, 发邮件, 批量发送 | email outreach, send email, outreach | outreach/creator-outreach/SKILL.md |
