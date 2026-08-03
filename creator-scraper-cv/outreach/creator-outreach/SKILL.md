@@ -45,6 +45,7 @@ metadata:
 - 所有业务逻辑（创建提报、查找会话、判断新建/回复）由 OpenAPI 内部完成
 - Skill 不需要知道 `submission_id`、`influencer_id` 等内部概念
 - 搜索后发送时，将搜索结果中的 `uid` + `platform` 传给 outreach_send，OpenAPI 内部自动从 Holo 查完整达人数据
+- Navos profile 下，`outreach_send.mjs`、`outreach_task.mjs`、`outreach_contact.mjs`、`outreach_todo.mjs` 会尽量补充 `cv_outreach_url`。输出时保留对话区摘要，并提供“在 CreatiVault 查看完整建联过程”入口；该链接会在 Navos 内置浏览器中无感登录 CV，并打开 `/asset/studio/influencer-submission?view=email` 原生建联工作台。common profile 下没有该链接时，不要声称可以打开 CV 建联页。
 
 ## 发送机制
 
@@ -177,7 +178,10 @@ metadata:
 • 失败：{failed_count} 封
 • 耗时：{duration}
 • 消耗积分：{credits_consumed}
+• 在 CreatiVault 查看完整建联过程：[在 CreatiVault 查看完整建联过程]({cv_outreach_url})
 ```
+
+如果 `cv_outreach_url` 存在，必须把它作为单独入口展示；不要把它混同为达人主页链接，也不要替代对话区的轻量摘要。
 
 ### 积分说明
 
@@ -197,3 +201,7 @@ metadata:
 - "渠道"/"模板" → `outreach_config.mjs`（🔮 待实现）
 - 模板变量：`{{creator_name}}`、`{{creator_email}}`、`{{platform}}`
 - 搜索后发送时，**必须**传 `uid` + `platform`（OpenAPI 自动从 Holo 查完整达人数据）
+## Navos Output Link Rules
+
+- If `cv_outreach_url` exists, never print the raw full URL in the final answer. Show it as `[在 CreatiVault 查看完整建联过程]({cv_outreach_url})`.
+- Keep the chat answer as a lightweight summary plus next steps; the CV outreach link must be a separate short entry.

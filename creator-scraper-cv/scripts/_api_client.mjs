@@ -13,13 +13,27 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SKILL_META = loadSkillMeta();
 const RUNTIME_PROFILE = loadRuntimeProfile({ skillMeta: SKILL_META });
 
-const CV_BASE_PROD = 'https://creativault-business.creativault.ai';
-const CV_BASE_STAGING = 'https://dev01-creativault-business.tec-develop.cn';
+const CV_BASE_PROD = 'https://api.creativault.vip/skill/creativault';
 
 function resolveApiBase() {
   const explicit = (process.env.CV_API_BASE_URL || '').trim();
   if (explicit) return explicit.replace(/\/+$/, '');
-  return (SKILL_META.channel === 'stable') ? CV_BASE_PROD : CV_BASE_STAGING;
+
+  if (SKILL_META.channel === 'stable') {
+    return CV_BASE_PROD;
+  }
+
+  // 非 stable（staging/dev）走内网地址，不硬编码在源码里，
+  // 避免内网域名随仓库 / skill 包分发泄露。仅从环境变量读取。
+  const staging = (process.env.CV_API_BASE_STAGING_URL || '').trim();
+  if (staging) return staging.replace(/\/+$/, '');
+
+  console.error(JSON.stringify({
+    error: 'Staging API base URL is not configured',
+    hint: 'Set CV_API_BASE_STAGING_URL (or CV_API_BASE_URL) to the internal API base for non-stable channels.',
+    channel: SKILL_META.channel,
+  }));
+  process.exit(1);
 }
 
 const API_BASE = resolveApiBase();
@@ -175,34 +189,28 @@ function buildPartnerHeaders(partnerCode) {
   return headers;
 }
 
-function resolveCreatorUid(item = {}) {
-  return (
-    item.union_user_id
-    || item.uid
-    || item.user_id
-    || item.kol_id
-    || item.channel_id
-    || item.id
-    || ''
-  ).toString().trim();
-}
+async function createCreatorResultSet({ platform, queryParams, result }) {
+  if (!isNavosProfile(RUNTIME_PROFILE)) return null;
 
-async function createCreatorDetailTicket({ platform, creatorUid }) {
-  if (!isNavosProfile(RUNTIME_PROFILE) || !creatorUid) return null;
+  const items = getResultItems(result);
+  if (items.length === 0) return null;
 
   const creds = await getCredentials();
   const { loadNavosIdentity } = await import('./_navos_identity.mjs');
   const identity = loadNavosIdentity();
   const partnerCode = creds.partnerCode || PARTNER_CODE || 'navos-global';
-  const url = `${API_BASE}/internal/partners/${encodeURIComponent(partnerCode)}/creator-detail-ticket`;
+  const url = `${API_BASE}/internal/partners/${encodeURIComponent(partnerCode)}/creator-result-set`;
   const body = {
     uid: identity.uid,
     token: identity.token,
     email: creds.userIdentity || identity.email,
     client_version: SKILL_META.channel || '',
     platform,
-    creator_uid: creatorUid,
     locale: RUNTIME_PROFILE.default_lang === 'en' ? 'en' : 'zh',
+    title: `Navos ${platform} creator search`,
+    query: queryParams || {},
+    items,
+    meta: result?.meta || {},
   };
 
   const response = await fetch(url, {
@@ -218,9 +226,58 @@ async function createCreatorDetailTicket({ platform, creatorUid }) {
     payload = null;
   }
 
-  if (!response.ok || payload?.code !== 200 || !payload?.data?.detail_url) {
+  if (!response.ok || payload?.code !== 200 || !payload?.data?.list_url) {
     const reason = payload?.en_message || payload?.zh_message || `HTTP ${response.status}`;
-    throw new Error(`CV creator detail ticket rejected: ${reason}`);
+    throw new Error(`CV creator result set rejected: ${reason}`);
+  }
+
+  return payload.data;
+}
+
+function buildOutreachWorkspaceRedirectPath(context = {}) {
+  const locale = RUNTIME_PROFILE.default_lang === 'en' ? 'en' : 'zh';
+  const query = new URLSearchParams({
+    view: 'email',
+    source: 'navos',
+    layout: 'compact',
+  });
+  if (context.task_id) query.set('task_id', String(context.task_id));
+  if (context.email) query.set('email', String(context.email));
+  return `/${locale}/asset/studio/influencer-submission?${query.toString()}`;
+}
+
+async function createPartnerWebLink({ redirectPath }) {
+  if (!isNavosProfile(RUNTIME_PROFILE) || !redirectPath) return null;
+
+  const creds = await getCredentials();
+  const { loadNavosIdentity } = await import('./_navos_identity.mjs');
+  const identity = loadNavosIdentity();
+  const partnerCode = creds.partnerCode || PARTNER_CODE || 'navos-global';
+  const url = `${API_BASE}/internal/partners/${encodeURIComponent(partnerCode)}/web-link-ticket`;
+  const body = {
+    uid: identity.uid,
+    token: identity.token,
+    email: creds.userIdentity || identity.email,
+    client_version: SKILL_META.channel || '',
+    redirect_path: redirectPath,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: buildPartnerHeaders(partnerCode),
+    body: JSON.stringify(body),
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok || payload?.code !== 200 || !payload?.data?.url) {
+    const reason = payload?.en_message || payload?.zh_message || `HTTP ${response.status}`;
+    throw new Error(`CV web link ticket rejected: ${reason}`);
   }
 
   return payload.data;
@@ -234,30 +291,44 @@ function getResultItems(result) {
   return [];
 }
 
-export async function attachCreatorDetailUrls(result, platform) {
+export async function attachCreatorResultSetUrl(result, platform, queryParams = {}) {
   if (!isNavosProfile(RUNTIME_PROFILE)) return result;
 
-  const items = getResultItems(result);
-  if (items.length === 0) return result;
-
-  await Promise.all(items.map(async (item) => {
-    const creatorUid = resolveCreatorUid(item);
-    if (!creatorUid || item.cv_detail_url) return;
-
-    try {
-      const ticket = await createCreatorDetailTicket({ platform, creatorUid });
-      if (ticket?.detail_url) {
-        item.cv_detail_url = ticket.detail_url;
-        item.cv_detail_expires_at = ticket.expires_at || null;
-      }
-    } catch (err) {
-      console.error(JSON.stringify({
-        cv_detail_url_warning: 'Failed to create creator detail link; keeping platform profile link only.',
-        creator_uid: creatorUid,
-        reason: err.message,
-      }));
+  try {
+    const snapshot = await createCreatorResultSet({ platform, queryParams, result });
+    if (snapshot?.list_url) {
+      result.cv_list_url = snapshot.list_url;
+      result.cv_result_set_id = snapshot.result_set_id || null;
+      result.cv_result_set_expires_at = snapshot.result_set_expires_at || null;
+      result.cv_list_ticket_expires_at = snapshot.ticket_expires_at || null;
     }
-  }));
+  } catch (err) {
+    console.error(JSON.stringify({
+      cv_list_url_warning: 'Failed to create creator result list link; keeping chat result only.',
+      reason: err.message,
+    }));
+  }
+
+  return result;
+}
+
+export async function attachOutreachWorkspaceUrl(result, context = {}) {
+  if (!isNavosProfile(RUNTIME_PROFILE)) return result;
+
+  try {
+    const redirectPath = buildOutreachWorkspaceRedirectPath(context);
+    const ticket = await createPartnerWebLink({ redirectPath });
+    if (ticket?.url) {
+      result.cv_outreach_url = ticket.url;
+      result.cv_outreach_redirect_path = ticket.redirect_path || redirectPath;
+      result.cv_outreach_expires_at = ticket.expires_at || null;
+    }
+  } catch (err) {
+    console.error(JSON.stringify({
+      cv_outreach_url_warning: 'Failed to create CreatiVault outreach workspace link; keeping chat result only.',
+      reason: err.message,
+    }));
+  }
 
   return result;
 }

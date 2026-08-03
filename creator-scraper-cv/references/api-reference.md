@@ -228,6 +228,7 @@ Important: `/openapi/v1/videos/search` accepts up to 5 hashtags, but multiple ha
 | `link_line` | string | S2 | Line link |
 | `link_zalo` | string | S2 | Zalo link |
 | `mcn` | string | S2 | MCN agency |
+| `recent_videos` | array | S2 | Recent videos (up to 3; each item has `cover_url` / `video_url` / `video_title` / `video_type`) |
 | `audience_female_rate` | number | S3 | Female audience ratio (percentage, e.g. 78.65 = 78.65%) |
 | `audience_country_code_list` | string[] | S3 | Audience country distribution |
 | `audience_language_code_list` | string[] | S3 | Audience language distribution |
@@ -272,6 +273,7 @@ Important: `/openapi/v1/videos/search` accepts up to 5 hashtags, but multiple ha
 | `hashtags` | string[] | S2 | Hashtag list |
 | `email` | string | S2 | Email address |
 | `whatsapp` | string | S2 | WhatsApp |
+| `recent_videos` | array | S2 | Recent videos (up to 3; each item has `cover_url` / `video_url` / `video_title` / `video_type`) |
 | `audience_female_rate` | number | S3 | Female audience ratio (percentage) |
 | `audience_country_code_list` | string[] | S3 | Audience country distribution |
 | `audience_language_list` | string[] | S3 | Audience language distribution |
@@ -305,6 +307,7 @@ Important: `/openapi/v1/videos/search` accepts up to 5 hashtags, but multiple ha
 | `hashtags` | string[] | S2 | Hashtag list |
 | `email` | string | S2 | Email address |
 | `link_whatsapp` | string | S2 | WhatsApp |
+| `recent_videos` | array | S2 | Recent videos (up to 3; each item has `cover_url` / `video_url` / `video_title` / `video_type`) |
 | `audience_female_rate` | number | S3 | Female audience ratio (percentage) |
 | `audience_country_code_list` | string[] | S3 | Audience country distribution |
 | `audience_language_code_list` | string[] | S3 | Audience language distribution |

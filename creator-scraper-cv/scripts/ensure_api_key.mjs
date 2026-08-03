@@ -38,7 +38,7 @@ async function main() {
   if (!cvBase) {
     console.error(JSON.stringify({
       error: 'CV_API_BASE_URL is not configured',
-      hint: 'export CV_API_BASE_URL=https://dev01-creativault-business.tec-develop.cn',
+      hint: 'export CV_API_BASE_URL=https://api.creativault.vip/skill/creativault',
     }));
     process.exit(1);
   }

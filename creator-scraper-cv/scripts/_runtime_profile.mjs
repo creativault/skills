@@ -77,6 +77,59 @@ function resolveIdentityPath() {
   return join(homedir(), '.navos', 'identity', 'navos-userinfo.json');
 }
 
+function resolveNavosSettingsPath() {
+  const override = process.env.NAVOS_SETTINGS_FILE;
+  if (override && override.trim()) {
+    return override.trim();
+  }
+
+  const appData = (process.env.APPDATA || '').trim();
+  if (appData) {
+    return join(appData, '@navos-mind', 'navos', 'navos.json');
+  }
+
+  return join(homedir(), 'AppData', 'Roaming', '@navos-mind', 'navos', 'navos.json');
+}
+
+function normalizeNavosLanguage(value, source = 'default') {
+  const language = String(value || '').trim();
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith('zh')) {
+    return {
+      prompt_locale: 'zh',
+      default_lang: 'cn',
+      navos_language: language || 'zh-CN',
+      navos_language_source: source,
+    };
+  }
+
+  return {
+    prompt_locale: 'en',
+    default_lang: 'en',
+    navos_language: language || 'en-US',
+    navos_language_source: source,
+  };
+}
+
+function readNavosLanguageProfile() {
+  const envLanguage = (process.env.NAVOS_LANGUAGE || '').trim();
+  if (envLanguage) {
+    return normalizeNavosLanguage(envLanguage, 'env');
+  }
+
+  const path = resolveNavosSettingsPath();
+  if (!existsSync(path)) {
+    return normalizeNavosLanguage('', 'default');
+  }
+
+  try {
+    const data = readJSON(path);
+    return normalizeNavosLanguage(data?.app?.language, 'file');
+  } catch {
+    return normalizeNavosLanguage('', 'default');
+  }
+}
+
 function readNavosAppId() {
   const envAppId = normalizeNavosAppProfile(process.env.NAVOS_APP_ID);
   if (envAppId) return envAppId;
@@ -117,11 +170,13 @@ export function loadRuntimeProfile({ skillMeta = null } = {}) {
     ...runtimeOverrides,
     profile: profileName,
   };
+  const navosLanguageProfile = isNavosProfile(profile) ? readNavosLanguageProfile() : {};
   const navosBaseUrl = profile.navos_base_url || '';
   const navosValidateBaseUrl = profile.navos_validate_base_url || navosBaseUrl;
   const navosCallbackBaseUrl = profile.navos_callback_base_url || navosBaseUrl;
   return {
     ...profile,
+    ...navosLanguageProfile,
     ...(navosValidateBaseUrl && { navos_validate_base_url: navosValidateBaseUrl }),
     ...(navosCallbackBaseUrl && { navos_callback_base_url: navosCallbackBaseUrl }),
   };

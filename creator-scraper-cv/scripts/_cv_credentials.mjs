@@ -283,7 +283,7 @@ async function callPartnerUserValidate({
  * Call CV `/internal/partners/{partner_code}/api-keys/ensure`.
  *
  * @param {object} args
- * @param {string} args.cvBase       e.g. https://dev01-creativault-business.tec-develop.cn
+ * @param {string} args.cvBase       e.g. https://api.creativault.vip/skill/creativault
  * @param {string} args.partnerCode  e.g. "navos"
  * @param {string} args.uid
  * @param {string} args.token

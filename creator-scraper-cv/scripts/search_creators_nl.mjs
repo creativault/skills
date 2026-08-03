@@ -4,7 +4,11 @@
 // Usage:
 //   node {baseDir}/scripts/search_creators_nl.mjs '{"platform":"instagram","query":"Find US running creators with authentic training content","limit":20}'
 
-import { callAPI, parseArgs } from './_api_client.mjs';
+import {
+  attachCreatorResultSetUrl,
+  callAPI,
+  parseArgs,
+} from './_api_client.mjs';
 
 const PLATFORM_ALIASES = new Map([
   ['instagram', 'instagram'],
@@ -64,4 +68,5 @@ const result = await callAPI(
     estimatedCredits: ESTIMATED_CREDITS,
   },
 );
+await attachCreatorResultSetUrl(result, platform, { query, platform, limit });
 console.log(JSON.stringify(result, null, 2));

@@ -20,7 +20,11 @@
  *   attachment_ids       — 附件ID列表
  */
 
-import { callAPI, parseArgs, validateRequired } from './_api_client.mjs';
+import {
+  attachOutreachWorkspaceUrl,
+  callAPI,
+  parseArgs,
+} from './_api_client.mjs';
 
 const params = parseArgs();
 
@@ -39,4 +43,8 @@ if (params.channel && CHANNEL_MAP[params.channel]) {
 }
 
 const result = await callAPI('/openapi/v1/outreach/send', params, null, { skipUserIdentity: false });
+await attachOutreachWorkspaceUrl(result, {
+  task_id: result?.data?.task_id,
+  email: params.to,
+});
 console.log(JSON.stringify(result, null, 2));

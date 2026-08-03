@@ -89,6 +89,19 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 - 实时采集是异步任务，返回 task id 后用 `get_task_status.mjs` 查询状态，用 `get_task_data.mjs` 拉取结果。
 - 实时结果来自品牌名/关键词采集，是候选达人或内容提及，不等同于离线确认过的品牌合作记录。
 
+## 搜索前 Brief 规则
+
+普通达人搜索必须先确认需求是否足够执行。最小 brief 包含：平台、目标市场/国家地区、品类/行业/关键词、需要数量。缺少平台或关键业务条件时，先澄清，再搜索。
+
+1. 用户未指定平台时，必须先问平台，给出 TikTok / Instagram / YouTube 选项；不要默认选一个平台，也不要同时搜多个平台。
+2. 用户未指定目标市场/地区时，必须先问目标地区；“东南亚”“欧美”“美国”等明确范围可以直接使用。
+3. 用户未指定品类、行业、关键词、产品、品牌或内容方向时，必须先问业务方向。
+4. 用户未指定数量时，可以默认先找 10 个；如果用户表达的是“合作名单/建联名单/批量达人”，优先追问数量。
+5. 用户已经给出平台、地区、品类和数量时，不要继续问服务等级或技术参数，直接按当前条件严格搜索。
+6. 澄清问题必须短，一次最多 3 个，只问当前真正缺失的信息。示例：“可以，我先确认 2 点：你想优先搜哪个平台？目标地区是哪些国家或区域？”
+
+不要用“基于规则”“参数如下”“size=min(...)”“Navos profile 自动 S3”“召回类型”等内部表达作为过程内容。内部规则只用于指导执行，不展示给用户。
+
 ## 搜索方式选择
 
 每次用户请求只选择一种搜索方式，不要同时调用两个脚本：
@@ -96,7 +109,7 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 1. 用户重点描述内容方向、达人画像、内容风格、真实场景、品牌或产品适配等难以稳定映射为类目/关键词的需求时，优先调用 `search_creators_nl.mjs`。Instagram 会使用语义向量召回；TikTok 和 YouTube 当前使用自然语言解析后的标量召回。
 2. 用户要求精确邮箱/WhatsApp、更新时间、指定行业 ID、排序字段、S1/S2/S3 完整字段、GMV/GPM 或其他明确结构化条件时，调用 `search_creators.mjs`。
 3. 用户既有复杂语义又有 Instagram 向量检索暂不支持的强约束（当前包括是否有邮箱、更新时间）时，不要假设自然语言接口会严格执行这些条件；优先使用结构化搜索，或先向用户说明限制并确认取舍。
-4. 用户未指定平台时，基于需求选择一个平台；自然语言接口默认平台是 Instagram，但不得为了凑数自动跨平台调用。
+4. 用户未指定平台时，先按「搜索前 Brief 规则」澄清平台；自然语言接口虽然有默认平台，但面向用户执行时不得依赖默认平台直接搜索。
 5. 多平台需求必须拆成多次请求，并在调用第二个平台前告知用户会增加查询消耗。
 
 ### 自然语言搜索协议
@@ -118,10 +131,9 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 
 - 只展示接口实际返回的 `uid`、`username`、`nickname`、`avatar_url`、`profile_url`、`country_code`、`followers_count`、`avg_views`、`engagement_rate`、`match_score`。
 - 只要返回 `avatar_url`，表格必须增加独立「头像」首列，用 40px 等比例缩略图渲染；不要只展示达人名文字链。`avatar_url` 为空时该格留空，不要编造头像或占位图。
-- common profile 下，用户名和昵称继续渲染为指向 `profile_url` 的可点击文字链。Navos profile 下，如果结果返回 `cv_detail_url`，用户名/昵称优先链接到 `cv_detail_url`，用于在 Navos 内置浏览器打开 CreatiVault 只读详情预览页；平台主页链接保留为单独「平台主页」字段或引用链接。
 - `engagement_rate` 是小数比例，展示时乘以 100 并加 `%`，例如 `0.0432` 展示为 `4.32%`。
 - `match_score` 仅用于同一次请求内比较，不要跨请求、跨平台比较，也不要解释成百分制绝对质量分。
-- 单独说明本次 `meta.recall_type`；结果为 0 或不足 `limit` 时停止，不要自动发起第二次搜索。
+- 结果为 0 或不足 `limit` 时停止，不要自动发起第二次搜索；不要主动说明 `meta.recall_type` 等内部召回信息，除非用户明确要求排查。
 
 ## 参数提取强制规则
 
@@ -152,11 +164,37 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 1. 所有用户筛选条件必须进入 OpenAPI 请求体。包括但不限于 `country_code`、`industry`、`followers_cnt_gte/_lte`、`last10_avg_video_interaction_rate_gte/_lte`、`has_email`、`language_code`、受众字段。禁止先只传少量条件拿候选，再本地过滤大量结果。
 2. 默认只调用一次搜索脚本，且只查 `page=1`。不得为了凑满用户要求的数量自动翻到 page 2、page 10 等。
 3. 默认 `size` 取 `min(max(用户要求数量 * 2, 用户要求数量), 20)`；如果用户只说"找几个"且未给数量，默认 `size=10`。禁止静默传 `size=50` 或 `size=100` 来扩大候选池。
-4. 用户未指定平台时，基于语义选择一个最合适的平台先搜。不得自动并行或串行搜索 TikTok、Instagram、YouTube 来凑结果。
+4. 用户未指定平台时，必须先澄清平台。不得自动选择平台，也不得自动并行或串行搜索 TikTok、Instagram、YouTube 来凑结果。
 5. 严格条件返回 0 条时，不再发起任何补充搜索；直接说明没有命中，并询问是否放宽条件，例如降低互动率、扩大地区、换平台或改用关键词。
 6. 严格条件返回数量少于用户要求时，只展示严格命中的结果，并说明"当前严格命中 N 个，未自动继续翻页或跨平台搜索"；继续搜索前必须让用户确认。
 7. 如果接口返回结果与用户筛选条件明显不一致，不展示不合格结果凑数；停止并说明可能是字段口径或传参问题，建议用户确认是否放宽条件或继续排查。
 8. 视频搜索不是达人搜索兜底。只有用户明确要求"找视频 / 爆款视频 / 参考视频 / 话题视频 / 内容案例"时，才能切换到 `video-search`。
+
+## 面向用户的回复口径
+
+搜索过程和最终回复必须像业务助手，而不是接口调试日志。
+
+### 搜索前
+
+- 信息足够时，只用 1-2 句话确认业务口径，例如：“我会按 TikTok / 美国 / 美妆 / 粉丝 10-50 万 / 互动率 ≥3% / 有邮箱做严格匹配，不自动跨平台或放宽条件。”
+- 信息不足时，只问缺失项，不展示参数、不解释规则、不输出 JSON。
+- 不要输出“参数：”“规则：”“size/page/service_level/endpoint/meta/request_id/recall_type”等技术内容。
+
+### 搜索后
+
+按以下顺序输出：
+
+1. 一句话结果摘要：严格命中了多少个、是否满足用户数量。
+2. 一张达人表：展示真实返回字段，Navos S3 场景按宽表展示。
+3. 1-3 条业务判断：谁最优先、为什么适合、潜在风险是什么。
+4. 如果有 `cv_list_url`，只展示短链接 `[在 CreatiVault 查看完整列表]({cv_list_url})`，不要原样输出长 URL。
+5. 下一步建议只给最相关的 1-3 条，优先围绕用户原始目标，例如建联、导出、继续放宽条件或找相似达人。
+
+禁止：
+
+- 不要解释“我选择了哪个接口”“用了哪个脚本”“Navos profile 自动 S3”“自然语言接口/结构化接口差异”等内部实现，除非用户明确问技术原因。
+- 不要说“共匹配 5000+”同时又只展示 20 条而不说明这是本次返回结果；Navos 快照页和对话区都应以本次实际返回数量为主。
+- 不要一边说“不会自动跨平台/翻页”，一边继续发起跨平台或翻页搜索。
 
 ## 服务等级
 
@@ -279,7 +317,7 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 
 达人名单表格必须遵循以下原则，提升可读性与交互效率：
 
-1. **达人名做成可点击链接**：common profile 下，用户名、昵称均链接到平台主页（TikTok/Instagram 用 `profile_url`，YouTube 用 `channel_url`）。Navos profile 下，如果返回 `cv_detail_url`，用户名/昵称优先链接到 `cv_detail_url`，并可描述为“查看 CV 详情预览”；平台主页仍要保留为单独「平台主页」字段或表格下方引用链接，避免用户失去跳转原平台的入口。链接锚点用 `[用户名][linkN]` / `[昵称][linkN]` 引用式，表格下方统一定义完整 URL。
+1. **Navos 链接与入口规则**：Navos profile 下不再生成单个达人详情链接。`scripts/search_creators.mjs` 和 `scripts/search_creators_nl.mjs` 只补充 `cv_list_url`，用于在 Navos 内置浏览器无感登录 CreatiVault 并打开本次搜索结果快照列表；用户在 CV 原生列表中点击达人打开详情弹窗。对话区表格里的达人名/昵称仍链接到平台主页，平台主页链接必须保留为单独入口或引用链接。common profile 下不展示 CV 列表入口。
 2. **动态展示返回字段，不要固定表头**：表格列必须基于本次接口实际返回字段动态生成，尤其 Navos 用户默认 S3，必须覆盖 S1 + S2 + S3 的所有可读字段。禁止只展示固定的少数列（如粉丝数、平均播放、互动率、国家、粉丝层级、认证、邮箱、带货、AI），也禁止因为表格变宽就省略 S3 受众画像字段。
 
    **固定语义列只保留这些：**
@@ -292,7 +330,6 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
    - 字段在接口响应里存在且至少一条结果有有效值，就展示为独立列
    - 字段在所有结果中都为空、`null`、空数组或空字符串时，可以省略该列
    - Boolean 字段不要只放空白图标；展示为 `是/否` 或带文字的 `✅ 是`、`—`
-   - common profile 下，`profile_url` / `channel_url` 已通过用户名和昵称链接承载，无需重复放一列；Navos profile 下如果使用 `cv_detail_url` 作为达人名链接，则必须保留平台主页入口
    - `avatar_url` 已通过头像承载，无需重复放原始 URL
    - `uid` 属于可追踪字段，S3 结果中如果返回必须展示，或至少在每行详情中展示，便于后续采集、建联、排障
 
@@ -334,14 +371,12 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 ### TikTok
 
 - **头像列**：用固定方形外框承载头像，避免 Navos 表格列压缩竖图。推荐格式：`<span style="display:inline-flex;width:40px;height:40px;overflow:hidden;border-radius:4px;vertical-align:middle;"><img src="{avatar_url}" width="40" height="40" style="width:40px;height:40px;max-width:40px;min-width:40px;object-fit:cover;object-position:center;display:block;"></span>`；`avatar_url` 来自 S1 字段，缺失时该格留空，禁止放占位图或编造 URL。不要用 Markdown `![]()`，也不要只裸写 `<img src="{avatar_url}" width="36" height="36">`
-- 用户名、昵称列均渲染为 `[名称][linkN]` 链接；Navos 有 `cv_detail_url` 时指向 CV 详情预览，否则指向 profile_url
 - TikTok S3 动态列应覆盖实际返回的这些字段：`uid`、`followers_count`、`likes_count`、`video_count`、`has_showcase`、`has_email`、`has_mcn`、`has_line`、`has_zalo`、`last_video_publish_date`、`country_code`、`gender`、`avg_views`、`engagement_rate`、`views_per_follower`、`is_verified`、`last10_video_views_per_sub`、`last10_med_video_views_cnt`、`last10_med_video_views_per_sub`、`product_categories`、`industry_categories`、`bio`、`hashtags`、`language`、`email`、`link_whatsapp`、`link_line`、`link_zalo`、`mcn`、`audience_female_rate`、`audience_country_code_list`、`audience_language_code_list`、`audience_age_id_list`
 - TikTok 不要固定输出 `AI` 列；除非响应里真实存在 AI 相关字段且有有效值
 
 ### YouTube
 
 - **头像列**：用固定方形外框承载头像，避免 Navos 表格列压缩竖图。推荐格式：`<span style="display:inline-flex;width:40px;height:40px;overflow:hidden;border-radius:4px;vertical-align:middle;"><img src="{avatar_url}" width="40" height="40" style="width:40px;height:40px;max-width:40px;min-width:40px;object-fit:cover;object-position:center;display:block;"></span>`；`avatar_url` 来自 S1 字段，缺失时该格留空，禁止放占位图或编造 URL。不要用 Markdown `![]()`，也不要只裸写 `<img src="{avatar_url}" width="36" height="36">`
-- 用户名、频道名列均渲染为 `[名称][linkN]` 链接；Navos 有 `cv_detail_url` 时指向 CV 详情预览，否则指向 channel_url
 - YouTube S3 动态列应覆盖实际返回的这些字段：`uid`、`has_email`、`has_whatsapp`、`last_video_publish_time`、`country_code`、`language`、`gender`、`bio`、`followers_count`、`video_count`、`view_count`、`avg_views`、`avg_views_short`、`avg_views_long`、`engagement_rate`、`engagement_rate_short`、`engagement_rate_long`、`is_verified`、`last10_video_views_per_sub`、`last10_video_views_per_sub_short`、`last10_video_views_per_sub_long`、`last10_med_video_views_cnt`、`last10_med_video_views_cnt_short`、`last10_med_video_views_cnt_long`、`last10_med_video_views_per_sub`、`last10_med_video_views_per_sub_short`、`last10_med_video_views_per_sub_long`、`industry_categories`、`hashtags`、`email`、`whatsapp`、`audience_female_rate`、`audience_country_code_list`、`audience_language_list`、`audience_age_list`
 - `is_ai_creator` 只在响应真实返回且有有效值时展示，不要固定输出空白 AI 列
 
@@ -355,7 +390,6 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 ### Instagram
 
 - **头像列**：用固定方形外框承载头像，避免 Navos 表格列压缩竖图。推荐格式：`<span style="display:inline-flex;width:40px;height:40px;overflow:hidden;border-radius:4px;vertical-align:middle;"><img src="{avatar_url}" width="40" height="40" style="width:40px;height:40px;max-width:40px;min-width:40px;object-fit:cover;object-position:center;display:block;"></span>`；`avatar_url` 来自 S1 字段，缺失时该格留空，禁止放占位图或编造 URL。不要用 Markdown `![]()`，也不要只裸写 `<img src="{avatar_url}" width="36" height="36">`
-- 用户名、昵称列均渲染为 `[名称][linkN]` 链接；Navos 有 `cv_detail_url` 时指向 CV 详情预览，否则指向 profile_url
 - Instagram S3 动态列应覆盖实际返回的这些字段：`uid`、`has_email`、`has_whatsapp`、`last_video_publish_time`、`country_code`、`language`、`gender`、`bio`、`followers_count`、`video_count`、`avg_views`、`engagement_rate`、`is_verified`、`last10_video_views_per_sub`、`last10_med_video_views_cnt`、`last10_med_video_views_per_sub`、`industry_categories`、`hashtags`、`email`、`link_whatsapp`、`audience_female_rate`、`audience_country_code_list`、`audience_language_code_list`、`audience_age_id_list`
 - `is_product_kol` / `is_ai_creator` 只在响应真实返回且有有效值时展示，不要固定输出空白带货或 AI 列
 
@@ -370,10 +404,8 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
   - Navos 用户默认走 S3，展示表格必须包含平均播放量、互动率、粉丝数/订阅数、联系方式、行业/标签、bio、最近发布时间、受众画像等全部实际返回字段
 - **平台主页跳转必须保留（S1 起即返回，所有等级必须保留）**：`profile_url`（TikTok/Instagram）/ `channel_url`（YouTube）属于 S1 字段，S2/S3 同样返回
   - common profile 下，用户名、昵称列必须渲染为 `[名称][linkN]` 链接，指向该达人平台主页 URL，**不再单独设置末列"主页链接"**
-  - Navos profile 下，如果返回 `cv_detail_url`，用户名、昵称列链接到 CV 只读详情预览页，平台主页 URL 作为单独「平台主页」字段或引用链接展示
   - 表格下方统一定义各 `[linkN]` 对应的完整 URL
   - **S3 场景同样必须保留可点击链接**——不可因增加了受众画像字段而挤掉或省略
-  - `cv_detail_url` 是 CreatiVault SaaS 只读详情预览入口；`profile_url` / `channel_url` 是平台主页入口，两类链接必须区分描述。
 - 统计信息单独列出：总匹配数、消耗积分、剩余配额、请求 ID（Navos 用户由脚本自动隐藏 service_level/credits/request_id，无需展示）
 - `meta.total` 为 null 时不展示总匹配数
 - 默认展示 5~10 条，超过时询问用户
@@ -382,14 +414,11 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
   - 禁止裸写 `<img src="{avatar_url}" width="36" height="36">` 这类同时固定宽高但未设置 `object-fit` / 外层裁切框的格式，避免把竖图、横图头像压扁
   - 头像通过 `<img src>` 内联 avatar_url，无需单独定义引用链接；达人名链接（`[linkN]`）在表格下方列出完整 URL
   - `avatar_url` 为空或缺失时，该格留空，**禁止编造头像 URL 或放占位图**
-  - 头像缩略图仅用于视觉识别；用户名/昵称文字链在 Navos 有 `cv_detail_url` 时跳转 CV 详情预览，否则跳转平台主页
 - 展示后主动询问是否需要导出 CSV/Excel
 
 ### 达人分析润色（AI 即兴生成 + 真实数据对照）
 
 **[必须]** 展示搜索结果表格后，不要只丢出原始数据就结束。基于返回的数据，对头部达人（前 3-5 个）给出**简短的专业分析**，帮助用户快速理解匹配价值。
-
-**润色区必须与真实数据对照**：每条达人分析中，达人名做成文字链 `[昵称][linkN]`（Navos 有 `cv_detail_url` 时打开 CV 详情预览，否则打开平台主页），并在分析内容里**紧跟展示该达人返回的真实数据字段**（粉丝数、平均播放、互动率、受众画像等），让用户一边看 AI 推荐理由、一边比对真实数据，无需在表格和分析间来回对照。
 
 润色维度参考（根据返回字段灵活组织，不必逐条罗列）：
 
@@ -439,6 +468,9 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 - "可以**搜索相似达人**（lookalike），基于表现最好的账号扩大候选池"
 - "可以**采集这批达人的近期视频**，分析他们的内容风格和合作潜力"
 
-**推荐达人必须可点击查看**：当下一步建议或润色中提到具体推荐达人时，达人名一律渲染为文字链 `[昵称][linkN]`；Navos 有 `cv_detail_url` 时指向 CV 详情预览，其他场景指向其 profile_url/channel_url，与表格保持同一链接体系。
-
 不要机械罗列所有建议——先按“建联建议判定规则”决定是否必须给建联建议，再根据用户的使用场景（建联/分析/采集）补充 1-2 条最相关的导出、lookalike 或进一步分析建议。
+
+## Navos Output Link Rules
+
+- If `cv_list_url` exists, never print the raw full URL in the final answer. Show it as `[在 CreatiVault 查看完整列表]({cv_list_url})`.
+- These link rules only govern how links are presented; they do not relax the wide-table requirement above — the chat table must still cover every actually returned S1/S2/S3 field. Creator names in the chat table may still link to platform profiles; the CV list link must be a separate short entry after the summary.

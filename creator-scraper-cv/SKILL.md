@@ -53,7 +53,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.9.1"
+  version: "1.9.4"
 ---
 
 # Creativault Creator Ecosystem
@@ -81,7 +81,28 @@ metadata:
 - 单条视频拆解/审核/评分：加载 `audit/video-script-audit/SKILL.md`，调用 `scripts/video_audit_submit.mjs` + `video_audit_poll.mjs`（异步任务）。
 - 复合流程，例如"找达人并建联""采集后导出再发邮件""拆解爆款再写 brief""品牌视频发现→分析→建联"：加载 `workflow/SKILL.md`，由工作流编排子 skill。
 
-执行前应把用户自然语言目标转成 CreatiVault OpenAPI 参数；不确定平台、国家、行业、数量或服务等级时，先做最少必要澄清。用户已给出明确条件时，直接调用脚本，不要先去网页搜索。
+执行前应把用户自然语言目标转成 CreatiVault OpenAPI 参数；用户已给出明确条件时，直接调用脚本，不要先去网页搜索。
+
+## Brief 澄清与过程输出质量
+
+达人搜索前必须先判断用户需求是否足够执行。普通达人搜索的最小 brief 是：平台、目标市场/国家地区、品类/行业/关键词、需要数量。缺少平台或缺少核心业务条件时，先向用户做一次简短澄清，不要自行猜测后直接搜索。
+
+澄清规则：
+
+1. 用户未指定平台时，必须先问平台；可给出选项：TikTok / Instagram / YouTube。不要默认选择 Instagram、TikTok 或任一平台。
+2. 用户未说明目标市场/国家地区时，先问目标地区；不要把“海外”“欧美”“东南亚”之外的范围自行细分到国家，除非用户已经表达清楚。
+3. 用户未说明品类、行业、关键词、产品或竞品品牌时，先问业务方向；不要用泛化词直接搜索。
+4. 用户未说明数量时，可默认先找 10 个，但要在执行前用一句话说明“我先按 10 个候选处理”；如果用户目标明显是建联名单，优先问期望数量。
+5. 用户已给出平台、地区、品类和数量时，可以直接执行；不要反复询问服务等级。Navos profile 默认按 S3 返回，common profile 按用户指定或默认策略执行。
+6. 澄清问题一次最多 3 个，优先问缺失的关键项。不要把所有可选筛选条件一次性列成长问卷。
+
+过程输出规则：
+
+1. 面向用户只输出业务语言，不输出内部实现细节。禁止展示 OpenAPI 参数 JSON、字段名清单、endpoint、`page`、`size`、`service_level`、`meta`、`request_id`、`recall_type`、“规则 4/规则 7”等内部词，除非用户明确要求排查或查看技术细节。
+2. 搜索前过程说明最多 2 句话，只说明将按哪些业务条件严格匹配，以及不会自动跨平台/翻页/放宽条件。
+3. 不要前后矛盾：如果说“先澄清”，就不要同时执行搜索；如果说“直接搜索”，就不要再展示推理过程或参数推导。
+4. 结果不足时只说清楚“严格命中 N 个”，再给 2-3 个放宽方向；不要把不满足条件的候选包装成结果。
+5. Navos 场景下，最终回复优先包含：一句结果摘要、一张结果表、1-3 条业务判断、短链接入口和下一步建议。不要长篇解释计费、调用策略、字段口径或平台实现。
 
 ## 搜索预算与静默查询边界
 
@@ -89,7 +110,7 @@ metadata:
 
 1. 必须把用户给出的筛选条件全部前置为 OpenAPI 参数，例如地区、行业、粉丝量、互动率、邮箱、语言、受众画像等；禁止先宽泛搜索一批候选，再在本地大量二次过滤。
 2. 默认每轮用户请求只执行 1 次 `creator-search` 调用；默认 `page=1`，`size` 不超过用户要求数量的 2 倍，且最大不超过 20，除非用户明确要求更多结果。
-3. 用户未指定平台时，只选择最匹配的 1 个平台先搜；禁止为了凑满数量自动跨平台搜索。
+3. 用户未指定平台时，必须先做 brief 澄清平台；禁止默认选择平台，也禁止为了凑满数量自动跨平台搜索。
 4. 若严格条件返回 0 条，或返回结果不足用户要求数量，必须停止并说明当前严格命中数量；禁止自动翻页、扩大 `size`、跨平台补数、放宽条件、改用关键词兜底或改用视频搜索。
 5. 继续翻页、跨平台、扩大结果数量、放宽条件、切换到视频搜索或使用更高服务等级前，必须先征得用户确认，并说明会产生额外查询消耗。
 6. 只展示满足用户筛选条件的达人；如果接口返回数据与用户条件明显不一致，停止并提示可能是字段口径或传参问题，建议用户放宽条件或确认下一步，不要展示无关结果凑数。
@@ -103,7 +124,8 @@ Navos profile 会在结构化达人搜索脚本中自动注入 `service_level: "
 2. 默认用一张动态宽表展示同一批达人，S1 / S2 / S3 实际返回且有值的字段都在同一张表里展开；不要再把 S3 受众画像单独拆成第二张表。表格变宽可以横向滚动，但不能因此省略受众女性、受众国家、受众语言、受众年龄等 S3 字段。
 3. `avatar_url` 属于 S1 基础字段。只要接口返回 `avatar_url`，Navos 搜索结果表必须默认增加独立「头像」列，并用 40px 方形外框裁切渲染；不要只保留达人主页文字链，也不要只裸写 `<img width height>` 导致 Navos 表格把竖图压窄。头像缺失时该单元格留空，不要编造头像或占位图。
 4. 字段只有在接口实际返回且至少一条结果有有效值时才展示；不要编造空缺字段。
-5. Navos profile 下，`scripts/search_creators.mjs` 会尽量为每条结果补充 `cv_detail_url`。如果该字段存在，达人名/昵称优先链接到 `cv_detail_url`，用于在 Navos 内置浏览器打开 CreatiVault 只读详情预览页；平台主页链接（TikTok/Instagram `profile_url`，YouTube `channel_url`）应保留为单独「平台主页」字段或表格下方引用链接。common profile 或 `cv_detail_url` 缺失时，达人名/昵称仍链接到平台主页，不要声称能打开 CV 详情。
+5. Navos profile 下不再生成单个达人详情链接。`scripts/search_creators.mjs` 和 `scripts/search_creators_nl.mjs` 只补充 `cv_list_url`，用于在 Navos 内置浏览器无感登录 CreatiVault 并打开本次搜索结果快照列表；用户在 CV 原生列表中点击达人打开详情弹窗。对话区表格里的达人名/昵称仍链接到平台主页，平台主页链接必须保留为单独入口或引用链接。common profile 下不展示 CV 列表入口。`cv_list_url` 是机器入口，禁止在最终回复中原样输出完整 URL；必须展示为短 Markdown 链接：`[在 CreatiVault 查看完整列表]({cv_list_url})`。
+6. Navos profile 下，建联发送、任务查询、沟通历史和待办脚本会尽量补充 `cv_outreach_url`，用于在 Navos 内置浏览器无感登录 CV 并打开建联工作台。对话区仍应展示摘要和下一步建议，`cv_outreach_url` 只作为查看完整过程的入口；禁止原样输出完整 URL，必须展示为短 Markdown 链接：`[在 CreatiVault 查看完整建联过程]({cv_outreach_url})`。
 
 `scripts/search_creators_nl.mjs` 是例外：自然语言搜索接口不支持 `service_level`，只返回固定精简字段。不要把 Navos 的 S3 展示规则套到该接口；如果用户需要完整联系方式或受众画像，应说明需要改用结构化搜索，并在再次调用前征得确认。
 
@@ -205,7 +227,7 @@ Set the following environment variables:
 
 - `CV_API_KEY` — Creativault Open API Key (obtain from admin dashboard)
 - `CV_USER_IDENTITY` — Operator email address
-- `CV_API_BASE_URL` (optional) — API base URL, defaults to `http://api.creativault.vip`
+- `CV_API_BASE_URL` (optional) — API base URL, defaults to `https://api.creativault.vip/skill/creativault` (stable channel). For non-stable channels, set `CV_API_BASE_STAGING_URL` to the internal API base.
 
 **Linux / macOS**:
 
@@ -254,24 +276,11 @@ Navos 用户（通过 Navos 桌面端使用本 Skill 的用户）的积分管控
 - **凭证优先级**：Navos 专用版默认使用 Navos 登录态和 `~/.creativault/skill-credentials.json` 中的环境化缓存 key；即使用户机器上存在 `CV_API_KEY` 环境变量，也不会覆盖 Navos 授权链路。仅开发排障时可显式设置 `CV_ALLOW_ENV_API_KEY=true` 临时启用环境变量覆盖。
 - 若用户询问积分/余额相关问题，引导其到 Navos 桌面端查看，不要展示 CV 积分数值。
 
-## Navos 用户安装引导
+## 安装说明
 
-Navos 用户安装本 Skill 时，应使用专用的 **`navos-exclusive` 分支**（针对 Navos 桌面端环境优化，含积分体系对接、身份读取、自动配置等能力）。
+本 Skill 以单一源码、单一 `main` 分支发布，Navos 用户与普通用户安装方式相同，无需区分分支。安装后按上方 Runtime Profiles 自动识别运行环境（common / Navos 国内版 / Navos 海外版），Navos 身份读取、积分预检等能力开箱即用。
 
-**安装方式（任选其一）：**
-
-1. **CLI 安装（推荐）**——使用 `skills add` 命令时指定分支：
-   ```bash
-   npx skills add creativault/skills#navos-exclusive
-   ```
-   > ⚠️ 直接执行 `npx skills add creativault/skills` 会安装默认 `main` 分支，**Navos 用户必须加 `#navos-exclusive` 后缀**。
-
-2. **手动克隆/下载**——从 GitHub 指定分支获取：
-   - Navos 用户：`https://github.com/creativault/skills/tree/navos-exclusive`
-   - 普通用户：`https://github.com/creativault/skills/tree/main`（默认）
-   - 开发/测试：`https://github.com/creativault/skills/tree/dev`
-
-> ⚠️ Navos 用户如果安装了 `main` 或 `dev` 分支，可能缺少 Navos 身份读取、积分预检等能力。安装后如遇身份认证失败（如 "Partner user validation failed"），请确认是否使用了 `navos-exclusive` 分支。
+> 说明：早期版本曾通过 `navos-exclusive` 专用分支分发，该模式已废弃；当前 `main` 分支即包含全部 profile 与 Navos 对接能力。
 
 ## References
 
