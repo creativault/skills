@@ -40,14 +40,14 @@ metadata:
 
 | 链路 | 方式 | 适用场景 | 达人数据维度 |
 |------|------|---------|------------|
-| **链路1（社媒 URL）** | 传 `url`，后端自动下载 | 已发布视频的拆解与竞品分析 | ✅ 反查粉丝/均播/爆款等级 |
-| **链路2（上传素材）** | 先调 `media_upload.mjs` 拿 `oss_key`，再传 `uploaded_oss_key` | 发布前脚本自审，无需社媒链接 | `not_applicable`（天然无社媒身份，非数据缺失） |
+| **链路1（社媒 URL）** | 传 `video_url`，后端自动下载 | 已发布视频的拆解与竞品分析 | ✅ 反查粉丝/均播/爆款等级 |
+| **链路2（上传素材）** | 先调 `media_upload.mjs` 拿 `oss_url`，再传 `oss_url` | 发布前脚本自审，无需社媒链接 | `not_applicable`（天然无社媒身份，非数据缺失） |
 
 **调用流程**：
 
 ```
-链路1: submit(url) → poll(status) → result
-链路2: media_upload → submit(uploaded_oss_key) → poll(status) → result
+链路1: submit(video_url) → poll(status) → result
+链路2: media_upload → submit(oss_url) → poll(status) → result
 ```
 
 任意一条链路固定计费 **100 credits/次**（submit）+ 链路2 额外 **20 credits**（media_upload），与视频时长无关。
@@ -56,8 +56,8 @@ metadata:
 
 | # | 脚本 | 相对路径 | 状态 | 说明 |
 |---|------|----------|------|------|
-| 1 | media_upload.mjs | `../../scripts/media_upload.mjs` | ✅ | 链路2：上传本地视频 → 公开桶，返回 oss_key（20 credits/次） |
-| 2 | video_audit_submit.mjs | `../../scripts/video_audit_submit.mjs` | ✅ | 提交审核任务（链路1传 url，链路2传 uploaded_oss_key），返回 task_id |
+| 1 | media_upload.mjs | `../../scripts/media_upload.mjs` | ✅ | 链路2：上传本地视频 → 公开桶，返回 oss_url（20 credits/次） |
+| 2 | video_audit_submit.mjs | `../../scripts/video_audit_submit.mjs` | ✅ | 提交审核任务（链路1传 video_url，链路2传 oss_url），返回 task_id |
 | 3 | video_audit_status.mjs | `../../scripts/video_audit_status.mjs` | ✅ | 单次查询状态，不轮询 |
 | 4 | video_audit_result.mjs | `../../scripts/video_audit_result.mjs` | ✅ | 拉取审核结果，仅 completed 时可用 |
 | 5 | video_audit_poll.mjs | `../../scripts/video_audit_poll.mjs` | ✅ | 自动轮询直到终态，可选自动取结果 |
@@ -69,7 +69,7 @@ metadata:
 | `pending` | 队列中，未开始处理 | ❌ 继续轮询 |
 | `processing` | 处理中（下载 / 分析 / 入库） | ❌ 继续轮询 |
 | `completed` | 已完成，可调用 result 获取审核 JSON | ✅ |
-| `failed` | 失败，`error_message` 含失败原因 | ✅ |
+| `failed` | 失败，`error_message` 含失败原因（**必须原文透传给用户**，见「失败态处理（强制）」） | ✅ |
 
 `progress` 字段语义：`pending=0` / `processing=50` / `completed=100` / `failed=0`。**不要根据 progress 判断终态**，只能根据 `status`。
 
@@ -79,21 +79,47 @@ metadata:
 
 ## 提交参数（video_audit_submit.mjs）
 
-`url` 和 `uploaded_oss_key` 二选一，不可同时为空，也不可同时传。
+`video_url` 和 `oss_url` 二选一，不可同时为空，也不可同时传。参数名与后端 `SubmitAuditTaskRequest` 一致。
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `url` | string | △ | 链路1：社媒视频 URL（TikTok / Instagram Reels / YouTube Shorts） |
-| `uploaded_oss_key` | string | △ | 链路2：已上传素材的 OSS key，由 `media_upload.mjs` 返回 |
+| `video_url` | string | △ | 链路1：社媒视频 URL，必须匹配下方白名单 |
+| `oss_url` | string | △ | 链路2：`media_upload.mjs` 返回的**完整** `oss_url`，必须是 `*.creativault.tech` 下的 HTTPS URL |
 | `brief` | string | × | 客户 Brief 原文，启用 Brief 符合度审核（`brief_compliance`） |
 | `user_id` | string | × | 业务用户 ID；不传则后端使用 `X-User-Identity` |
 | `campaign_id` | string | × | 活动 / 战役 ID，用于结果归档 |
 | `audit_mode` | string | × | 审核严格度：`high`（默认）/ `low` |
 | `is_benchmark` | boolean | × | 是否标记为优质案例存入 benchmark 库；`true` 时会忽略 `enable_benchmark` |
 | `enable_benchmark` | boolean | × | 是否启用 benchmark 对比，默认 `false` |
-| `oss_url_override` | string | × | [旧 Workaround] 跳过下载；新接入推荐用 `uploaded_oss_key` |
 
-> △ `url` 和 `uploaded_oss_key` 至少传一个。
+> △ `video_url` 和 `oss_url` 必须恰好传一个：都不传或都传，后端 `model_validator` 都会拒绝。
+
+**已废弃的旧参数名**
+
+| 旧名 | 处理 |
+|------|------|
+| `url` | 自动映射为 `video_url`，可继续用但不推荐 |
+| `oss_url_override` | 自动映射为 `oss_url`，可继续用但不推荐 |
+| `uploaded_oss_key` | **不再接受**。它是 OSS key 而非完整 URL，后端只认 URL。请改传 `media_upload.mjs` 返回的 `oss_url` |
+
+### URL 白名单（链路1 强制）
+
+只有以下三种格式会被接受，`video_audit_submit.mjs` 在提交前本地校验，后端 submit 也会二次校验：
+
+| 平台 | 接受的格式 | 示例 |
+|------|-----------|------|
+| TikTok | `tiktok.com/@{username}/video/{数字ID}` | `https://www.tiktok.com/@creator/video/7648432916250250526` |
+| YouTube Shorts | `youtube.com/shorts/{id}` 或 `youtu.be/{id}` | `https://www.youtube.com/shorts/abc123` |
+| Instagram Reels | `instagram.com/reel/{code}`、`/reels/{code}`、`/p/{code}` | `https://www.instagram.com/reel/Cxyz_1/` |
+
+**常见不支持的形态**（遇到这些不要提交，直接向用户要正确链接）：
+
+| 用户给的链接 | 为什么不行 | 怎么办 |
+|-------------|-----------|--------|
+| `youtube.com/watch?v=xxx` | YouTube **长视频页**，只支持 Shorts | 让用户确认是否为 Shorts；长视频当前不支持分析 |
+| `vt.tiktok.com/xxx`、`vm.tiktok.com/xxx` | TikTok 分享**短链**，无法识别 | 让用户在浏览器打开后复制完整链接 |
+| `douyin.com/video/xxx` | 抖音不在支持范围 | 说明仅支持海外三平台 |
+| 达人主页链接（无 `/video/`） | 不是单条视频链接 | 让用户提供具体某条视频的链接 |
 
 **[强制规则]**
 
@@ -101,20 +127,21 @@ metadata:
 2. `audit_mode` 只接受 `high` / `low`，不要传 `medium`（后端已不支持）。
 3. 一次只能审核一条视频；批量审核由调用方循环管理 task_id。
 4. 同一视频重复 submit 会重复扣 100 credits/次，失败后查 `error_message` 而不是重新 submit。
+5. **提交前必须核对上方 URL 白名单。** 不匹配时禁止提交，直接把不支持的原因和正确格式告知用户并索取新链接。提交也会被拒（`40004`），但会白跑一次请求。
 
 **示例**
 
 ```bash
 # 链路1：最小参数
-node ../../scripts/video_audit_submit.mjs '{"url":"https://www.tiktok.com/@creator/video/7648432916250250526"}'
+node ../../scripts/video_audit_submit.mjs '{"video_url":"https://www.tiktok.com/@creator/video/7648432916250250526"}'
 
 # 链路1：带 Brief + benchmark 对比
-node ../../scripts/video_audit_submit.mjs '{"url":"https://www.tiktok.com/@creator/video/123","brief":"给职场妈妈的 SLG 手游，5 分钟一局","audit_mode":"high","enable_benchmark":true}'
+node ../../scripts/video_audit_submit.mjs '{"video_url":"https://www.tiktok.com/@creator/video/123","brief":"给职场妈妈的 SLG 手游，5 分钟一局","audit_mode":"high","enable_benchmark":true}'
 
 # 链路2：先上传，再审核（两步）
 node ../../scripts/media_upload.mjs '{"file_path":"/path/to/draft.mp4"}'
-# → 返回 oss_key: "media_ingestion/uploads/user@example.com/20260615_a1b2.mp4"
-node ../../scripts/video_audit_submit.mjs '{"uploaded_oss_key":"media_ingestion/uploads/user@example.com/20260615_a1b2.mp4","brief":"发布前自审","audit_mode":"high"}'
+# → 从响应里取 oss_url（不是 oss_key）: "https://oss.creativault.tech/media_ingestion/uploads/user@example.com/20260615_a1b2.mp4"
+node ../../scripts/video_audit_submit.mjs '{"oss_url":"https://oss.creativault.tech/media_ingestion/uploads/user@example.com/20260615_a1b2.mp4","brief":"发布前自审","audit_mode":"high"}'
 ```
 ```
 
@@ -163,7 +190,7 @@ node ../../scripts/media_upload.mjs '{"file_path":"/path/to/video.mp4"}'
 }
 ```
 
-将返回的 `oss_key` 作为 `video_audit_submit.mjs` 的 `uploaded_oss_key` 传入。**计费 20 credits/次**（与文件大小无关）。
+将返回的 **`oss_url`**（不是 `oss_key`）作为 `video_audit_submit.mjs` 的 `oss_url` 传入。`oss_key` 仅用于上传结果追踪，后端 submit 不接受它。**计费 20 credits/次**（与文件大小无关）。
 
 ## 状态查询（video_audit_status.mjs）
 
@@ -303,14 +330,80 @@ node ../../scripts/video_audit_result.mjs '{"task_id":"550e8400-e29b-41d4-a716-4
 | `audit_result.confidence.overall_confidence` | 0~1 | 整体置信度，<0.6 建议提示需要人工复核 |
 | `audit_result.confidence.requires_human_review` | boolean | 后端判定的人工复核标志 |
 
+## 失败态处理（强制）
+
+**核心原则：`success` 字段只代表 HTTP 请求本身是否成功，不代表视频审核任务是否成功。**
+
+这条链路有三种失败，来源和读取字段都不同，**任何一种都必须把失败原因原文告知用户**：
+
+| 失败阶段 | 判定方式 | 原因字段 | 脚本输出的 `failure_stage` |
+|---------|---------|---------|--------------------------|
+| 本地校验 | 脚本未发出请求就退出 | `error` + `reason` | `local_validation` |
+| 提交阶段 | `success: false` | `error`（顶层字符串） | 无（`_api_client.mjs` 直接输出） |
+| 任务阶段 | `success: true` 且 `data.status === "failed"` | `data.error_message` | `audit_task` |
+| 轮询超时 | 脚本达到 max_attempts | `error` | `poll_timeout` |
+
+### [禁止] 只看外层 success 就当成功
+
+```jsonc
+// 这是一次「失败」的响应，不是成功
+{
+  "success": true,                  // ← 只说明状态查询这个 HTTP 请求成功了
+  "data": {
+    "status": "failed",             // ← 真正的任务状态在这里
+    "error_message": "不支持的视频 URL（仅支持 TikTok / YouTube Shorts / Instagram Reels）: ..."
+  }
+}
+```
+
+### [必须] 遵守的四条
+
+1. 拿到任何响应，先看 `data.status`，再看外层 `success`。
+2. `data.status === "failed"` 时，**必须**把 `data.error_message` 原文展示给用户。禁止只回复「分析失败」「处理出错」这类无信息量的话。
+3. 脚本**退出码非 0** 时，禁止报告「任务处理中」或静默重试。必须先读 stdout / stderr 里的 `error` 字段，拿到原因再回复用户。
+4. 脚本输出里若含 `action_required` 字段，按该字段要求执行。
+
+### 失败呈现模板
+
+```
+❌ 视频审核未完成
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+失败阶段: {本地校验 / 提交 / 任务执行 / 轮询超时}
+失败原因: {error 或 data.error_message 原文}
+{如有 reason 字段，追加一行说明}
+{如有 supported_formats，列出正确格式}
+
+下一步: {向用户索取符合格式的链接 / 稍后重查 task_id / 充值}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+> 失败原因是后端唯一告诉用户「为什么没结果」的渠道。含糊掉它，用户只能看到扣了积分却没有报告。
+
 ## 错误码（视频审核专属）
 
-| code | 场景 | 处置 |
-|------|------|------|
-| 40001 | 任务不存在（task_id 无效） | 检查 task_id 是否拼错 / 是否本租户提交 |
-| 40002 | 任务未完成（status ≠ completed） | 不要立刻报错给用户，先调 status / poll 等待 |
-| 40003 | 审核结果不存在（已被清理） | 重新 submit；旧 task 不再可恢复 |
-| 40201 | 积分不足（提交时） | 提示充值，不要重试 |
+同一个 code 在不同端点语义不同，**必须按调用的端点判断**：
+
+| code | 端点 | 场景 | 处置 |
+|------|------|------|------|
+| 40004 | `/tasks/submit` | 视频 URL 不在平台白名单 | 不重试。把原因和正确格式告知用户，索取新链接。不扣积分 |
+| 40001 | `/tasks/submit` | 请求参数无效（如 `video_url` / `oss_url` 未二选一） | 调用方传参问题，修正参数后重试 |
+| 40001 | `/tasks/status`、`/tasks/result` | 任务不存在（task_id 无效） | 检查 task_id 是否拼错 / 是否本租户提交 |
+| 40002 | `/tasks/result` | 任务未完成（status ≠ completed） | 不要报错给用户，先调 status / poll 等待 |
+| 40003 | `/tasks/result` | 审核结果不存在（已被清理） | 重新 submit；旧 task 不再可恢复 |
+| 40201 | `/tasks/submit` | 积分不足 | 提示充值，不要重试 |
+
+### 任务阶段失败原因（`data.error_message`）
+
+这些不是错误码，是 worker 执行过程中的失败，只能从 `error_message` 读取：
+
+| 原因文案关键词 | 含义 | 处置 |
+|--------------|------|------|
+| 不支持的视频 URL | URL 不在白名单 | 索取符合白名单的链接 |
+| 视频时长 … 超过限制 600s | 视频超过 10 分钟 | 说明当前只支持 10 分钟以内的短视频 |
+| 视频文件大小 … 超过限制 500MB | 文件超限 | 换更小的素材，或改用链路2 上传压缩版 |
+| 下载失败 / not_found / invalid | 视频已删除、私密或下载服务异常 | 确认链接仍可公开访问；可稍后重试 |
+
+> 遇到不在上表的 `error_message`，**原文透传给用户**，不要归类成「未知错误」后丢弃原文。
 
 通用错误码（40101 / 42901 / 50001 等）见 `references/error-codes.md`。
 
@@ -320,7 +413,7 @@ node ../../scripts/video_audit_result.mjs '{"task_id":"550e8400-e29b-41d4-a716-4
 
 ```bash
 # 1. 提交（拿 task_id）
-node ../../scripts/video_audit_submit.mjs '{"url":"https://www.tiktok.com/@creator/video/123","enable_benchmark":true}'
+node ../../scripts/video_audit_submit.mjs '{"video_url":"https://www.tiktok.com/@creator/video/123","enable_benchmark":true}'
 
 # 2. 轮询并自动取结果（推荐）
 node ../../scripts/video_audit_poll.mjs '{"task_id":"<上一步返回的 task_id>"}'
@@ -331,10 +424,10 @@ node ../../scripts/video_audit_poll.mjs '{"task_id":"<上一步返回的 task_id
 ```bash
 # 1. 上传本地视频 → 公开桶（20 credits）
 node ../../scripts/media_upload.mjs '{"file_path":"/path/to/draft.mp4"}'
-# 输出中拿 oss_key，如: "media_ingestion/uploads/user@example.com/20260615_a1b2.mp4"
+# 输出中拿 oss_url，如: "https://oss.creativault.tech/media_ingestion/uploads/user@example.com/20260615_a1b2.mp4"
 
-# 2. 提交审核（100 credits），传 uploaded_oss_key
-node ../../scripts/video_audit_submit.mjs '{"uploaded_oss_key":"media_ingestion/uploads/.../20260615_a1b2.mp4","brief":"发布前自审","audit_mode":"high"}'
+# 2. 提交审核（100 credits），传 oss_url
+node ../../scripts/video_audit_submit.mjs '{"oss_url":"https://oss.creativault.tech/media_ingestion/uploads/user@example.com/20260615_a1b2.mp4","brief":"发布前自审","audit_mode":"high"}'
 
 # 3. 轮询取结果
 node ../../scripts/video_audit_poll.mjs '{"task_id":"<step 2 返回的 task_id>"}'
@@ -432,7 +525,7 @@ Hook 拆解
 | 达人ID | `creator_metadata.union_user_id` 或 URL 中的 username | 优先 `union_user_id`，降级从 URL 提取 |
 | 主页链接 | 拼装：`https://www.{platform}.com/@{username}` | 链路2 为 `—` |
 | 达人类型 | `creator_metadata.creator_type` | `creator_type_reason` 作为备注；链路2 为 `—` |
-| 商单链接 | 提交时的 `url` 或 submitted URL | 原始输入 |
+| 商单链接 | 提交时的 `video_url` | 原始输入 |
 | 内容类型 | `content_type_label` | 6 个固定类目值之一；链路2 同样分析 |
 | 作品分析 | `structured_analysis` | 拼接三段式：场景/需求切入点、拍摄呈现亮点、标题引导/CTA亮点 |
 | 结构拆解 | `storyboard.script_structure` + `storyboard.shots[]` | Hook → Body(分段) → CTA + 分镜数 |
@@ -441,6 +534,7 @@ Hook 拆解
 
 **通用规则**：
 
+- 任务失败时不要套用上面的成功模板，改用「失败态处理（强制）」章节的失败呈现模板，并原文带上失败原因。
 - 仅展示实际返回的字段，缺字段不要捏造（特别是 benchmark / brief_compliance 关闭时为空）。
 - `confidence.requires_human_review=true` 时在报告顶部加显式提示。
 - 任何 `*_score` 为 `null` 时跳过，不要替换为 `0` 或"未知"。

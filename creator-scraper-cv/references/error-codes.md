@@ -26,11 +26,30 @@
 
 ## Video Script Audit Errors
 
-| code | HTTP | Description | Action |
-|------|------|-------------|--------|
-| 40001 | 200 | Audit task not found (invalid `task_id`) | Verify the task UUID; ensure it was submitted by the same tenant |
-| 40002 | 200 | Audit task not completed yet (`status ≠ completed`) | Continue polling via `/tasks/status`; do not retry `result` immediately |
-| 40003 | 200 | Audit result missing (cleaned up) | Resubmit the video; old task results are not recoverable |
+The same code carries different meanings per endpoint — always resolve it against the endpoint you called.
+
+| code | Endpoint | HTTP | Description | Action |
+|------|----------|------|-------------|--------|
+| 40004 | `/tasks/submit` | 400 | Video URL not in the platform whitelist (TikTok / YouTube Shorts / Instagram Reels only) | Do not retry. Report the reason plus the accepted formats to the user and ask for a new link. No credits are charged |
+| 40001 | `/tasks/submit` | 400 | Invalid request parameters (e.g. `video_url` / `oss_url` not mutually exclusive) | Caller-side parameter bug; fix the payload and retry |
+| 40001 | `/tasks/status`, `/tasks/result` | 200 | Audit task not found (invalid `task_id`) | Verify the task UUID; ensure it was submitted by the same tenant |
+| 40002 | `/tasks/result` | 200 | Audit task not completed yet (`status ≠ completed`) | Continue polling via `/tasks/status`; do not retry `result` immediately |
+| 40003 | `/tasks/result` | 200 | Audit result missing (cleaned up) | Resubmit the video; old task results are not recoverable |
+
+### Task-Level Failures (no error code)
+
+When `/tasks/status` returns `success: true` with `data.status = "failed"`, the failure happened inside the
+worker and is reported only through `data.error_message`. There is no error code for these.
+
+| `error_message` keyword | Meaning | Action |
+|------------------------|---------|--------|
+| 不支持的视频 URL | URL outside the whitelist | Ask for a whitelisted link |
+| 视频时长 … 超过限制 600s | Video longer than 10 minutes | Explain only sub-10-minute videos are supported |
+| 视频文件大小 … 超过限制 500MB | File exceeds 500MB | Use a smaller asset, or upload a compressed version via path 2 |
+| 下载失败 / not_found / invalid | Video deleted, private, or download service error | Confirm the link is still publicly reachable; retry later |
+
+> `data.error_message` MUST be surfaced verbatim to the user. `success: true` only means the status query
+> itself succeeded — it says nothing about whether the audit task succeeded.
 
 ## Media Upload Errors
 

@@ -55,9 +55,25 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       process.exit(0);
     }
 
-    // 失败或不需要获取结果
+    if (status === 'failed') {
+      // 任务级失败：状态查询这个 HTTP 请求本身是成功的（外层 success=true），
+      // 失败只体现在 data.status / data.error_message。把原因提到顶层 error，
+      // 避免调用方只看外层 success 就当成功，或让 error_message 埋在原始 JSON 里被忽略。
+      const reason = error_message || '后端未返回具体失败原因';
+      console.error(`[视频审核轮询] 任务失败：${reason}`);
+      console.log(JSON.stringify({
+        success: false,
+        failure_stage: 'audit_task',
+        error: reason,
+        action_required: '必须把 error 原文告知用户，不要只回复「分析失败」',
+        data: statusResult.data,
+      }, null, 2));
+      process.exit(1);
+    }
+
+    // completed 但调用方不需要自动取结果
     console.log(JSON.stringify(statusResult, null, 2));
-    process.exit(status === 'completed' ? 0 : 1);
+    process.exit(0);
   }
 
   if (attempt < maxAttempts) {
@@ -67,9 +83,12 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 
 // 超过最大轮询次数
 console.error(`[视频审核轮询] 已达最大轮询次数 ${maxAttempts}（共等待 ${maxAttempts * interval} 秒），任务仍在处理中`);
+// error 与 failed 分支、_api_client.mjs 保持同一形状（字符串），避免调用方解析歧义。
 console.log(JSON.stringify({
   success: false,
-  error: { message: `轮询超时：已等待 ${maxAttempts * interval} 秒，任务仍未完成。建议稍后使用 video_audit_status.mjs 手动查询。` },
+  failure_stage: 'poll_timeout',
+  error: `轮询超时：已等待 ${maxAttempts * interval} 秒，任务仍未完成。建议稍后使用 video_audit_status.mjs 手动查询。`,
+  action_required: '告知用户任务仍在处理中（不是失败），并给出稍后手动查询的方式',
   data: { task_id: taskId },
-}));
+}, null, 2));
 process.exit(1);

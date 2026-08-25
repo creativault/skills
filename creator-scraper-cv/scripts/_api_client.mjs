@@ -297,7 +297,12 @@ export async function attachCreatorResultSetUrl(result, platform, queryParams = 
   try {
     const snapshot = await createCreatorResultSet({ platform, queryParams, result });
     if (snapshot?.list_url) {
-      result.cv_list_url = snapshot.list_url;
+      const separator = snapshot.list_url.includes('?') ? '&' : '?';
+      // Keep the browser entry aligned with the Navos language captured for this run.
+      // Navos can replace this parameter at click time for links in historical chats.
+      result.cv_list_url = `${snapshot.list_url}${separator}navos_locale=${encodeURIComponent(
+        RUNTIME_PROFILE.navos_language || 'en-US'
+      )}`;
       result.cv_result_set_id = snapshot.result_set_id || null;
       result.cv_result_set_expires_at = snapshot.result_set_expires_at || null;
       result.cv_list_ticket_expires_at = snapshot.ticket_expires_at || null;
@@ -578,7 +583,12 @@ export async function callAPI(path, body = {}, platform = null, options = {}) {
     }
 
     if (!data.success) {
-      console.error(JSON.stringify(buildErrorOutput(data), null, 2));
+      const errorOutput = buildErrorOutput(data);
+      // 失败原因必须同时出现在 stdout。只写 stderr 时，按非 0 退出码判定「脚本执行失败」
+      // 的宿主会丢弃输出，调用方拿不到 error.message，用户只看到一句「失败」而不知原因。
+      // stderr 保留原样，便于终端排查和日志采集。
+      console.log(JSON.stringify({ success: false, ...errorOutput }, null, 2));
+      console.error(JSON.stringify(errorOutput, null, 2));
       process.exit(1);
     }
 

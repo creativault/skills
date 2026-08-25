@@ -376,8 +376,8 @@ Async single-video audit pipeline with **two ingestion paths**:
 
 | Path | Input | Use case | Creator data dimensions |
 |------|-------|----------|------------------------|
-| **Path 1 (Social URL)** | `url` | Published video analysis | ✅ Lookback creator data (followers, avg views, viral level) |
-| **Path 2 (Upload)** | `uploaded_oss_key` (via `/media/upload`) | Pre-publish self-audit | `creator_metadata.status=not_applicable` |
+| **Path 1 (Social URL)** | `video_url` | Published video analysis | ✅ Lookback creator data (followers, avg views, viral level) |
+| **Path 2 (Upload)** | `oss_url` (via `/media/upload`) | Pre-publish self-audit | `creator_metadata.status=not_applicable` |
 
 Submit returns a UUID `task_id`; backend runs the full audit
 (download → transcribe → storyboard → viral factor → benchmark → score) in ~3-5 minutes.
@@ -386,8 +386,8 @@ Submit returns a UUID `task_id`; backend runs the full audit
 
 | Endpoint | Path | Body | Notes |
 |----------|------|------|-------|
-| Upload media | `/openapi/v1/media/upload` | `multipart/form-data: file` | 20 credits/call; returns `oss_key` for path 2 |
-| Submit | `/openapi/v1/video-script-audit/tasks/submit` | `{url?, uploaded_oss_key?, brief?, ...}` | Fixed 100 credits/call; `url` and `uploaded_oss_key` are mutually exclusive |
+| Upload media | `/openapi/v1/media/upload` | `multipart/form-data: file` | 20 credits/call; returns `oss_url` for path 2 |
+| Submit | `/openapi/v1/video-script-audit/tasks/submit` | `{video_url?, oss_url?, brief?, ...}` | Fixed 100 credits/call; `video_url` and `oss_url` are mutually exclusive |
 | Status | `/openapi/v1/video-script-audit/tasks/status` | `{task_id}` | Free, but counts toward daily quota |
 | Result | `/openapi/v1/video-script-audit/tasks/result` | `{task_id}` | Free; only when status=completed |
 
@@ -402,23 +402,27 @@ Content-Type: multipart/form-data
 |-------|------|----------|-------------|
 | `file` | file | ✓ | Video file (mp4/mov/avi/mkv/webm, ≤ 500MB) |
 
-**Response**: `{oss_key, oss_url, filename, size_bytes}`. Pass `oss_key` as `uploaded_oss_key` to submit.
+**Response**: `{oss_key, oss_url, filename, size_bytes}`. Pass **`oss_url`** (not `oss_key`) as the submit `oss_url`.
+`oss_key` is for upload tracking only — submit rejects it.
 
 ### Submit Request Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `url` | string | △ | Path 1: Video URL (TikTok / Instagram Reels / YouTube Shorts) |
-| `uploaded_oss_key` | string | △ | Path 2: OSS key from `/media/upload` response |
+| `video_url` | string | △ | Path 1: Video URL (TikTok video / Instagram Reels / YouTube Shorts only) |
+| `oss_url` | string | △ | Path 2: full `oss_url` from `/media/upload`; must be HTTPS under `*.creativault.tech` |
 | `brief` | string | × | Customer brief, enables `brief_compliance` audit |
 | `user_id` | string | × | Business user id; defaults to `X-User-Identity` |
 | `campaign_id` | string | × | Campaign id for archival |
 | `audit_mode` | string | × | `high` (default) / `low` |
 | `is_benchmark` | boolean | × | Mark as benchmark case (skips benchmark comparison) |
 | `enable_benchmark` | boolean | × | Compare against benchmark library |
-| `oss_url_override` | string | × | [Legacy workaround] pre-uploaded OSS URL; prefer `uploaded_oss_key` for new integrations |
 
-> △ `url` and `uploaded_oss_key`: provide exactly one, not both, not neither.
+**Deprecated aliases** (auto-mapped by `video_audit_submit.mjs`, avoid in new code):
+`url` → `video_url`, `oss_url_override` → `oss_url`.
+`uploaded_oss_key` is **rejected** — it is an OSS key, not a URL; pass `oss_url` instead.
+
+> △ `video_url` and `oss_url`: provide exactly one, not both, not neither.
 
 ### Audit Task Status
 

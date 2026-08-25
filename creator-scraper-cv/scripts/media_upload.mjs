@@ -8,8 +8,8 @@
 //   file_path — 必填，本地视频文件绝对路径（mp4/mov/avi/mkv/webm，≤500MB）
 //
 // 返回:
-//   oss_key   — 上传成功的 OSS key（传给 video_audit_submit 的 uploaded_oss_key）
-//   oss_url   — 公开可达 URL
+//   oss_key   — 上传成功的 OSS key（仅用于上传结果追踪，submit 不接受它）
+//   oss_url   — 公开可达的完整 URL，传给 video_audit_submit 的 oss_url
 //   filename  — 原始文件名
 //   size_bytes — 文件字节数
 //
