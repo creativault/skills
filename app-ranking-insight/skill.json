@@ -1,0 +1,8 @@
+{
+  "name": "app-ranking-insight",
+  "version": "1.0.0",
+  "channel": "stable",
+  "updated_at": "2026-09-01",
+  "profile": "common",
+  "auth": "cv-user-api-key-or-navos"
+}
