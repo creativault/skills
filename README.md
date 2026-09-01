@@ -1,121 +1,60 @@
-# Creativault Creator Ecosystem Skill
+# CreatiVault Creator Ecosystem Skill
 
-> **版本**: 1.8.1 | **兼容性**: Node.js 20.6+ | **渠道**: stable
+> **当前版本**：1.9.7 · **运行环境**：Node.js 20.6+ · **发布渠道**：stable
 
-[`creator-scraper-cv`](creator-scraper-cv/) 是 CreatiVault 官方达人数据采集与建联 Skill，为 AI 编码助手提供 **TikTok / YouTube / Instagram / Twitter (X)** 四平台达人的搜索、发现、批量采集、数据导出、视频脚本审核以及邮件建联能力。
+`creator-scraper-cv` 是 CreatiVault 官方达人营销 Skill，可帮助 AI Agent 完成达人发现、内容洞察、数据采集、邮件建联和账号审核等工作。
 
----
+## v1.9.7 更新
 
-## 功能总览
+- 结构化达人搜索新增 `union_user_ids` 和 `profile_urls` 批量精确查询。
+- 两个列表均支持最多 200 条记录，可单独使用或同时使用。
+- 批量精确查询可继续叠加地区、粉丝量、联系方式等筛选条件。
+- 搜索接口单页最多返回 100 条；需要更多结果时可继续分页获取。
 
-| 领域 | 子 Skill | 核心能力 |
-|------|----------|----------|
-| 🔍 **发现** | [`creator-search`](creator-scraper-cv/discovery/creator-search/SKILL.md) | 三平台达人多维度实时搜索 |
-| 🔗 **相似匹配** | [`creator-lookalike`](creator-scraper-cv/discovery/creator-lookalike/SKILL.md) | 种子达人相似匹配与跨平台发现 |
-| 📦 **批量采集** | [`creator-collection`](creator-scraper-cv/collection/creator-collection/SKILL.md) | 批量异步采集与多格式导出（xlsx / csv / html） |
-| ✉️ **邮件建联** | [`creator-outreach`](creator-scraper-cv/outreach/creator-outreach/SKILL.md) | 邮件建联全流程（代发、跟进、待办管理） |
-| 🎬 **视频审核** | [`video-script-audit`](creator-scraper-cv/audit/video-script-audit/SKILL.md) | 单条视频 12 维度异步拆解（Hook / 选题 / 痛点 / 植入 / 镜头 / 情绪 / 文案等） |
-| 🔄 **工作流** | [`workflow`](creator-scraper-cv/workflow/SKILL.md) | 剧本式工作流编排与 AI 自主调度 |
+完整更新记录请查看 [CHANGELOG](creator-scraper-cv/CHANGELOG.md)。
 
----
+## 主要能力
 
-## 目录结构
-
-```
-creator-scraper-cv/
-├── SKILL.md                          # 主 Skill 定义
-├── skill.json                        # Skill 配置
-├── skill-manifest.json               # 发布清单
-├── discovery/
-│   ├── creator-search/SKILL.md       # 达人搜索子 Skill
-│   └── creator-lookalike/SKILL.md    # 相似达人子 Skill
-├── collection/
-│   └── creator-collection/SKILL.md   # 批量采集子 Skill
-├── outreach/
-│   └── creator-outreach/SKILL.md     # 邮件建联子 Skill
-├── audit/
-│   └── video-script-audit/SKILL.md   # 视频脚本审核子 Skill
-├── workflow/
-│   ├── SKILL.md                      # 工作流编排子 Skill
-│   └── workflows/
-│       ├── batch-outreach.md         # 批量建联工作流
-│       └── full-campaign.md          # 完整 Campaign 工作流
-├── scripts/                          # 23 个可执行脚本（见下方表格）
-└── references/                       # API 参考文档
-    ├── api-reference.md
-    ├── platform-params.md
-    ├── industry-categories.md
-    ├── country-codes.md
-    ├── language-codes.md
-    └── error-codes.md
-```
-
----
-
-## 脚本速览
-
-所有脚本位于 [`creator-scraper-cv/scripts/`](creator-scraper-cv/scripts/)，使用 Node.js `.mjs` 模块。
-
-### 搜索与发现
-
-| 脚本 | 功能 |
+| 能力 | 说明 |
 |------|------|
-| [`search_creators.mjs`](creator-scraper-cv/scripts/search_creators.mjs) | 达人多维搜索（平台 / 国家 / 行业 / 粉丝量 / 互动率等） |
-| [`find_lookalike.mjs`](creator-scraper-cv/scripts/find_lookalike.mjs) | 相似达人匹配 |
+| 达人搜索 | 支持自然语言搜索、结构化筛选，以及按达人 ID 或主页链接批量精确查询 |
+| 视频搜索 | 按 Hashtag、标题、播放量、互动率和达人标识查找视频 |
+| 品牌洞察 | 查找品牌相关视频和已收录的品牌合作达人 |
+| 相似达人 | 根据达人用户名或主页链接发现同平台或跨平台相似达人 |
+| 批量采集 | 按主页链接、用户名或关键词提交异步采集任务 |
+| 数据导出 | 支持 xlsx、csv 和 html 格式 |
+| 邮件建联 | 支持单笔或批量发送、任务查询、沟通历史和跟进待办 |
+| 假粉检测 | 提供假粉率估算、互动质量评分和账号风险信号 |
+| 视频脚本审核 | 从 Hook、选题、痛点、植入、镜头、情绪和文案等维度分析视频 |
+| 工作流编排 | 组合达人发现、内容分析、采集、导出和建联流程 |
 
-### 批量采集与导出
+## 平台支持
 
-| 脚本 | 功能 |
-|------|------|
-| [`submit_collection_task.mjs`](creator-scraper-cv/scripts/submit_collection_task.mjs) | 按链接 / 用户名批量提交采集任务 |
-| [`submit_keyword_task.mjs`](creator-scraper-cv/scripts/submit_keyword_task.mjs) | 按关键词批量提交采集任务 |
-| [`poll_task_status.mjs`](creator-scraper-cv/scripts/poll_task_status.mjs) | 轮询任务状态直至完成 |
-| [`get_task_status.mjs`](creator-scraper-cv/scripts/get_task_status.mjs) | 查询采集任务状态 |
-| [`get_task_data.mjs`](creator-scraper-cv/scripts/get_task_data.mjs) | 获取任务采集结果 |
-| [`get_download_url.mjs`](creator-scraper-cv/scripts/get_download_url.mjs) | 获取导出文件下载地址 |
-| [`export_task_data.mjs`](creator-scraper-cv/scripts/export_task_data.mjs) | 导出任务数据 |
-| [`export_to_csv.mjs`](creator-scraper-cv/scripts/export_to_csv.mjs) | 导出为 CSV 格式 |
+| 能力 | TikTok | Instagram | YouTube | Twitter (X) |
+|------|:------:|:---------:|:-------:|:-----------:|
+| 达人搜索 | ✅ | ✅ | ✅ | — |
+| 视频搜索与品牌视频洞察 | ✅ | ✅ | ✅ | — |
+| 相似达人 | ✅ | ✅ | ✅ | — |
+| 批量采集 | ✅ | ✅ | ✅ | ✅ |
+| 假粉检测 | ✅ | ✅ | ✅ | — |
+| 已发布视频审核 | ✅ | Reels | Shorts | — |
 
-### 邮件建联
-
-| 脚本 | 功能 |
-|------|------|
-| [`outreach_contact.mjs`](creator-scraper-cv/scripts/outreach_contact.mjs) | 查询 / 管理联系人 |
-| [`outreach_send.mjs`](creator-scraper-cv/scripts/outreach_send.mjs) | 发送邮件 |
-| [`outreach_task.mjs`](creator-scraper-cv/scripts/outreach_task.mjs) | 批量建联任务管理 |
-| [`outreach_todo.mjs`](creator-scraper-cv/scripts/outreach_todo.mjs) | 跟进待办管理 |
-
-### 视频脚本审核
-
-| 脚本 | 功能 |
-|------|------|
-| [`video_audit_submit.mjs`](creator-scraper-cv/scripts/video_audit_submit.mjs) | 提交视频审核任务 |
-| [`video_audit_poll.mjs`](creator-scraper-cv/scripts/video_audit_poll.mjs) | 轮询审核结果 |
-| [`video_audit_result.mjs`](creator-scraper-cv/scripts/video_audit_result.mjs) | 获取审核报告 |
-| [`video_audit_status.mjs`](creator-scraper-cv/scripts/video_audit_status.mjs) | 查询审核状态 |
-
-### 工具与运维
-
-| 脚本 | 功能 |
-|------|------|
-| [`_api_client.mjs`](creator-scraper-cv/scripts/_api_client.mjs) | OpenAPI 客户端封装 |
-| [`_industry_mapper.mjs`](creator-scraper-cv/scripts/_industry_mapper.mjs) | 行业类目映射工具 |
-| [`skill_update.mjs`](creator-scraper-cv/scripts/skill_update.mjs) | Skill 版本更新检查与执行 |
-| [`generate_manifest.mjs`](creator-scraper-cv/scripts/generate_manifest.mjs) | 生成发布清单 |
-| [`media_upload.mjs`](creator-scraper-cv/scripts/media_upload.mjs) | 媒体文件上传 |
-| [`influencer_industry_tree.json`](creator-scraper-cv/scripts/influencer_industry_tree.json) | 行业类目树（数据） |
-
----
+Twitter (X) 支持链接、用户名和关键词采集，不支持视频采集。
 
 ## 快速开始
 
-### 1. 配置环境变量
+### 1. 安装
+
+将 [`creator-scraper-cv`](creator-scraper-cv/) 目录安装到支持 `SKILL.md` 的 AI Agent 环境中。项目使用单一 `main` 分支，common 和 Navos 环境使用同一套源码。
+
+### 2. 配置
+
+common 环境需要设置 CreatiVault API Key 和操作者身份：
 
 ```powershell
 # Windows PowerShell
 $env:CV_API_KEY = "cv_live_your_key_here"
 $env:CV_USER_IDENTITY = "your_email@example.com"
-# $env:CV_API_BASE_URL = "http://api.creativault.vip"  # 可选，默认即可
 ```
 
 ```bash
@@ -124,114 +63,130 @@ export CV_API_KEY=cv_live_your_key_here
 export CV_USER_IDENTITY=your_email@example.com
 ```
 
-### 2. 搜索达人示例
+API Key 可从 CreatiVault 管理后台获取。使用自定义 API 地址时，可额外设置 `CV_API_BASE_URL`。
 
-```bash
-node creator-scraper-cv/scripts/search_creators.mjs \
-  --platform tiktok \
-  --country US \
-  --industry "beauty" \
-  --min-followers 100000 \
-  --max-results 20
+Navos 用户无需手动配置 CreatiVault API Key；安装后将使用当前 Navos 登录身份完成授权。
+
+### 3. 在 AI Agent 中使用
+
+安装后，可以直接用自然语言描述任务，例如：
+
+```text
+帮我找 20 位美国 TikTok 美妆达人，粉丝数不少于 10 万，并且有公开邮箱。
 ```
 
-### 3. 批量采集示例
-
-```bash
-# 按链接采集
-node creator-scraper-cv/scripts/submit_collection_task.mjs \
-  --type links \
-  --links "https://tiktok.com/@user1,https://tiktok.com/@user2"
-
-# 按关键词采集
-node creator-scraper-cv/scripts/submit_keyword_task.mjs \
-  --platform tiktok \
-  --keywords "beauty influencer,skincare" \
-  --max-results 50
-
-# 轮询等待完成并导出
-node creator-scraper-cv/scripts/poll_task_status.mjs --task-id <task_id>
-node creator-scraper-cv/scripts/export_task_data.mjs --task-id <task_id>
+```text
+分析 Fenty Beauty 在 Instagram 上的热门视频和主要合作达人。
 ```
 
----
-
-## 强制执行边界
-
-当用户目标涉及 **达人、KOL、网红、创作者、社媒账号、主页链接、邮箱、粉丝量、播放量、互动率、行业类目、相似达人、批量采集、导出名单、邮件建联、合作跟进、单条视频拆解 / 审核 / 评分** 时，必须优先使用本 Skill 及其子 Skill，**不要默认退化到 Web Search**。
-
-Web Search 仅限以下情况使用：
-
-1. 用户明确要求"用网页搜索 / Google / 公开网页查找"
-2. CreatiVault OpenAPI 返回无数据且用户确认允许兜底
-3. 查询非达人数据（新闻、文档、政策等）
-
----
-
-## 意图路由
-
-| 用户意图 | 加载子 Skill | 调用脚本 |
-|----------|-------------|----------|
-| 搜索/筛选达人 | [`creator-search`](creator-scraper-cv/discovery/creator-search/SKILL.md) | [`search_creators.mjs`](creator-scraper-cv/scripts/search_creators.mjs) |
-| 找相似达人 | [`creator-lookalike`](creator-scraper-cv/discovery/creator-lookalike/SKILL.md) | [`find_lookalike.mjs`](creator-scraper-cv/scripts/find_lookalike.mjs) |
-| 批量采集/导出 | [`creator-collection`](creator-scraper-cv/collection/creator-collection/SKILL.md) | 采集 + 轮询 + 导出脚本 |
-| 邮件建联/批量建联/跟进 | [`creator-outreach`](creator-scraper-cv/outreach/creator-outreach/SKILL.md) | outreach 系列脚本 |
-| 单条视频拆解/审核/评分 | [`video-script-audit`](creator-scraper-cv/audit/video-script-audit/SKILL.md) | [`video_audit_submit.mjs`](creator-scraper-cv/scripts/video_audit_submit.mjs) + [`video_audit_poll.mjs`](creator-scraper-cv/scripts/video_audit_poll.mjs) |
-| 复合流程（找达人→建联→导出等） | [`workflow`](creator-scraper-cv/workflow/SKILL.md) | 由工作流编排子 Skill |
-
----
-
-## 错误处理
-
-| 错误码 | 说明 | 处理方式 |
-|--------|------|----------|
-| 40001 | 无效参数 | 检查参数格式 |
-| 40101 | API Key 无效 | 检查 `CV_API_KEY` |
-| 40102 | API Key 过期 | 联系管理员 |
-| 40201 | 积分不足 | 充值或升级套餐 |
-| 40301 | 无权限 | 检查 API Key 权限范围 |
-| 42901 | 请求频率超限 | 按 `Retry-After` 自动重试 |
-| 42902 | 日配额耗尽 | 等待 UTC 00:00 重置 |
-| 50001 | 服务端错误 | 提供 `request_id` 联系技术支持 |
-
-> **积分余额判断规则**：只有 OpenAPI 明确返回 `40201` 时才能提示用户"积分不足"。`meta.quota_remaining` 表示 API 请求次数余量，不是积分余额。
-
----
-
-## 版本更新
-
-检查更新：
-
-```bash
-node creator-scraper-cv/scripts/skill_update.mjs --check
+```text
+检测这个 YouTube 达人的假粉和互动质量：https://www.youtube.com/@creator
 ```
 
-确认更新：
-
-```bash
-node creator-scraper-cv/scripts/skill_update.mjs --yes
+```text
+拆解这条 Instagram Reel 的内容结构、开头 Hook 和转化设计。
 ```
 
-也可设置环境变量实现自动更新：
+Agent 会根据任务自动选择对应的搜索、采集、审核或建联能力。
+
+## 脚本调用示例
+
+如需直接调用脚本，所有脚本均位于 [`creator-scraper-cv/scripts`](creator-scraper-cv/scripts/)，并通过一个 JSON 参数接收输入。
+
+### 结构化搜索
 
 ```bash
-export CV_SKILL_UPDATE_MANIFEST_URL=https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill-manifest.json
-export CV_SKILL_AUTO_UPDATE=true
+node creator-scraper-cv/scripts/search_creators.mjs '{"platform":"tiktok","country_code":"US","industry":"beauty","followers_cnt_gte":100000,"has_email":true,"size":20}'
 ```
 
----
+### 批量精确查询
+
+```bash
+node creator-scraper-cv/scripts/search_creators.mjs '{"platform":"tiktok","profile_urls":["https://www.tiktok.com/@creator_a"],"union_user_ids":["creator_b"]}'
+```
+
+`profile_urls` 和 `union_user_ids` 可分别传入最多 200 条记录。
+
+### 自然语言搜索
+
+```bash
+node creator-scraper-cv/scripts/search_creators_nl.mjs '{"platform":"instagram","query":"Find US running creators with authentic training content","limit":20}'
+```
+
+### 视频搜索
+
+```bash
+node creator-scraper-cv/scripts/search_videos.mjs '{"platform":"tiktok","hashtag":["beauty","skincare"],"video_views_cnt_gte":100000,"page":1,"size":20}'
+```
+
+### 批量采集与导出
+
+```bash
+# 提交主页链接采集任务
+node creator-scraper-cv/scripts/submit_collection_task.mjs '{"task_type":"LINK_BATCH","platform":"tiktok","values":["https://www.tiktok.com/@creator1","https://www.tiktok.com/@creator2"]}'
+
+# 等待任务完成
+node creator-scraper-cv/scripts/poll_task_status.mjs '{"task_id":"task_xxx"}'
+
+# 导出结果
+node creator-scraper-cv/scripts/export_task_data.mjs '{"task_id":"task_xxx","format":"xlsx"}'
+```
+
+## 视频审核说明
+
+已发布视频链接支持：
+
+- TikTok 完整视频链接；
+- Instagram Reels；
+- YouTube Shorts。
+
+YouTube 普通长视频、TikTok 分享短链、抖音链接以及已删除或设为私密的视频不在链接审核范围内。
+
+本地视频可先通过 `media_upload.mjs` 上传，再提交审核。支持 mp4、mov、avi、mkv 和 webm，单个文件不超过 500 MB。
+
+## 项目结构
+
+```text
+creator-scraper-cv/
+├── SKILL.md                 # Skill 入口
+├── skill.json               # 版本与发布配置
+├── CHANGELOG.md             # 更新记录
+├── discovery/               # 达人、视频和相似达人发现
+├── collection/              # 批量采集与导出
+├── outreach/                # 邮件建联
+├── audit/                   # 假粉检测与视频审核
+├── workflow/                # 组合工作流
+├── scripts/                 # Node.js 执行脚本
+├── profiles/                # 运行环境配置
+└── references/              # API 与参数参考
+```
 
 ## 参考文档
 
 - [API 接口参考](creator-scraper-cv/references/api-reference.md)
 - [平台参数说明](creator-scraper-cv/references/platform-params.md)
-- [行业类目表](creator-scraper-cv/references/industry-categories.md)
-- [国家代码表](creator-scraper-cv/references/country-codes.md)
-- [语言代码表](creator-scraper-cv/references/language-codes.md)
-- [错误码说明](creator-scraper-cv/references/error-codes.md)
+- [行业类目](creator-scraper-cv/references/industry-categories.md)
+- [国家代码](creator-scraper-cv/references/country-codes.md)
+- [语言代码](creator-scraper-cv/references/language-codes.md)
+- [错误码](creator-scraper-cv/references/error-codes.md)
 
----
+## 版本更新
+
+common 环境可通过以下命令检查或安装更新：
+
+```bash
+node creator-scraper-cv/scripts/skill_update.mjs --check
+node creator-scraper-cv/scripts/skill_update.mjs --yes
+```
+
+Navos 环境中的版本更新由 Navos 统一管理。
+
+## 安全说明
+
+- 不要将真实的 `CV_API_KEY` 提交到代码仓库或写入公开日志。
+- 建议通过环境变量或运行平台提供的密钥管理功能配置凭证。
+- 假粉率和账号风险属于数据模型估算结果，不代表社交平台官方审计结论。
 
 ## 许可
 
-本 Skill 由 CreatiVault 提供，仅供授权用户使用。API 访问需有效的 `CV_API_KEY`。
+本 Skill 由 CreatiVault 提供，仅供授权用户使用。API 访问需要有效授权，并受对应账户权限和服务条款约束。

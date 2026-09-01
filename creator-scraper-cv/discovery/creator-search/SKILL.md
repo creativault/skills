@@ -163,10 +163,10 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 
 1. 所有用户筛选条件必须进入 OpenAPI 请求体。包括但不限于 `country_code`、`industry`、`followers_cnt_gte/_lte`、`last10_avg_video_interaction_rate_gte/_lte`、`has_email`、`language_code`、受众字段。禁止先只传少量条件拿候选，再本地过滤大量结果。
 2. 默认只调用一次搜索脚本，且只查 `page=1`。不得为了凑满用户要求的数量自动翻到 page 2、page 10 等。
-3. 默认 `size` 取 `min(max(用户要求数量 * 2, 用户要求数量), 20)`；如果用户只说"找几个"且未给数量，默认 `size=10`。禁止静默传 `size=50` 或 `size=100` 来扩大候选池。
+3. 用户未说明数量时，默认 `size=20`。用户明确要求 N 条时，当前页 `size=min(N,100)`；生产接口单页最大值为 100，禁止发送大于 100 的 `size`。当 N 大于 100 时，只查询第 1 页并返回最多 100 条，不得自动翻页。
 4. 用户未指定平台时，必须先澄清平台。不得自动选择平台，也不得自动并行或串行搜索 TikTok、Instagram、YouTube 来凑结果。
 5. 严格条件返回 0 条时，不再发起任何补充搜索；直接说明没有命中，并询问是否放宽条件，例如降低互动率、扩大地区、换平台或改用关键词。
-6. 严格条件返回数量少于用户要求时，只展示严格命中的结果，并说明"当前严格命中 N 个，未自动继续翻页或跨平台搜索"；继续搜索前必须让用户确认。
+6. 严格条件返回数量少于用户要求时，只展示严格命中的结果。若用户要求超过 100 条，明确说明当前仅返回第 1 页、继续获取还需分页；任何继续翻页或跨平台搜索都必须先让用户确认。
 7. 如果接口返回结果与用户筛选条件明显不一致，不展示不合格结果凑数；停止并说明可能是字段口径或传参问题，建议用户确认是否放宽条件或继续排查。
 8. 视频搜索不是达人搜索兜底。只有用户明确要求"找视频 / 爆款视频 / 参考视频 / 话题视频 / 内容案例"时，才能切换到 `video-search`。
 
@@ -223,6 +223,8 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `platform` | string | 必填：`tiktok` / `youtube` / `instagram` |
+| `union_user_ids` | string[] | 可选：达人 `union_user_id` 批量精确查询，最多 200 条；可与 `profile_urls` 同传，两者取并集 |
+| `profile_urls` | string[] | 可选：达人主页链接批量精确查询，最多 200 条；可与其他筛选条件叠加 |
 | `keyword` | string | 搜索关键词 |
 | `country_code` | string | 国家代码，多选逗号分隔 |
 | `gender` | string | `"0"`=女性，`"1"`=男性 |

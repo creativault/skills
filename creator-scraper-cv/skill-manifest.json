@@ -1,13 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.9.6",
+  "latest_version": "1.9.7",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "Surface video audit failure reasons instead of a generic failure message",
-    "Reject unsupported video URLs before submission to avoid wasted credits",
-    "Align video audit submit parameters with the backend contract"
+    "Add batch creator lookup by profile URLs and union user IDs; explicit quantity requests use up to 100 results per page"
   ],
   "sync": {
     "mode": "mirror",
@@ -33,7 +31,7 @@
     {
       "path": "CHANGELOG.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
-      "sha256": "866852f3d91d695c4d41fd1c9cba9baae842de0fb53283ee7eae9a2ed90d0809"
+      "sha256": "f6780bed05beb326ce2a90566ee8483def0351f2e4474d088f840aedebaebcb3"
     },
     {
       "path": "collection/creator-collection/SKILL.md",
@@ -48,7 +46,7 @@
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "9dd7a27b4ea95853a425e2b1ae5a77589c9d29a0c89f6cb688b0a5f9cf40a232"
+      "sha256": "3b93b365ef710f1cd8b1fcf8d6cfdf6a202e6c81a76e0b9ff8192f4bc98eff2b"
     },
     {
       "path": "discovery/video-search/SKILL.md",
@@ -238,7 +236,7 @@
     {
       "path": "scripts/search_creators.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_creators.mjs",
-      "sha256": "691656969ba98ade5e8d1ef05c7c914602e8c5733dfe9987bba179de81d8b414"
+      "sha256": "fa2e479604a83ad783f610a510203b189e02858e3a2280e140dcf2fc5f7a4efb"
     },
     {
       "path": "scripts/search_videos.mjs",
@@ -292,12 +290,12 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "5e681c79d6610401edfb39cbc087360dc9b6dad68bf1a60ff9d0254be4a99539"
+      "sha256": "7b52aa1845092b3e979382e8a73d01b7a569d6dae232aaef59fd6e1801425d34"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "785367d04b4aad89484bc7816108d9250d496f820d9677a52b8529715a527eb5"
+      "sha256": "4405f98638d5ba3dbfff0b04495a46b310fd6ed6d3875abe749548709915aee8"
     },
     {
       "path": "workflow/SKILL.md",
