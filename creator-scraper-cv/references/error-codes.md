@@ -51,6 +51,18 @@ worker and is reported only through `data.error_message`. There is no error code
 > `data.error_message` MUST be surfaced verbatim to the user. `success: true` only means the status query
 > itself succeeded — it says nothing about whether the audit task succeeded.
 
+## Video Script Session Audit Errors
+
+| Code | HTTP | Description | Action |
+|---|---:|---|---|
+| 40001 | 400 | Invalid Session audit parameters or unsupported action/material combination | Fix the request payload |
+| 40004 | 400 | Material URL is unsupported or unsafe | Use an allowed Google Docs/Drive or supported video URL |
+| 40101 | 401 | Invalid API key or Session is not owned by the current tenant | Verify credentials and Session ownership |
+| 40301 | 403 | Missing Session audit endpoint scope | Request the required API key scope |
+| 50001 | 500 | Session audit service error | Record `request_id` and contact support |
+
+When a status request returns `success: true` with `data.status = "failed"`, the asynchronous stage failed. Surface `data.error_message`; the outer `success` value only describes the status HTTP request.
+
 ## Media Upload Errors
 
 | code | HTTP | Description | Action |

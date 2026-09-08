@@ -1,15 +1,14 @@
 # CreatiVault Creator Ecosystem Skill
 
-> **当前版本**：1.9.7 · **运行环境**：Node.js 20.6+ · **发布渠道**：stable
+> **当前版本**：1.9.8 · **运行环境**：Node.js 20.6+ · **发布渠道**：stable
 
 `creator-scraper-cv` 是 CreatiVault 官方达人营销 Skill，可帮助 AI Agent 完成达人发现、内容洞察、数据采集、邮件建联和账号审核等工作。
 
-## v1.9.7 更新
+## v1.9.8 新增
 
-- 结构化达人搜索新增 `union_user_ids` 和 `profile_urls` 批量精确查询。
-- 两个列表均支持最多 200 条记录，可单独使用或同时使用。
-- 批量精确查询可继续叠加地区、粉丝量、联系方式等筛选条件。
-- 搜索接口单页最多返回 100 条；需要更多结果时可继续分页获取。
+- 首次加入 `video-script-session-audit` Skill。
+- 首次提供 Session 创建、素材导入、阶段执行、阶段状态、Session 结果和轮询脚本。
+- 支持 Client Brief、Script Brief、Video URL、Brief 解析、Script QC、视频分析、Content Audit 和 Enhancement。
 
 完整更新记录请查看 [CHANGELOG](CHANGELOG.md)。
 

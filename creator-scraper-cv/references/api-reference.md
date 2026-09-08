@@ -61,6 +61,13 @@ Never report insufficient credits from `quota_remaining`. Only error code `40201
 | Submit video script audit | `/openapi/v1/video-script-audit/tasks/submit` | Async single-video audit, fixed 100 credits/call |
 | Query audit task status | `/openapi/v1/video-script-audit/tasks/status` | Poll audit task (recommended interval: 10s) |
 | Get audit task result | `/openapi/v1/video-script-audit/tasks/result` | Fetch full 12-dimension audit JSON when status=completed |
+| Create video script audit Session | `/openapi/v1/content-strategy/video-script-session-audit/sessions/create` | Create a Session |
+| Import Session material | `/openapi/v1/content-strategy/video-script-session-audit/sessions/materials/import` | Import a Brief or Video URL |
+| Execute Session stage | `/openapi/v1/content-strategy/video-script-session-audit/sessions/stages/execute` | Submit one audit stage action |
+| Query Session stage status | `/openapi/v1/content-strategy/video-script-session-audit/sessions/stages/status` | Query one or all stages |
+| Get Session result | `/openapi/v1/content-strategy/video-script-session-audit/sessions/result` | Fetch the aggregate Session result |
+
+For the complete Session audit contract, see `references/video-script-session-audit.md`.
 
 ## Task Types
 

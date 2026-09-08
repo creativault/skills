@@ -6,6 +6,18 @@
 
 ---
 
+## v1.9.8 - 2026-09-07
+
+### 首次新增能力
+
+#### 视频脚本 Session 审核 Skill
+- 首次加入基于 Session 的视频脚本审核能力，支持 Client Brief、Script Brief、Video URL、Brief 解析、Script QC、视频分析、Content Audit、Enhancement、阶段状态和 Session 结果。
+- 首次加入 Session 创建、素材导入、阶段执行、状态查询、结果查询和轮询脚本。
+- 首次加入 `script_line_comparison` Enhancement 参数说明。
+- 首次明确 Session API 的 URL 导入范围、异步状态语义和错误处理规则。
+
+---
+
 ## v1.9.7 - 2026-08-28
 
 ### 新增能力

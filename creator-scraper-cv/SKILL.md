@@ -53,7 +53,7 @@ description: |
 compatibility: Node.js 20.6+
 metadata:
   author: creativault
-  version: "1.9.7"
+  version: "1.9.8"
 ---
 
 # Creativault Creator Ecosystem
@@ -79,6 +79,7 @@ metadata:
 - 邮件建联/批量建联/跟进：加载 `outreach/creator-outreach/SKILL.md`。
 - 达人假粉/互动真实性/账号风险检测：加载 `audit/fake-follower-audit/SKILL.md`，调用 `scripts/fake_follower_audit.mjs`（同步单达人检测）。
 - 单条视频拆解/审核/评分：加载 `audit/video-script-audit/SKILL.md`，调用 `scripts/video_audit_submit.mjs` + `video_audit_poll.mjs`（异步任务）。
+- 视频脚本 Session 审核、Brief 审核、Script QC、台词对比：加载 `audit/video-script-session-audit/SKILL.md`，调用对应 `video_script_session_audit_*.mjs` 脚本。
 - 复合流程，例如"找达人并建联""采集后导出再发邮件""拆解爆款再写 brief""品牌视频发现→分析→建联"：加载 `workflow/SKILL.md`，由工作流编排子 skill。
 
 执行前应把用户自然语言目标转成 CreatiVault OpenAPI 参数；用户已给出明确条件时，直接调用脚本，不要先去网页搜索。
@@ -140,6 +141,7 @@ Navos profile 会在结构化达人搜索脚本中自动注入 `service_level: "
 | outreach | creator-outreach | 邮件建联全流程（代发、跟进、待办） |
 | audit | fake-follower-audit | 单达人假粉率估算、互动质量和账号风险检测 |
 | audit | video-script-audit | 单条视频 12 维度异步拆解（Hook/选题/痛点/植入/镜头/情绪/文案等） |
+| audit | video-script-session-audit | 基于 Brief、Script Brief 和 Video 的多阶段 Session 审核 |
 | workflow | workflow | 剧本式工作流编排与 AI 自主调度 |
 
 ## 路由索引
@@ -153,6 +155,7 @@ Navos profile 会在结构化达人搜索脚本中自动注入 `service_level: "
 | creator-outreach | 建联, 发邮件, 批量发送 | email outreach, send email, outreach | outreach/creator-outreach/SKILL.md |
 | fake-follower-audit | 假粉检测, 假粉率, 粉丝真实性, 互动真实性, 刷粉, 达人风险 | fake follower audit, follower authenticity, engagement authenticity, creator risk | audit/fake-follower-audit/SKILL.md |
 | video-script-audit | 视频审核, 视频拆解, 爆款拆解, 分镜拆解, 钩子分析 | video audit, video script audit, viral breakdown, storyboard | audit/video-script-audit/SKILL.md |
+| video-script-session-audit | 视频脚本 Session 审核, Brief 审核, Script Brief, 脚本质检, 台词对比, 分阶段视频审核 | video script Session audit, Client Brief, Script Brief, Script QC, dialogue comparison | audit/video-script-session-audit/SKILL.md |
 | workflow | 工作流, 流程编排, 批量建联流程 | workflow orchestration, campaign flow, batch outreach flow | workflow/SKILL.md |
 
 **路由规则**：AI Agent 根据用户意图匹配上表关键词，加载对应子 skill。无法匹配时展示本表供用户选择。
@@ -290,3 +293,4 @@ Navos 用户（通过 Navos 桌面端使用本 Skill 的用户）的积分管控
 - [Country Codes](references/country-codes.md)
 - [Language Codes](references/language-codes.md)
 - [Error Codes](references/error-codes.md)
+- [Video Script Session Audit](references/video-script-session-audit.md)

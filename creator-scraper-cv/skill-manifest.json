@@ -1,11 +1,11 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.9.7",
+  "latest_version": "1.9.8",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "Add batch creator lookup by profile URLs and union user IDs; explicit quantity requests use up to 100 results per page"
+    "First release of video-script-session-audit Session skill"
   ],
   "sync": {
     "mode": "mirror",
@@ -29,9 +29,19 @@
       "sha256": "32231de59d05607e1a21ca5ec594fefed6823e3a969c809cd223d788110259fb"
     },
     {
+      "path": "audit/video-script-session-audit/SKILL.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/video-script-session-audit/SKILL.md",
+      "sha256": "405d986676a151c3faab29fa59b813573cbfbd0ad02c5f26d54640c9d955d698"
+    },
+    {
+      "path": "audit/video-script-session-audit/USAGE_GUIDE.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/video-script-session-audit/USAGE_GUIDE.md",
+      "sha256": "ea2c8ba5c80d77d13b687e3316b91d44ade299b1d21e488cd2afee192fe759d6"
+    },
+    {
       "path": "CHANGELOG.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
-      "sha256": "f6780bed05beb326ce2a90566ee8483def0351f2e4474d088f840aedebaebcb3"
+      "sha256": "f43e9a04d5f6db37dbb57b7cb9a118856e4644cac2379c2ee0e7a8f4066efebe"
     },
     {
       "path": "collection/creator-collection/SKILL.md",
@@ -74,9 +84,14 @@
       "sha256": "616f10349534a6375b7d7ffdcd917eb6ec0ff85cf94c96456cf20eef835eb0b9"
     },
     {
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/README.md",
+      "sha256": "06e04a1e975f948c9c8adc90c2f50bf1ebc35adeeafc77694f282d6d470e2cb1"
+    },
+    {
       "path": "references/api-reference.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/api-reference.md",
-      "sha256": "fc5577be630270189fb8999c34f7f7f3ab241c520bf24e8a24d19fcf62884053"
+      "sha256": "88f9b124fc049e44f139b6b07f53e6d37329a53eb1ae0d654dff649192bbc35a"
     },
     {
       "path": "references/country-codes.md",
@@ -86,7 +101,7 @@
     {
       "path": "references/error-codes.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/error-codes.md",
-      "sha256": "4fcf503a25a15d675a8957e744e780d1f565e7e1135064613b8bf97beadd55f4"
+      "sha256": "d5167603bd113a1bc5e0862d75b5ce05f9213d7964cb8947100c69c407f43cd4"
     },
     {
       "path": "references/industry-categories.md",
@@ -102,6 +117,11 @@
       "path": "references/platform-params.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/platform-params.md",
       "sha256": "0c713f78b89a63008998f7eb73c2862b323aab0786b1978c1e5bf20f94717acb"
+    },
+    {
+      "path": "references/video-script-session-audit.md",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/video-script-session-audit.md",
+      "sha256": "8c72b3d911d4a051e0ef0878b4fddbea601ae8f0989d25c980fea3bc94a79ed1"
     },
     {
       "path": "scripts/_api_client.mjs",
@@ -284,18 +304,48 @@
       "sha256": "fe7965b04345a0509e346da41ecfbfd3104f123a8c40fbdc7f08af91d6767d6a"
     },
     {
+      "path": "scripts/video_script_session_audit_create.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_create.mjs",
+      "sha256": "ff701f59b6e88b36e6aa26ad5a096970097ea4c65c17fd95a290254f99a1355d"
+    },
+    {
+      "path": "scripts/video_script_session_audit_material_import.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_material_import.mjs",
+      "sha256": "c985dacbb6caf25d777edc5f0227ae250e583f23e61ac57910530b4317891abf"
+    },
+    {
+      "path": "scripts/video_script_session_audit_poll.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_poll.mjs",
+      "sha256": "a61395a6505fa72598da99f0a064369e2a1a3c5566a1c8e4350b138199b0795d"
+    },
+    {
+      "path": "scripts/video_script_session_audit_result.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_result.mjs",
+      "sha256": "64939f05c4129eb6f70d366e146f81b86f58336efa41a5f8437705ce7bf42c6d"
+    },
+    {
+      "path": "scripts/video_script_session_audit_stage_execute.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_stage_execute.mjs",
+      "sha256": "4fa687d065cdb04cb58c994ceef08510d6acd2de8d4969fac81e5fd9f47d3764"
+    },
+    {
+      "path": "scripts/video_script_session_audit_stage_status.mjs",
+      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_script_session_audit_stage_status.mjs",
+      "sha256": "e996b675c1923c4f2bfd3eff0902bbd5acada2537862b2460f047d35f132f777"
+    },
+    {
       "path": "skill-manifest.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill-manifest.json"
     },
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "7b52aa1845092b3e979382e8a73d01b7a569d6dae232aaef59fd6e1801425d34"
+      "sha256": "69cd4066b2375c1fcf7feb22152cc6a61777d074808d04af9843f98e91cf22d8"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "4405f98638d5ba3dbfff0b04495a46b310fd6ed6d3875abe749548709915aee8"
+      "sha256": "fcb4d7c319a45bc740217d84bbd689ed0f5c247068633c74b94259f83c18532a"
     },
     {
       "path": "workflow/SKILL.md",
