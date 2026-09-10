@@ -1,21 +1,19 @@
 # CreatiVault Skills
 
-CreatiVault 官方 AI Agent Skills 集合，提供达人营销与 App 市场洞察能力。每个一级目录都是一个可独立安装的 Skill。
+CreatiVault 官方 AI Agent Skills 仓库，当前对外提供达人营销数据能力。每个一级目录都是一个可独立安装的 Skill。
 
 ## Skills 目录
 
 | Skill | 版本 | 主要能力 | 文档 |
 |------|------|----------|------|
 | `creator-scraper-cv` | 1.9.7 | 达人发现、视频搜索、批量采集、数据导出、邮件建联、假粉检测与内容审核 | [查看说明](creator-scraper-cv/README.md) |
-| `app-ranking-insight` | 1.0.0 | App 信息查询、商店榜单、排名趋势、跨国表现、竞品发现与广告投放洞察 | [查看说明](app-ranking-insight/README.md) |
 
 ## 安装
 
-建议始终使用 `--skill` 明确选择需要安装的 Skill：
+安装 `creator-scraper-cv`：
 
 ```bash
 npx skills add creativault/skills --skill creator-scraper-cv
-npx skills add creativault/skills --skill app-ranking-insight
 ```
 
 安装前可查看仓库中可发现的 Skills：
@@ -24,7 +22,7 @@ npx skills add creativault/skills --skill app-ranking-insight
 npx skills add creativault/skills --list
 ```
 
-直接运行以下命令时，交互式终端通常会显示 Skill 选择列表；在 AI Agent 或其他非交互环境中，安装器可能自动安装全部可发现的 Skills，因此自动化场景应使用上面的 `--skill` 参数。
+当前仓库只公开一个 Skill，因此也可以直接运行：
 
 ```bash
 npx skills add creativault/skills
@@ -32,7 +30,7 @@ npx skills add creativault/skills
 
 也可以直接告诉支持 GitHub Skill 安装的 Agent：
 
-> 请从 GitHub 仓库 `creativault/skills` 安装 `app-ranking-insight` Skill。
+> 请从 GitHub 仓库 `creativault/skills` 安装 `creator-scraper-cv` Skill。
 
 ## 运行要求
 
@@ -46,10 +44,7 @@ npx skills add creativault/skills
 
 ```text
 skills/
-├── creator-scraper-cv/
-│   ├── SKILL.md
-│   └── README.md
-└── app-ranking-insight/
+└── creator-scraper-cv/
     ├── SKILL.md
     └── README.md
 ```
