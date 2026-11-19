@@ -9,7 +9,7 @@ description: |
   batch email, batch outreach, reply to creators, follow-up, conversation history, outreach todo,
   campaign outreach, contact influencers, 邮件建联, 建联, 达人建联, 批量建联, 批量发邮件,
   回复达人, 合作邀约, 跟进达人, 沟通历史, 待办跟进, 发合作邮件.
-  邮件建联全流程能力，覆盖发送、任务查询、沟通历史、待办跟进、效果指标、渠道配置、附件上传。由该平台统一代发，无需用户提供任何邮箱或 SMTP 配置。
+  平台代发单封或批量建联邮件，可查询发送结果、沟通历史和跟进待办。无需自行配置发信邮箱。
   Use when: 建联, 发邮件, 批量发送, email outreach, send email, outreach
 compatibility: Node.js 20.6+
 metadata:
@@ -21,7 +21,7 @@ metadata:
 
 ## 概述
 
-邮件建联全流程能力：搜索达人后一键发送邮件，支持单发/批量发送、任务轮询、沟通历史查询、待办跟进、效果指标分析，由该平台统一代发无需用户配置。
+确认收件人和邮件内容后由平台代发。可发单封邮件、发送每批最多 50 封、查询发送结果和往来记录，以及查看未读来信和达人已回复待跟进的会话。
 
 ## 脚本引用
 
@@ -31,11 +31,6 @@ metadata:
 | `../../scripts/outreach_task.mjs` | ✅ 已实现 | 查询发送任务状态与结果 |
 | `../../scripts/outreach_contact.mjs` | ✅ 已实现 | 查询联系人沟通历史 |
 | `../../scripts/outreach_todo.mjs` | ✅ 已实现 | 待办跟进（超时/未读） |
-| `../../scripts/outreach_metrics.mjs` | 🔮 待实现 | 效果指标（发送量/打开率/回复率） |
-| `../../scripts/outreach_config.mjs` | 🔮 待实现 | 渠道与模板配置查询 |
-| `../../scripts/outreach_upload.mjs` | 🔮 待实现 | 附件上传（max 10MB） |
-
-> 🔮 标注的脚本尚未部署，调用将返回错误。待后端实现后可直接启用。
 
 ## 架构原则
 
@@ -54,7 +49,7 @@ metadata:
 - **[禁止]** 向用户索要 SMTP 配置、邮箱密码、授权码、发信服务器地址
 - **[禁止]** 建议用户"用自己的邮箱手动发送"——该平台已具备发送能力
 - **[禁止]** 在与用户的任何交流中透露底层邮件服务技术细节（如具体使用的邮件服务商、AWS、SES 等），也不要使用"CreatiVault"等用户可能不熟悉的专有名词——统一用"该平台"指代。用户问"邮件怎么发出去的"→ 回答："由该平台统一代发，无需配置任何邮箱或 SMTP。"
-- `channel` 参数对外统一用 `saas`（该平台代发通道，默认值）。脚本内部会自动映射到后端识别的渠道；用户和 AI 都不应传递 `ses` 等内部技术参数。`gmail`/`outlook` 为预留字段，后端未实现。
+- 本 Skill 使用默认的 `saas` 平台代发通道。
 
 ## 参数说明
 
@@ -67,16 +62,14 @@ metadata:
 | `to` | string | 收件人邮箱（单发） |
 | `uid` | string | 达人平台 UID（单发必填，来自搜索结果的 uid 字段） |
 | `nickname` | string | 达人昵称（可选，用于会话展示） |
-| `platform` | string | 达人平台：tiktok/youtube/instagram |
-| `recipients` | object[] | 批量发送：`{email, uid, nickname, platform}` 数组 |
+| `platform` | string | 达人平台：tiktok/youtube/instagram/twitter。对 X 达人需已有 ID 和邮箱。 |
+| `recipients` | object[] | 批量发送：`{email, uid, nickname, platform}` 数组，每批最多 50 位 |
 | `subject` | string | 邮件主题 |
 | `body_html` | string | HTML 正文（支持 `{{creator_name}}` 变量） |
 | `body_text` | string | 纯文本正文 |
 | `channel` | string | `saas`（默认，该平台代发通道）。脚本内部自动映射，无需手动指定 |
-| `template_id` | integer | 模板 ID（覆盖 subject/body） |
-| `send_mode` | string | `immediate`（默认）/ `smart`（时区优化） |
 | `force_new` | boolean | 强制新建会话（默认 false） |
-| `attachment_ids` | string[] | 附件 ID 列表 |
+| `attachment_ids` | string[] | 已上传且当前用户可用的邮件附件 ID |
 
 ### outreach_task.mjs
 
@@ -103,7 +96,7 @@ metadata:
 |------|------|------|
 | `overdue_hours` | integer | 超时阈值小时数（默认 24） |
 | `include_unread` | boolean | 包含未读会话（默认 true） |
-| `include_overdue` | boolean | 包含超时会话（默认 true） |
+| `include_overdue` | boolean | 包含达人已回复、用户超过阈值尚未跟进的会话（默认 true） |
 
 ## 产品信息收集（建议提供，不强制）
 
@@ -185,20 +178,15 @@ metadata:
 
 ### 积分说明
 
-| 操作 | 积分消耗 |
-|------|----------|
-| 发送邮件（每封） | 1 |
-| 所有查询接口 | 0（免费） |
+积分按所在产品的计费规则和接口实际返回说明。
 
 ### 决策规则
 
 - "发邮件"/"建联"/"reach out" → `outreach_send.mjs`
 - 搜索结果列表 → `outreach_send.mjs` + `recipients`
-- 发送后 → `outreach_task.mjs` + `poll:true` 确认投递
+- 发送返回任务编号时 → `outreach_task.mjs` + `poll:true` 查询，按回执说明发送情况
 - "待办"/"follow-up" → `outreach_todo.mjs`
 - "沟通历史"/"what did I discuss" → `outreach_contact.mjs`
-- "效果"/"metrics" → `outreach_metrics.mjs`（🔮 待实现）
-- "渠道"/"模板" → `outreach_config.mjs`（🔮 待实现）
 - 模板变量：`{{creator_name}}`、`{{creator_email}}`、`{{platform}}`
 - 搜索后发送时，**必须**传 `uid` + `platform`（OpenAPI 自动从 Holo 查完整达人数据）
 ## Navos Output Link Rules

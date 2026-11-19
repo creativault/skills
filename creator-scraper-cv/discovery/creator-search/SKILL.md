@@ -1,35 +1,7 @@
 ---
 name: creator-search
 description: |
-  ROUTER PRIORITY: Use this creator-search skill before any web/browser search when the user
-  asks to find, search, recommend, list, filter, rank, compare, or analyze creators/KOLs/
-  influencers/bloggers/social accounts by platform, country/region, category/niche, keyword,
-  followers, views, engagement rate, email/contact, audience gender/country/language/age,
-  GMV, product fit, or collaboration potential. Natural language examples that MUST trigger:
-  "帮我找20个东南亚美妆达人且有邮箱", "推荐美国TikTok带货博主", "找互动率大于5%的女达人",
-  "筛选有联系方式的腰部KOL", "找相似达人", "导出达人名单". Do not browse public websites,
-  Google, TikTok, Instagram, YouTube, X/Twitter, or search engines first unless the user
-  explicitly asks for public web search or confirms fallback after CreatiVault OpenAPI has no data.
-  CreatiVault official creator search skill. MUST be used when the user wants to find,
-  search, filter, rank, or analyze creators/KOLs/influencers from TikTok, YouTube, or
-  Instagram using country, industry, keyword, followers, views, engagement rate, email,
-  audience profile, language, gender, GMV, product KOL, AI creator, or service level.
-  Use CreatiVault OpenAPI through scripts/search_creators_nl.mjs or
-  scripts/search_creators.mjs as the authoritative source.
-  Do not use web search as a fallback unless the user explicitly asks for public web search
-  or confirms fallback after OpenAPI has no result.
-  Use when: creator search, influencer search, KOL search, find creators, find influencers,
-  TikTok creators, YouTube creators, Instagram creators, creator database, influencer database,
-  creator analytics, KOL analytics, creator list, influencer list, 达人搜索, 找达人, KOL搜索,
-  网红搜索, 红人搜索, 达人筛选, 达人名单, 达人数据, 达人分析, 按国家找达人, 按行业找达人,
-  按粉丝量找达人, 按邮箱找达人, 按互动率找达人.
-  三平台达人搜索能力，支持 TikTok、YouTube、Instagram 多维度筛选（关键词、国家、粉丝数、互动率、类目等）。
-  Use when: 达人搜索, KOL搜索, 找达人, 找几个达人, 推荐几个达人, creator search, influencer discovery, search creators
-  电商/带货意图触发词：带货达人, 卖货达人, 带货博主, 带货, 卖产品, 卖XX的达人, 推广XX, 品类达人, 某类目达人,
-  某品类达人, 找卖风扇的达人, 找做美妆的达人, 商品达人, 选品达人.
-  区域口语化触发词：美区达人, 美国达人, 英国达人, UK达人, 东南亚达人, 欧洲达人, 日本达人, 韩国达人,
-  中东达人, 拉美达人, 台湾达人, 港澳达人, 北美达人, 本地达人, 海外达人.
-  偏好/筛选口语化触发词：最好有邮箱, 要邮箱, 有联系方式, 粉丝多的, 互动高的, 有受众画像的, 高人气的, 头部达人, 腰部达人, 素人达人.
+  使用 CreatiVault OpenAPI 搜索 TikTok、YouTube 和 Instagram 已收录达人。支持自然语言搜索、按地区/行业/粉丝/互动率/邮箱/受众筛选、按达人 ID 或主页链接批量精确查询、将本次结果导出 CSV，以及查 TikTok 和 Instagram 已收录的品牌合作达人。适用于找达人、带货达人、达人筛选、合作名单、品牌合作达人、creator search、influencer discovery。
 compatibility: Node.js 20.6+
 metadata:
   layer: discovery
@@ -40,7 +12,7 @@ metadata:
 
 ## 概述
 
-三平台（TikTok、YouTube、Instagram）达人实时搜索。支持直接提交一句自然语言描述，也支持关键词、国家、粉丝数、互动率、行业等精确结构化筛选，结果即时返回。
+在 CreatiVault 已收录的 TikTok、YouTube 和 Instagram 达人中搜索。自然语言搜索适合描述内容方向和合作场景，结构化搜索适合硬性条件或批量查询已知账号。以 CreatiVault OpenAPI 为数据来源。除非用户明确要求公开网页搜索，或在 OpenAPI 未命中后确认使用公开来源，否则使用 CreatiVault OpenAPI。
 
 ## 脚本引用
 
@@ -49,7 +21,7 @@ metadata:
 | search_creators_nl.mjs | `../../scripts/search_creators_nl.mjs` | ✅ 可用 |
 | search_creators.mjs | `../../scripts/search_creators.mjs` | ✅ 可用 |
 | find_brand_collaboration_creators.mjs | `../../scripts/find_brand_collaboration_creators.mjs` | ✅ 可用 |
-| submit_brand_realtime_mentions.mjs | `../../scripts/submit_brand_realtime_mentions.mjs` | ✅ 可用 |
+| export_to_csv.mjs | `../../scripts/export_to_csv.mjs` | 将已返回的搜索结果转换为 CSV |
 
 自然语言搜索调用格式：
 
@@ -65,7 +37,7 @@ node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","country_code":
 
 ## 竞品品牌找达人
 
-当用户要找“某个竞品/品牌合作过的达人”“Fenty Beauty 合作达人”“某品牌种草达人”时，优先使用这里的品牌发现链路，不要先走公开网页搜索。
+当用户要找已与某个竞品或品牌合作过的达人时，使用品牌合作达人查询。只想看该品牌相关视频时，使用 `video-search` 的品牌视频洞察。
 
 离线合作达人查询：
 
@@ -73,30 +45,18 @@ node {baseDir}/scripts/search_creators.mjs '{"platform":"tiktok","country_code":
 node {baseDir}/scripts/find_brand_collaboration_creators.mjs '{"brand_name":"Fenty Beauty","platforms":["tiktok","instagram"],"limit":20}'
 ```
 
-- 离线查询用于找已沉淀在 CreatiVault 数据库里的品牌合作达人，优先级最高。
-- 当前离线查询支持 TikTok / Instagram。
-- `items[].creator` 是合作达人，`items[].brand_account` 是匹配到的品牌账号，`items[].evidence_videos` 是合作证据视频。
-- `collaboration_count > 0` 是合作达人命中依据；`evidence_videos` 只是解释字段。若 `evidence_available=false`，仍可展示该合作达人，但需要说明当前未取到可展示的视频证据。
-- 如果离线查询没有结果，停止并说明“当前未找到已沉淀的品牌合作记录”，再询问是否要启动实时关键词采集；不要静默切换到网页搜索或普通达人搜索。
-
-轻量实时品牌提及采集：
-
-```bash
-node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok","brand_name":"Fenty Beauty"}'
-```
-
-- 仅在用户明确要找近期提及、潜在种草候选，或确认离线无结果后继续实时采集时使用。
-- 实时采集是异步任务，返回 task id 后用 `get_task_status.mjs` 查询状态，用 `get_task_data.mjs` 拉取结果。
-- 实时结果来自品牌名/关键词采集，是候选达人或内容提及，不等同于离线确认过的品牌合作记录。
+- 查询 TikTok、Instagram 已收录的合作记录，可按地区、行业、粉丝量、互动率下限或邮箱可用性筛选达人。
+- `items[].creator` 为合作达人，`items[].brand_account` 为匹配的品牌账号，`items[].collaboration_count` 为记录中的合作次数。`evidence_videos` 有值时可展示佐证视频。
+- 无结果时说明当前未找到已收录的品牌合作记录。用户若需要品牌相关视频，可确认后使用品牌视频洞察查询已收录视频。
 
 ## 搜索前 Brief 规则
 
-普通达人搜索必须先确认需求是否足够执行。最小 brief 包含：平台、目标市场/国家地区、品类/行业/关键词、需要数量。缺少平台或关键业务条件时，先澄清，再搜索。
+按已有主页链接或达人 ID 精确查询时，只需明确标识所属平台及标识列表，可按用户要求叠加筛选条件。筛选新候选名单时，按以下规则确认需求。
 
 1. 用户未指定平台时，必须先问平台，给出 TikTok / Instagram / YouTube 选项；不要默认选一个平台，也不要同时搜多个平台。
 2. 用户未指定目标市场/地区时，必须先问目标地区；“东南亚”“欧美”“美国”等明确范围可以直接使用。
 3. 用户未指定品类、行业、关键词、产品、品牌或内容方向时，必须先问业务方向。
-4. 用户未指定数量时，可以默认先找 10 个；如果用户表达的是“合作名单/建联名单/批量达人”，优先追问数量。
+4. 用户未指定数量时，默认先找 20 个。
 5. 用户已经给出平台、地区、品类和数量时，不要继续问服务等级或技术参数，直接按当前条件严格搜索。
 6. 澄清问题必须短，一次最多 3 个，只问当前真正缺失的信息。示例：“可以，我先确认 2 点：你想优先搜哪个平台？目标地区是哪些国家或区域？”
 
@@ -107,7 +67,7 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 每次用户请求只选择一种搜索方式，不要同时调用两个脚本：
 
 1. 用户重点描述内容方向、达人画像、内容风格、真实场景、品牌或产品适配等难以稳定映射为类目/关键词的需求时，优先调用 `search_creators_nl.mjs`。Instagram 会使用语义向量召回；TikTok 和 YouTube 当前使用自然语言解析后的标量召回。
-2. 用户要求精确邮箱/WhatsApp、更新时间、指定行业 ID、排序字段、S1/S2/S3 完整字段、GMV/GPM 或其他明确结构化条件时，调用 `search_creators.mjs`。
+2. 用户要求按主页链接或达人 ID 查询，或要求精确邮箱/WhatsApp、更新时间、指定行业 ID、排序字段、S1/S2/S3 字段、GMV/GPM 等明确结构化条件时，调用 `search_creators.mjs`。
 3. 用户既有复杂语义又有 Instagram 向量检索暂不支持的强约束（当前包括是否有邮箱、更新时间）时，不要假设自然语言接口会严格执行这些条件；优先使用结构化搜索，或先向用户说明限制并确认取舍。
 4. 用户未指定平台时，先按「搜索前 Brief 规则」澄清平台；自然语言接口虽然有默认平台，但面向用户执行时不得依赖默认平台直接搜索。
 5. 多平台需求必须拆成多次请求，并在调用第二个平台前告知用户会增加查询消耗。
@@ -118,9 +78,8 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 - 请求体只允许 `query`、`platform`、`limit`。不要传 `lang`、`service_level`、`debug`、`route_top_k` 等内部实现字段。
 - `query` 必填，长度 1~1000；`platform` 支持 Instagram/TikTok/YouTube 及常用别名；`limit` 默认 20，范围 1~100。
 - 一次请求只搜索一个平台。结果不足或为 0 时遵守本 Skill 的静默查询边界，不自动换平台、追加结构化搜索或放宽条件。
-- 固定按请求计费 15 credits/次，与 `limit`、实际返回数量和召回类型无关；Instagram 服务端 fallback 仍属于同一次请求，不重复计费。
-- 多平台搜索需要分别调用，每个平台各计 15 credits。调用第二个平台前必须说明额外消耗并征得用户确认。
-- Navos profile 会在请求前按 15 credits 做余额预检；余额不足时直接停止，不发送 OpenAPI 请求。
+- 该脚本预估 15 credits 用于 Navos 余额预检。实际消耗以服务端计费配置和接口响应为准。
+- 多平台需要分别调用。追加平台或切换检索方式前，说明会增加查询并征得用户确认。
 - `meta.recall_type=vector` 表示 Instagram 语义向量召回；`scalar_fallback` 表示 Instagram 因语义不足自动使用结构化筛选；`scalar` 表示 TikTok/YouTube 标量召回。
 - Instagram 服务端 fallback 在同一次请求内完成，不需要客户端再次调用，也不要把它算成一次新的补充搜索。
 - 该接口返回固定精简字段，不返回 S3 受众画像或完整联系方式；需要丰富字段时应改用结构化搜索，并先征得用户确认。
@@ -145,13 +104,9 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 6. 日期筛选统一传 `YYYY-MM-DD`。
 7. `lang` 只控制响应码值翻译，不用于筛选达人，默认 `en`。筛选达人内容语言使用 `language_code`。
 8. 只传目标平台支持的字段。三平台播放量、互动率、受众语言等字段名并不完全相同。
-9. 当前 HTTP Open API 不支持 Instagram 的 GMV、销售商品数筛选，不要发送这些字段。
-10. **GMV/GPM 仅是筛选条件，不返回字段值（禁止编造）**：TikTok 支持 `last30day_gmv_gte/_lte`、`last30day_gpm_gte/_lte`、`last30day_gmv_per_buyer_gte/_lte`、`last30day_commission_rate_gte/_lte` 等筛选参数，用于**按近30天 GMV/GPM 范围筛选达人**。但这些是**筛选条件**，响应字段表里**不返回**任何 GMV/GPM 数值——结果只表示"该达人符合筛选范围"，不会给出具体金额。因此：
-    - 展示搜索结果时**禁止编造或填入 GMV/GPM/客单价/佣金率数值**（即使搜索用了这些筛选条件）
-    - 如用户询问某达人具体 GMV，如实告知"GMV 仅支持按范围筛选，不返回具体数值"
-    - YouTube/Instagram 不支持 GMV 筛选，详见第 9 条
-11. 不要发送旧字段名。HTTP Open API 请求模型会忽略未声明字段，旧字段可能请求成功但实际没有产生筛选效果。
-12. **行业 vs 关键词的决策逻辑**：
+9. **TikTok 带货指标**：可按近 30 天 GMV、GPM、客单价和佣金率区间筛选。S2 和 S3 有数据时可返回对应展示值与销售商品数，按接口实际提供的字符串展示，不用筛选区间补全缺失值。YouTube 和 Instagram 的达人搜索使用各自平台字段。
+10. 不要发送旧字段名。HTTP Open API 请求模型会忽略未声明字段，旧字段可能请求成功但实际没有产生筛选效果。
+11. **行业与关键词选择**：
     - **用户明确指定**"行业"或"关键词"时，按用户意图走,不要替换。例如用户说"关键词搜 funny"就用 `keyword`，说"行业选美妆"就用 `industry`。
     - **用户未明确区分**时（如"找搞笑达人"、"美妆博主"），优先映射为 `industry`。常见映射：搞笑/funny → Comedy & Humor, 美妆/beauty → Skincare 或 Beauty, 科技/tech → Technology, 宠物/pet → Pet Supplies, 美食/food → Food & Beverage。
     - **行业搜索结果为空时**（返回 0 条），不要自动用同义词降级为 `keyword` 重新搜索。应停止并告知用户"当前严格行业筛选无结果"，提供 2-3 个可选放宽方向，等待用户确认后再搜索。
@@ -163,7 +118,7 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 
 1. 所有用户筛选条件必须进入 OpenAPI 请求体。包括但不限于 `country_code`、`industry`、`followers_cnt_gte/_lte`、`last10_avg_video_interaction_rate_gte/_lte`、`has_email`、`language_code`、受众字段。禁止先只传少量条件拿候选，再本地过滤大量结果。
 2. 默认只调用一次搜索脚本，且只查 `page=1`。不得为了凑满用户要求的数量自动翻到 page 2、page 10 等。
-3. 用户未说明数量时，默认 `size=20`。用户明确要求 N 条时，当前页 `size=min(N,100)`；生产接口单页最大值为 100，禁止发送大于 100 的 `size`。当 N 大于 100 时，只查询第 1 页并返回最多 100 条，不得自动翻页。
+3. 用户未说明数量时，默认 `size=20`。用户明确要求 N 条时，当前页 `size=min(N,100)`。只查询第 1 页，单页最多 100 条。批量精确查找时可按提供的标识数量（去重后）设置本页目标数量，仍遵守单页上限和翻页规则。
 4. 用户未指定平台时，必须先澄清平台。不得自动选择平台，也不得自动并行或串行搜索 TikTok、Instagram、YouTube 来凑结果。
 5. 严格条件返回 0 条时，不再发起任何补充搜索；直接说明没有命中，并询问是否放宽条件，例如降低互动率、扩大地区、换平台或改用关键词。
 6. 严格条件返回数量少于用户要求时，只展示严格命中的结果。若用户要求超过 100 条，明确说明当前仅返回第 1 页、继续获取还需分页；任何继续翻页或跨平台搜索都必须先让用户确认。
@@ -198,19 +153,17 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 
 ## 服务等级
 
-`service_level` 控制返回字段与积分消耗。面向用户发起搜索前，必须让用户清楚三档含义：
+`service_level` 控制结构化搜索返回的数据范围。实际消耗以服务端计费配置和接口响应为准。
 
 本节仅适用于 `search_creators.mjs` 结构化搜索。`search_creators_nl.mjs` 不接受 `service_level`，也不返回 S3 受众画像。
 
-- 用户未指定等级时，先展示下方简短表格，并说明默认推荐 `S2`。
-- 用户确认“默认/推荐/直接搜”时，使用 `S2`。
-- 用户明确指定 `S1` / `S2` / `S3`，或本轮对话已展示过等级说明时，可直接执行，避免重复打断。
+- 用户明确指定等级时按其选择；需要邮箱等详细信息时用 `S2`，需要受众画像时用 `S3`。未指定时，常规调用缺省 `S2`，Navos 默认注入 `S3`。
 
-| 等级 | 名称 | 积分/条 | 返回范围 |
-|------|------|---------|----------|
-| S1 | 纯名单筛选 | 1 | 基础身份、主页、联系方式存在性、最近发布时间；具体字段因平台而异 |
-| S2 | 精准触达 | 3 | S1 + 国家、性别、粉丝/播放/互动、行业、邮箱等；具体字段因平台而异 |
-| S3 | 深度画像 | 4 | S2 + 受众性别、国家、语言、年龄分布 |
+| 等级 | 返回范围 |
+|------|----------|
+| S1 | 基础身份、主页、粉丝或订阅数、联系方式可用性等 |
+| S2 | 增加地区、内容表现、行业及已有的邮箱等信息。TikTok 有数据时可返回带货指标 |
+| S3 | 增加受众性别、国家或地区、语言和年龄等画像 |
 
 > **Navos 用户**：脚本会自动使用 S3（深度画像），无需手动指定。Navos 用户搜索结果可能不展示积分消耗信息（积分由 Navos 侧管控）。
 
@@ -234,9 +187,9 @@ node {baseDir}/scripts/submit_brand_realtime_mentions.mjs '{"platform":"tiktok",
 | `industry` | string | 行业类目；脚本支持类目 ID、中文/英文名称和常用别名 |
 | `audience_country_code_list` | string | 受众国家代码，多选逗号分隔 |
 | `audience_age_list` | string | 受众年龄，多选逗号分隔 |
-| `audience_female_rate_gte` / `audience_female_rate_lte` | number | 受众女性比例，传 0~100 百分比数值 |
+| `audience_female_rate_gte` / `audience_female_rate_lte` | number | TikTok 和 YouTube 的受众女性比例，传 0~100 百分比数值。Instagram 用 `female_ratio_gte` / `female_ratio_lte` |
 | `page` | integer | 页码，默认 1 |
-| `size` | integer | 每页数量，默认 50；普通 Open API 调用最大 100 |
+| `size` | integer | 每页 1~100，Skill 在用户未指定时取 20 |
 | `sort_field` | string | 排序字段，必须使用目标平台支持的字段 |
 | `sort_order` | string | `asc` / `desc`，默认 `desc` |
 | `service_level` | string | `S1` / `S2` / `S3`，默认 `S2` |
@@ -313,6 +266,20 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 {"platform":"instagram","industry":"Beauty","is_product_kol":true,"audience_language_list":"en","service_level":"S2"}
 ```
 
+批量查找已收录的账号，主页链接和达人 ID 可合用，两类各最多 200 条，按并集筛选：
+
+```json
+{"platform":"tiktok","profile_urls":["https://www.tiktok.com/@creator_a"],"union_user_ids":["123456789"],"has_email":true,"size":20}
+```
+
+## 导出搜索结果
+
+将已经取得的结构化或自然语言搜索响应传给 `export_to_csv.mjs`。为本次结果选一个尚未使用的输出路径，脚本会生成本地 CSV，便于用户继续筛选。脚本默认追加到已有文件，复用路径前先确认用户是要合并还是覆盖。
+
+```bash
+node {baseDir}/scripts/export_to_csv.mjs '{"output":"creators-current-search.csv"}' < search-result.json
+```
+
 ## 输出格式
 
 ### 表格设计原则（展示层优化）
@@ -340,7 +307,7 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
    - 字段在所有结果中都为空、`null`、空数组或空字符串时，可以省略该列
    - Boolean 字段不要只放空白图标；展示为 `是/否` 或带文字的 `✅ 是`、`—`
    - `avatar_url` 已通过头像承载，无需重复放原始 URL
-   - `uid` 属于可追踪字段，S3 结果中如果返回必须展示，或至少在每行详情中展示，便于后续采集、建联、排障
+   - `uid` 属于可追踪字段，S3 结果中如果返回必须展示，或至少在每行详情中展示，便于后续精确查询、建联、排障
 
    **S3 字段强制覆盖**：当 `service_level=S3`（Navos 默认）时，以下字段只要返回就必须展示，不得漏掉：
    - 受众女性比例：`audience_female_rate`
@@ -406,8 +373,8 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 
 - 仅展示实际返回的字段，不能假设低服务等级包含其不具备的字段
 - **等级字段范围（必须正确理解，避免漏展示核心指标）**：S1 ⊂ S2 ⊂ S3，高等级向下兼容低等级的全部字段
-  - S1：基础身份、主页、联系方式存在性、最近发布时间
-  - S2：在 S1 基础上增加粉丝/订阅数、平均播放量（avg_views）、互动率（engagement_rate）、行业、邮箱等
+  - S1：基础身份、主页、粉丝或订阅数、联系方式存在性、最近发布时间
+  - S2：在 S1 基础上增加平均播放量（avg_views）、互动率（engagement_rate）、行业、邮箱等，TikTok 有数据时可提供带货指标
   - S3：在 S2 基础上再增加受众画像（audience_female_rate / audience_country_code_list / audience_language_code_list / audience_age_id_list 等）
   - 因此 **S3 必须展示 S1 + S2 + S3 的全部实际返回字段**，它们是 S3 的子集，不可因"高等级"、"表格太宽"、"已有摘要列"而漏掉
   - Navos 用户默认走 S3，展示表格必须包含平均播放量、互动率、粉丝数/订阅数、联系方式、行业/标签、bio、最近发布时间、受众画像等全部实际返回字段
@@ -417,13 +384,11 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
   - **S3 场景同样必须保留可点击链接**——不可因增加了受众画像字段而挤掉或省略
 - 统计信息单独列出：总匹配数、消耗积分、剩余配额、请求 ID（Navos 用户由脚本自动隐藏 service_level/credits/request_id，无需展示）
 - `meta.total` 为 null 时不展示总匹配数
-- 默认展示 5~10 条，超过时询问用户
 - **头像列渲染规则（S1 起即返回，所有等级适用）**：`avatar_url` 属于 S1 字段，全平台全等级返回
   - 表格新增独立的「头像」首列（紧随序号 # 之后），用固定方形外框承载头像：`<span style="display:inline-flex;width:40px;height:40px;overflow:hidden;border-radius:4px;vertical-align:middle;"><img src="{avatar_url}" width="40" height="40" style="width:40px;height:40px;max-width:40px;min-width:40px;object-fit:cover;object-position:center;display:block;"></span>`（外框固定、图片居中裁切，避免 Navos 表格列宽把竖图压窄）
   - 禁止裸写 `<img src="{avatar_url}" width="36" height="36">` 这类同时固定宽高但未设置 `object-fit` / 外层裁切框的格式，避免把竖图、横图头像压扁
   - 头像通过 `<img src>` 内联 avatar_url，无需单独定义引用链接；达人名链接（`[linkN]`）在表格下方列出完整 URL
   - `avatar_url` 为空或缺失时，该格留空，**禁止编造头像 URL 或放占位图**
-- 展示后主动询问是否需要导出 CSV/Excel
 
 ### 达人分析润色（AI 即兴生成 + 真实数据对照）
 
@@ -473,11 +438,11 @@ Instagram 不要使用旧字段名 `last10_avg_video_views_cnt_*`、`last_video_
 
 - "我可以基于这批达人做**更详细的匹配和数据解释**，比如分析哪个达人的受众最契合你的产品"
 - "可以一键**批量建联**这些达人，我帮你起草个性化邮件（需要先确认你的产品信息）"
-- "可以**导出 CSV/Excel** 方便团队协作筛选"
+- "可以**将本次搜索结果导出为 CSV**，方便团队协作筛选"
 - "可以**搜索相似达人**（lookalike），基于表现最好的账号扩大候选池"
-- "可以**采集这批达人的近期视频**，分析他们的内容风格和合作潜力"
+- "可以**查找这批达人已收录的视频**，再拆解选定的视频"
 
-不要机械罗列所有建议——先按“建联建议判定规则”决定是否必须给建联建议，再根据用户的使用场景（建联/分析/采集）补充 1-2 条最相关的导出、lookalike 或进一步分析建议。
+先按“建联建议判定规则”决定是否建议建联，再按用户目标选取最相关的 CSV 导出、相似达人或进一步分析建议。
 
 ## Navos Output Link Rules
 

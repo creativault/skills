@@ -1,11 +1,12 @@
 {
   "name": "creator-scraper-cv",
-  "latest_version": "1.9.7",
+  "latest_version": "1.9.8",
   "min_supported_version": "1.5.0",
   "channel": "stable",
   "branch": "main",
   "release_notes": [
-    "Add batch creator lookup by profile URLs and union user IDs; explicit quantity requests use up to 100 results per page"
+    "移除批量采集、采集任务导出和品牌实时提及采集入口，保留达人搜索结果 CSV 导出。",
+    "按后端契约同步达人搜索、视频搜索、短视频拆解和工作流。"
   ],
   "sync": {
     "mode": "mirror",
@@ -26,37 +27,32 @@
     {
       "path": "audit/video-script-audit/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/audit/video-script-audit/SKILL.md",
-      "sha256": "32231de59d05607e1a21ca5ec594fefed6823e3a969c809cd223d788110259fb"
+      "sha256": "a2df096ab263c16c98b1d6c686103052c2afa06bf22b27d8c853e0d54f0aff81"
     },
     {
       "path": "CHANGELOG.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/CHANGELOG.md",
-      "sha256": "f6780bed05beb326ce2a90566ee8483def0351f2e4474d088f840aedebaebcb3"
-    },
-    {
-      "path": "collection/creator-collection/SKILL.md",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/collection/creator-collection/SKILL.md",
-      "sha256": "596e4b77f69dce568cdc1e382f71b2ac06828187b285061edd76e72a6f77e412"
+      "sha256": "575a5568cd5f932db01e7f458019a806603cc588b4fa355cf730b79dff8723dd"
     },
     {
       "path": "discovery/creator-lookalike/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-lookalike/SKILL.md",
-      "sha256": "c4ab630aaa470a5cb430e406515c6f343fe954ed1cda8a5ec19430f0fc84dc39"
+      "sha256": "8ef37987bf87f0df4ab13d21910e9736402cc525681804adbfbc111f3f59085e"
     },
     {
       "path": "discovery/creator-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/creator-search/SKILL.md",
-      "sha256": "3b93b365ef710f1cd8b1fcf8d6cfdf6a202e6c81a76e0b9ff8192f4bc98eff2b"
+      "sha256": "a6bd6bd73538bf6c4ac6adc65c39639d65f93b7ace92175383be3bff156bce5c"
     },
     {
       "path": "discovery/video-search/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/discovery/video-search/SKILL.md",
-      "sha256": "60ddea5a4ba8a73010eac222afa393fa7f7e0ca0c3ae763c29c2db9fec12c2d8"
+      "sha256": "80b4478ff24b5e9bce313c350775bd84537d8492f08932520abf2469d0fd20f1"
     },
     {
       "path": "outreach/creator-outreach/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/outreach/creator-outreach/SKILL.md",
-      "sha256": "7c9d5e95672f101a51340bebf3a089b647635999cb04f5f17d8147cf1bdef8e8"
+      "sha256": "ef048870f986f7275dd2383c6ed84b531e3586a792a9b41ee8177c3a51c51cc3"
     },
     {
       "path": "profiles/common.json",
@@ -76,7 +72,7 @@
     {
       "path": "references/api-reference.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/api-reference.md",
-      "sha256": "fc5577be630270189fb8999c34f7f7f3ab241c520bf24e8a24d19fcf62884053"
+      "sha256": "b659721cbc7dd6230e9e3f8487aec14cbc81ff056eb2bc70969130258d8384b4"
     },
     {
       "path": "references/country-codes.md",
@@ -86,7 +82,7 @@
     {
       "path": "references/error-codes.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/error-codes.md",
-      "sha256": "4fcf503a25a15d675a8957e744e780d1f565e7e1135064613b8bf97beadd55f4"
+      "sha256": "28de8190aec3d81cff47e5a7478b10f2160ba06d16ec1270237256da47a8d211"
     },
     {
       "path": "references/industry-categories.md",
@@ -101,7 +97,7 @@
     {
       "path": "references/platform-params.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/references/platform-params.md",
-      "sha256": "0c713f78b89a63008998f7eb73c2862b323aab0786b1978c1e5bf20f94717acb"
+      "sha256": "753039618ef92460aa80f1f973e8c44d838407ca629fa4de86987efbf37f83b8"
     },
     {
       "path": "scripts/_api_client.mjs",
@@ -144,14 +140,9 @@
       "sha256": "3f71065a1a8cec988dd490d5bb923dbf3ab14a942891dc579e46970667ed83c8"
     },
     {
-      "path": "scripts/export_task_data.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/export_task_data.mjs",
-      "sha256": "abe27d05b0ae6dfb6937bd61e136fd6eb75646d678b0c1d61f8aaac83da5954c"
-    },
-    {
       "path": "scripts/export_to_csv.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/export_to_csv.mjs",
-      "sha256": "98689e28904daa8aec0d9da36d472f223fb3d3ec5d1705623418f19759516c35"
+      "sha256": "4103393c57bb5f8c488f869f76a1231c65b9ed8c031af0e0b69faf4008f56ee7"
     },
     {
       "path": "scripts/fake_follower_audit.mjs",
@@ -172,21 +163,6 @@
       "path": "scripts/generate_manifest.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/generate_manifest.mjs",
       "sha256": "1fe15caa958ae88fbd5018b754989555e4bb9bb571b121b5a4f74193e232f747"
-    },
-    {
-      "path": "scripts/get_download_url.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/get_download_url.mjs",
-      "sha256": "992d8faba5709c483d5b6cb9ef2bedf8581561437caf746920b2847847a90570"
-    },
-    {
-      "path": "scripts/get_task_data.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/get_task_data.mjs",
-      "sha256": "716324b666fe5d710e7020b3e1c957f99a8fce97c97c2f4058359d4898275b14"
-    },
-    {
-      "path": "scripts/get_task_status.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/get_task_status.mjs",
-      "sha256": "d45369000bc186066d71dccd95467b178ae41c4674c5d3a6ff12cffa4427ffc9"
     },
     {
       "path": "scripts/influencer_industry_tree.json",
@@ -219,11 +195,6 @@
       "sha256": "efc18dc27e55b5515c50c389bf9d7714cd9680b36aec28c93218e7edc4f4972f"
     },
     {
-      "path": "scripts/poll_task_status.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/poll_task_status.mjs",
-      "sha256": "cfbdef3b77cd800d09eb9c7d65c66feb9fe38fdbcce17e422e126e3f75829ba9"
-    },
-    {
       "path": "scripts/search_brand_video_insights.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_brand_video_insights.mjs",
       "sha256": "3e31f381c32511533ac535d655e174f6aa1eb4160c46d03f6821c6f6e3230ee5"
@@ -241,27 +212,12 @@
     {
       "path": "scripts/search_videos.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/search_videos.mjs",
-      "sha256": "ca453a6d05c69ed431f5e038ded5e05163fbdc32e2bd51e1e48ef1bb2dbab555"
+      "sha256": "c55e62e03c70d3ad932393d168b5f0b5bb2f9f3f03f8b508092fb79be31f9d6c"
     },
     {
       "path": "scripts/skill_update.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/skill_update.mjs",
       "sha256": "41397ffd545bfcfcbe02fec696083a43b292e08c5785e7497735fd7487b2bf79"
-    },
-    {
-      "path": "scripts/submit_brand_realtime_mentions.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/submit_brand_realtime_mentions.mjs",
-      "sha256": "5a1fc16c968d0173e8c30663797d4523aa564e97c015521ae4f8ef86b92dc7b3"
-    },
-    {
-      "path": "scripts/submit_collection_task.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/submit_collection_task.mjs",
-      "sha256": "9ce8175a9f8387ab326d17a262cd99339584f0ede20510ff9d183cc96f24ac6c"
-    },
-    {
-      "path": "scripts/submit_keyword_task.mjs",
-      "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/submit_keyword_task.mjs",
-      "sha256": "9252ce42baf7f06b48a6f683ee268655a0d7085c577656eda095eabc23b0f8ed"
     },
     {
       "path": "scripts/video_audit_poll.mjs",
@@ -281,7 +237,7 @@
     {
       "path": "scripts/video_audit_submit.mjs",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/scripts/video_audit_submit.mjs",
-      "sha256": "fe7965b04345a0509e346da41ecfbfd3104f123a8c40fbdc7f08af91d6767d6a"
+      "sha256": "38536b40ed0908e9342a95145ae2a26aaaa1dfcae424ff7ca55ae7ee37280fbd"
     },
     {
       "path": "skill-manifest.json",
@@ -290,32 +246,32 @@
     {
       "path": "skill.json",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/skill.json",
-      "sha256": "7b52aa1845092b3e979382e8a73d01b7a569d6dae232aaef59fd6e1801425d34"
+      "sha256": "8bd1eb6132057336b8b8f2261b409610a80983ce57453d2a19aa9d5ed3fb9689"
     },
     {
       "path": "SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/SKILL.md",
-      "sha256": "4405f98638d5ba3dbfff0b04495a46b310fd6ed6d3875abe749548709915aee8"
+      "sha256": "de1d7f2dd3bdd8016440b3182c172729e5a13836e862375f41d2c9b3001eb673"
     },
     {
       "path": "workflow/SKILL.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/workflow/SKILL.md",
-      "sha256": "9e976226a7f98801a04abae9bb96687fdf8b9b133e23fe7d4e998c7fbea696ca"
+      "sha256": "db9a6d06264e3c9f9b88fac50cc59c7cf6957369bb827741b84c608e319b3e6f"
     },
     {
       "path": "workflow/workflows/batch-outreach.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/workflow/workflows/batch-outreach.md",
-      "sha256": "0b337891f25c80881d1ff96b2daca9bd89f384bcb9fd6aee8983257b32fd1139"
+      "sha256": "69c6d427e6ae95e06a68543113aa964aaab9c4f479be68a8cb472d2100b386c0"
     },
     {
       "path": "workflow/workflows/brand-video-to-outreach.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/workflow/workflows/brand-video-to-outreach.md",
-      "sha256": "ed8912cae79c4972fe66de281c07919645ed4c4d15a6338b2dbb61ca66bdb267"
+      "sha256": "761dc1178aef9662948913376ccab794b107125da3b856569b92d39eab4cb1b8"
     },
     {
       "path": "workflow/workflows/full-campaign.md",
       "url": "https://raw.githubusercontent.com/creativault/skills/main/creator-scraper-cv/workflow/workflows/full-campaign.md",
-      "sha256": "90c4dc8d3da195e2d0514cad3847e4245a4a6e2dec9a5a1d7a5510a670a1eed5"
+      "sha256": "5d98dd320a63e742a429a6611099551f2010cbf012e0afd44ab631128f10f67c"
     }
   ]
 }

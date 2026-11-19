@@ -21,11 +21,9 @@
 //   oss_url           — 链路2必填（与 video_url 二选一），media_upload.mjs 返回的完整 oss_url
 //                       必须是 *.creativault.tech 下的 HTTPS 完整 URL
 //   brief             — 可选，客户 Brief（用于符合度审核）
-//   user_id           — 可选，用户标识（默认用 X-User-Identity）
 //   campaign_id       — 可选，活动 ID
 //   audit_mode        — 可选，审核模式: high(默认) / low
-//   is_benchmark      — 可选，是否标记为优质案例（进入 benchmark 库），默认 false
-//   enable_benchmark  — 可选，是否启用 benchmark 对比，默认 false
+//   enable_benchmark  — 可选，与已有案例对标，默认 false
 //
 // 兼容的旧参数名（会自动映射，仅为兼容存量调用）:
 //   url               → video_url
@@ -42,7 +40,7 @@
 //   status               — "pending"
 //   estimated_time_seconds — 预估耗时（约 240 秒）
 //
-// 计费: 固定 100 credits/次（与链路无关，与视频长度无关）
+// 积分消耗以服务端计费配置和响应为准。
 
 import { callAPI, parseArgs } from './_api_client.mjs';
 
